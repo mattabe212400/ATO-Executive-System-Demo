@@ -8,44 +8,40 @@ const KC_DAY_SHORT   = {mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri'};
 const KC_LUNCH_SLOTS  = 2;
 const KC_DINNER_SLOTS = 4;
 
+// Example chore checklist for demo purposes — not any specific chapter's actual list.
 const KC_DEFAULT_CHORES = [
   // 2nd Floor
-  {id:'c2f-bath',  area:'2nd Floor',        chore:'Sweep and mop bathroom',                    notes:'Use Pine Sol and a mop', day:'both'},
-  {id:'c2f-hallS', area:'2nd Floor',        chore:'Sweep hallways',                            notes:"Don't neglect the corners/hard to reach areas", day:'both'},
-  {id:'c2f-hallM', area:'2nd Floor',        chore:'Mop hallways',                              notes:'Do not mop until hallway is swept. Open ALL doors when mopping', day:'both'},
-  {id:'c2f-show',  area:'2nd Floor',        chore:'Clean showers',                             notes:'Scrub HARD on orange spots with scrubbing bubbles and rag', day:'both'},
-  {id:'c2f-tolT',  area:'2nd Floor',        chore:'Toilets and urinals (Tuesday)',             notes:'Use toilet cleaner on inside and wipe down outside with Clorox wipes. Do not use rags.', day:'tuesday'},
-  {id:'c2f-tolH',  area:'2nd Floor',        chore:'Toilets and urinals (Thursday)',            notes:'Use toilet cleaner on inside and wipe down outside with Clorox wipes. Do not use rags.', day:'thursday'},
-  {id:'c2f-sink',  area:'2nd Floor',        chore:'Sinks, counters, and mirrors',              notes:'Use paper towels and Windex spray on mirrors. Use rags and scrubbing bubbles on sinks.', day:'both'},
+  {id:'c2f-bath',  area:'2nd Floor',        chore:'Sweep and mop bathroom',                    notes:'Standard cleaning supplies', day:'both'},
+  {id:'c2f-hall',  area:'2nd Floor',        chore:'Sweep and mop hallways',                    notes:'Sweep before mopping', day:'both'},
+  {id:'c2f-tolT',  area:'2nd Floor',        chore:'Clean toilets and urinals (Tuesday)',       notes:'', day:'tuesday'},
+  {id:'c2f-tolH',  area:'2nd Floor',        chore:'Clean toilets and urinals (Thursday)',      notes:'', day:'thursday'},
+  {id:'c2f-sink',  area:'2nd Floor',        chore:'Sinks, counters, and mirrors',              notes:'', day:'both'},
   {id:'c2f-garb',  area:'2nd Floor',        chore:'Take out and re-bag garbage',               notes:'Once a day', day:'daily'},
-  // Front Stairwells
-  {id:'cfsT',      area:'Front Stairwells', chore:'Sweep & mop front stairwell (Tuesday)',     notes:'Use Pine Sol, press mop hard to lift dirt stains. Wipe down handrails.', day:'tuesday'},
-  {id:'cfsH',      area:'Front Stairwells', chore:'Sweep & mop front stairwell (Thursday)',    notes:'Use Pine Sol, press mop hard to lift dirt stains. Wipe down handrails.', day:'thursday'},
-  // Back Stairwells
-  {id:'cbsT',      area:'Back Stairwells',  chore:'Sweep & mop back stairwell (Tuesday)',      notes:'Use Pine Sol, press mop hard to lift dirt stains. Wipe down handrails.', day:'tuesday'},
-  {id:'cbsH',      area:'Back Stairwells',  chore:'Sweep & mop back stairwell (Thursday)',     notes:'Use Pine Sol, press mop hard to lift dirt stains. Wipe down handrails.', day:'thursday'},
-  // Foyers & Outside
-  {id:'cfoy',      area:'Foyers & Outside', chore:'Front foyer',                               notes:'Sweep/vacuum and mop. Wipe top of radiator. Shake rugs outside.', day:'both'},
-  {id:'cbfoy',     area:'Foyers & Outside', chore:'Back foyer',                                notes:'Sweep/vacuum and mop. Wipe top of radiator. Shake rugs outside.', day:'both'},
-  {id:'cout-f',    area:'Foyers & Outside', chore:'Outside (front)',                           notes:'Siphon front ash tray, pick up trash in front. Take out trash on front porch and mail room. Pick up trash on driveway side.', day:'both'},
-  {id:'cout-b',    area:'Foyers & Outside', chore:'Outside (back)',                            notes:'Siphon back ash tray and pick up/take out trash in back lot AND side of the house (Beta side).', day:'both'},
+  // Stairwells
+  {id:'cfsT',      area:'Stairwells',       chore:'Sweep and mop front stairwell (Tuesday)',   notes:'Wipe down handrails', day:'tuesday'},
+  {id:'cfsH',      area:'Stairwells',       chore:'Sweep and mop front stairwell (Thursday)',  notes:'Wipe down handrails', day:'thursday'},
+  {id:'cbsT',      area:'Stairwells',       chore:'Sweep and mop back stairwell (Tuesday)',    notes:'Wipe down handrails', day:'tuesday'},
+  {id:'cbsH',      area:'Stairwells',       chore:'Sweep and mop back stairwell (Thursday)',   notes:'Wipe down handrails', day:'thursday'},
+  // Common Areas & Outside
+  {id:'cfoy',      area:'Common Areas',     chore:'Front entryway',                            notes:'Sweep or vacuum and mop', day:'both'},
+  {id:'cbfoy',     area:'Common Areas',     chore:'Back entryway',                             notes:'Sweep or vacuum and mop', day:'both'},
+  {id:'cout-f',    area:'Common Areas',     chore:'Outside (front)',                           notes:'Pick up trash, take out front porch trash', day:'both'},
+  {id:'cout-b',    area:'Common Areas',     chore:'Outside (back)',                            notes:'Pick up trash, take out back lot trash', day:'both'},
   // Dining Room
-  {id:'cdrS',      area:'Dining Room',      chore:'Sweep dining room',                         notes:'After dinner, PUT CHAIRS UP', day:'both'},
-  {id:'cdrM',      area:'Dining Room',      chore:'Mop dining room',                           notes:'After dinner, PUT CHAIRS UP', day:'both'},
+  {id:'cdrS',      area:'Dining Room',      chore:'Sweep dining room',                         notes:'After dinner, chairs up', day:'both'},
+  {id:'cdrM',      area:'Dining Room',      chore:'Mop dining room',                           notes:'After dinner, chairs up', day:'both'},
   // 3rd Floor
-  {id:'c3f-bath',  area:'3rd Floor',        chore:'Sweep and mop bathroom',                    notes:'Use Pine Sol and a mop', day:'both'},
-  {id:'c3f-hallS', area:'3rd Floor',        chore:'Sweep hallways',                            notes:'Self explanatory', day:'both'},
-  {id:'c3f-hallM', area:'3rd Floor',        chore:'Mop hallways',                              notes:'Do not mop until hallway is swept', day:'both'},
-  {id:'c3f-show',  area:'3rd Floor',        chore:'Clean showers (Thursday)',                  notes:'Scrub HARD on orange spots with scrubbing bubbles and rag', day:'thursday'},
-  {id:'c3f-tolT',  area:'3rd Floor',        chore:'Toilets and urinals (Tuesday)',             notes:'Use toilet cleaner and Clorox wipes on outside. DO NOT USE RAGS.', day:'tuesday'},
-  {id:'c3f-tolH',  area:'3rd Floor',        chore:'Toilets and urinals (Thursday)',            notes:'Use toilet cleaner and Clorox wipes on outside. DO NOT USE RAGS.', day:'thursday'},
-  {id:'c3f-sink',  area:'3rd Floor',        chore:'Sinks, mirrors, and counters',              notes:'Use Windex and paper towels on mirrors. Scrubbing bubbles and rag on sinks.', day:'both'},
+  {id:'c3f-bath',  area:'3rd Floor',        chore:'Sweep and mop bathroom',                    notes:'Standard cleaning supplies', day:'both'},
+  {id:'c3f-hall',  area:'3rd Floor',        chore:'Sweep and mop hallways',                    notes:'Sweep before mopping', day:'both'},
+  {id:'c3f-tolT',  area:'3rd Floor',        chore:'Clean toilets and urinals (Tuesday)',       notes:'', day:'tuesday'},
+  {id:'c3f-tolH',  area:'3rd Floor',        chore:'Clean toilets and urinals (Thursday)',      notes:'', day:'thursday'},
+  {id:'c3f-sink',  area:'3rd Floor',        chore:'Sinks, mirrors, and counters',              notes:'', day:'both'},
   {id:'c3f-garb',  area:'3rd Floor',        chore:'Take out and re-bag garbage',               notes:'Once a day', day:'daily'},
   // Basement
-  {id:'cbasT',     area:'Basement',         chore:'Bathrooms (Tuesday)',                        notes:'Sweep and mop both bathrooms, clean toilets and check TP, wipe down sink, mirror, and countertops. TAKE OUT TRASH.', day:'tuesday'},
-  {id:'cbasH',     area:'Basement',         chore:'Bathrooms (Thursday)',                       notes:'Sweep and mop both bathrooms, clean toilets and check TP, wipe down sink, mirror, and countertops. TAKE OUT TRASH.', day:'thursday'},
-  {id:'cbasHall',  area:'Basement',         chore:'Sweep & mop hallway',                       notes:'Sweep then mop', day:'both'},
-  {id:'cbasLaun',  area:'Basement',         chore:'Laundry room',                              notes:'Sweep room, take out trash, put mop buckets under folding table, wipe down tops of machines and folding table, put detergent on shelves.', day:'both'},
+  {id:'cbasT',     area:'Basement',         chore:'Clean bathrooms (Tuesday)',                 notes:'Toilets, sinks, mirrors, countertops, trash', day:'tuesday'},
+  {id:'cbasH',     area:'Basement',         chore:'Clean bathrooms (Thursday)',                notes:'Toilets, sinks, mirrors, countertops, trash', day:'thursday'},
+  {id:'cbasHall',  area:'Basement',         chore:'Sweep and mop hallway',                     notes:'', day:'both'},
+  {id:'cbasLaun',  area:'Basement',         chore:'Laundry room',                              notes:'Sweep, take out trash, tidy folding area', day:'both'},
 ];
 
 // ── RBAC: lead positions + whichever positions were granted the 'kcrew' page ──
@@ -177,7 +173,7 @@ function renderKcSchedule(){
 }
 
 function kcUpdateSlot(sel){
-  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit KCrew.','error');return;}
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit Meal Duties.','error');return;}
   const meal=sel.dataset.meal;
   const day=sel.dataset.day;
   const slot=parseInt(sel.dataset.slot);

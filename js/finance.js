@@ -7,24 +7,22 @@ const BUDGET_ALERT_THRESHOLD    = 0.85; // Warn when spending exceeds 85% of bud
 
 // Default categories — used as fallback when chapter has not customized yet.
 // Stored in D.settings.budgetCategories as [{name, color, icon}] for full customization.
+// Example category set for demo purposes — not any specific chapter's real budget.
 const FIN_DEFAULT_CATS = [
   {name:'Housing Rent',          color:'var(--navy)', icon:'ti-home'},
-  {name:'Housing Upper Crust',   color:'var(--navy)', icon:'ti-home'},
-  {name:'Housing Mike',          color:'var(--navy)', icon:'ti-home'},
+  {name:'Housing Maintenance',   color:'var(--navy)', icon:'ti-home'},
   {name:'Housing Miscellaneous', color:'var(--navy)', icon:'ti-home'},
   {name:'Utilities Electric',    color:'var(--am)',   icon:'ti-bolt'},
-  {name:'Utilities Alliant Energy',color:'var(--am)', icon:'ti-flame'},
-  {name:'Utilities Waste Management',color:'var(--am)',icon:'ti-recycle'},
+  {name:'Utilities Water & Trash',color:'var(--am)',  icon:'ti-recycle'},
   {name:'Administrative IFC Dues',  color:'var(--mt)', icon:'ti-building'},
-  {name:'Administrative YouTube/TV',color:'var(--mt)', icon:'ti-device-tv'},
-  {name:'Events Greek Week',     color:'var(--bl)',   icon:'ti-trophy'},
-  {name:'Events House Maintenance',color:'var(--bl)', icon:'ti-tool'},
+  {name:'Administrative Insurance', color:'var(--mt)', icon:'ti-shield'},
+  {name:'Events Recruitment',    color:'var(--bl)',   icon:'ti-user-plus'},
   {name:'Events Social',         color:'var(--bl)',   icon:'ti-confetti'},
-  {name:'Events Chaplain',       color:'var(--bl)',   icon:'ti-book'},
   {name:'Events Philanthropy',   color:'var(--rd)',   icon:'ti-heart'},
-  {name:'Events Dads Day',       color:'var(--bl)',   icon:'ti-heart-handshake'},
+  {name:'Events Brotherhood',    color:'var(--bl)',   icon:'ti-users'},
   {name:'Events Alumni',         color:'var(--bl)',   icon:'ti-users-group'},
   {name:'Scholarship',           color:'var(--gn)',   icon:'ti-school'},
+  {name:'Risk Management',       color:'var(--rd)',   icon:'ti-shield-check'},
   {name:'Miscellaneous',         color:'var(--ht)',   icon:'ti-dots'},
 ];
 function getBudgetCats(){

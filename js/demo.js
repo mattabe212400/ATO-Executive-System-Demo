@@ -63,6 +63,12 @@ function loadDemoData(){
     {id:'ce03',title:'Bags Tournament',type:'brotherhood',chEventType:'bags',date:future(10),start:'14:00',location:'Chapter House',mandatory:false,estCost:75,planningStatus:'scheduled',owner:'m17',notes:'Bracket set, signage ordered.',reflection:''},
     {id:'ce04',title:'Brotherhood Retreat Planning',type:'brotherhood',chEventType:'retreat',date:future(25),start:'',location:'',mandatory:false,estCost:1200,planningStatus:'planning',owner:'m17',notes:'Comparing 2 cabin venues.',reflection:''},
     {id:'ce05',title:'Bowling Night',type:'brotherhood',chEventType:'custom',date:future(40),start:'',location:'',mandatory:false,estCost:null,planningStatus:'idea',owner:null,notes:'',reflection:''},
+    // New Member Education sessions live on the shared calendar (type:'pledge'), same pattern
+    // as Social/Philanthropy — see js/newmembereducation.js's nmeSessions().
+    {id:'rs01',title:'New Member Orientation',type:'pledge',date:past(35),start:'',location:'',mandatory:false,facilitatorId:'m16',notes:'Chapter history, organization overview, expectations for the semester.'},
+    {id:'rs02',title:'Ritual Book Session 1',type:'pledge',date:past(28),start:'',location:'',mandatory:false,facilitatorId:'m17',notes:'Introduction to the ritual book and its significance.'},
+    {id:'rs03',title:'Risk Management & FIPG Training',type:'pledge',date:past(21),start:'',location:'',mandatory:false,facilitatorId:'m06',notes:'FIPG guidelines and chapter risk policy walkthrough.'},
+    {id:'rs04',title:'Semester Wrap-Up & Reflection',type:'pledge',date:future(10),start:'',location:'',mandatory:false,facilitatorId:'m16',notes:'Reflect on the semester and preview what full membership looks like.'},
   ];
 
   // ── ATTENDANCE ──
@@ -418,7 +424,8 @@ function loadDemoData(){
         {id:'pay06',memberId:'m15',amount:200,type:'Partial Dues',method:'Venmo',date:past(11)},
       ],
       nationalDues: {}, nationalPayments: [],
-      budget: {'Housing Rent':8000,'Housing Upper Crust':1200,'Housing Mike':600,'Housing Miscellaneous':600,'Utilities Electric':900,'Utilities Alliant Energy':700,'Utilities Waste Management':300,'Administrative IFC Dues':500,'Administrative YouTube/TV':150,'Events Greek Week':800,'Events House Maintenance':500,'Events Social':2500,'Events Chaplain':300,'Events Philanthropy':800,'Events Moms Day':400,'Events Alumni':500,'Scholarship':600,'Miscellaneous':500},
+      // Example budget categories for demo purposes — not any specific chapter's real budget.
+      budget: {'Housing Rent':8000,'Housing Maintenance':1200,'Housing Miscellaneous':600,'Utilities Electric':900,'Utilities Water & Trash':700,'Administrative IFC Dues':500,'Administrative Insurance':400,'Events Recruitment':800,'Events Social':2500,'Events Philanthropy':800,'Events Brotherhood':500,'Events Alumni':500,'Scholarship':600,'Risk Management':300,'Miscellaneous':500},
     },
     recruitment: { rushees, events: rcEvents, goal: {target:20,label:'New Members This Semester'} },
     committees,
@@ -455,22 +462,17 @@ function loadDemoData(){
       events: [],
     },
     newMemberEducation: {
-      sessions: [
-        {id:'rs01',title:'New Member Orientation',date:past(35),type:'education',facilitatorId:'m16',notes:'Chapter history, organization overview, expectations for the semester.'},
-        {id:'rs02',title:'Ritual Book Session 1',date:past(28),type:'ritual',facilitatorId:'m17',notes:'Introduction to the ritual book and its significance.'},
-        {id:'rs03',title:'Risk Management & FIPG Training',date:past(21),type:'education',facilitatorId:'m06',notes:'FIPG guidelines and chapter risk policy walkthrough.'},
-        {id:'rs04',title:'Standards Test Review',date:future(10),type:'test',facilitatorId:'m16',notes:'Review session before the standards test.'},
-      ],
+      // Sessions live on the shared calendar (D.events, type:'pledge') — see the events array above.
+      sessions: [],
       requirements: [
         {id:'req01',title:'Attend Orientation Session',due:past(35),desc:''},
-        {id:'req02',title:'Pass Standards Test',due:future(14),desc:'Written test on chapter history and policies.'},
         {id:'req03',title:'Complete 5 Community Service Hours',due:future(21),desc:''},
         {id:'req04',title:'Submit Peer Mentor Preference Form',due:future(28),desc:''},
       ],
       progress: {
-        m11:{req01:true,req02:true,req03:true,req04:false},
-        m12:{req01:true,req02:false,req03:false,req04:false},
-        m13:{req01:true,req02:true,req03:false,req04:false},
+        m11:{req01:true,req03:true,req04:false},
+        m12:{req01:true,req03:false,req04:false},
+        m13:{req01:true,req03:false,req04:false},
       },
       mentorGroups: [
         {id:'mg01',name:'Group 1',mentorIds:['m16'],newMemberIds:['m11','m12'],createdBy:'m16',createdAt:Date.now(),updatedAt:Date.now()},
@@ -562,7 +564,7 @@ function loadDemoData(){
     announcements: [
       {id:'ann01',title:'Spring Formal tickets on sale now',body:'Grab your Spring Formal ticket before the RSVP deadline. Buses will pick up from the Chapter House — see the Social Events page for the full schedule.',postedBy:'m01',postedByName:'James Mitchell',postedAt:past(2),pinned:true,expiresAt:future(14)},
       {id:'ann02',title:'Dues reminder — balance due this week',body:'A few members still have an outstanding balance for this semester. Please settle up with the Treasurer by Friday to avoid a late fee.',postedBy:'m03',postedByName:'Connor Walsh',postedAt:past(5),pinned:false,expiresAt:future(3)},
-      {id:'ann03',title:'Standards Test review session added',body:'New members: an extra review session has been added before the Standards Test. Check the New Member Education page for the date and location.',postedBy:'m16',postedByName:'Mason Evans',postedAt:past(9),pinned:false,expiresAt:null},
+      {id:'ann03',title:'New member training session added',body:'New members: an extra education session has been added this semester. Check the New Member Education page for the date and location.',postedBy:'m16',postedByName:'Mason Evans',postedAt:past(9),pinned:false,expiresAt:null},
     ],
     settings,
   };

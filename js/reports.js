@@ -102,7 +102,7 @@ function rpWeekly(sem){
       const items=[];
       if(ovT>0)items.push({icon:'ti-clock',text:`${ovT} overdue task${ovT>1?'s':''} — assign ownership and set new deadlines`,color:'var(--rd-bg)',ic:'var(--rd-tx)'});
       if(lowAtt.length)items.push({icon:'ti-user-x',text:`${lowAtt.length} member${lowAtt.length>1?'s':''} below 75% attendance: ${esc(lowAtt.slice(0,3).map(m=>m.name.split(' ')[0]).join(', '))}${lowAtt.length>3?` +${lowAtt.length-3} more`:''}`,color:'var(--am-bg)',ic:'var(--am-tx)'});
-      if(unassignedShifts>0)items.push({icon:'ti-shield-exclamation',text:`${unassignedShifts} sober bro shift${unassignedShifts>1?'s':''} unassigned — needs coverage before next event`,color:'var(--bl-bg)',ic:'var(--bl-tx)'});
+      if(unassignedShifts>0)items.push({icon:'ti-shield-exclamation',text:`${unassignedShifts} social monitor shift${unassignedShifts>1?'s':''} unassigned — needs coverage before next event`,color:'var(--bl-bg)',ic:'var(--bl-tx)'});
       if(openCases>0)items.push({icon:'ti-scale',text:`${openCases} open Judicial Board case${openCases>1?'s':''} — schedule hearings and follow up`,color:'var(--rd-bg)',ic:'var(--rd-tx)'});
       if(!items.length)return`<div style="color:var(--gn);font-size:12px;padding:10px 0"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>No urgent action items — chapter is in good standing.</div>`;
       return items.map(i=>`<div class="rp-alert-row"><i class="ti ${i.icon}" style="color:${i.ic};font-size:13px;flex-shrink:0;margin-top:1px"></i><span>${i.text}</span></div>`).join('');

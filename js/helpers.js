@@ -109,7 +109,7 @@ document.addEventListener('keydown', e => {
 })();
 
 
-const PT={dashboard:'Executive Dashboard',attendance:'Attendance',finance:'Finance',calendar:'Calendar',tasks:'Tasks & Goals',notes:'Meeting Notes',judicial:'Judicial Board',sober:'Sober Bro Management',members:'Members',recruitment:'Recruitment CRM',academics:'Academics',committees:'Committees',analytics:'Analytics & Reporting',files:'Files & Documents',transition:'Officer Transition Hub',settings:'Settings',philanthropy:'Philanthropy',communityService:'Community Service',alumni:'Alumni Relations',ritual:'Chaplain Hub',newMemberEducation:'New Member Education',healthscore:'Chapter Health Scorecard',reports:'Reports',kcrew:'House Management',social:'Social Events',houseLife:'House Life'};
+const PT={dashboard:'Executive Dashboard',attendance:'Attendance',finance:'Finance',calendar:'Calendar',tasks:'Tasks & Goals',notes:'Meeting Notes',judicial:'Judicial Board',sober:'Social Monitor Management',members:'Members',recruitment:'Recruitment CRM',academics:'Academics',committees:'Committees',analytics:'Analytics & Reporting',files:'Files & Documents',transition:'Officer Transition Hub',settings:'Settings',philanthropy:'Philanthropy',communityService:'Community Service',alumni:'Alumni Relations',ritual:'Chaplain Hub',newMemberEducation:'New Member Education',healthscore:'Chapter Health Scorecard',reports:'Reports',kcrew:'House Management',social:'Social Events',houseLife:'House Life'};
 
 function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 // Local-timezone date-only string (YYYY-MM-DD). Not toISOString().split('T')[0], which is
@@ -377,7 +377,7 @@ function autoGenerateNotifs(){
 
   const unassigned=sbFlatSlots().filter(s=>isUp(s.date)&&!s.memberId);
   if(unassigned.length){
-    pushAuto('sober_unassigned_'+today,'Unassigned Sober Shifts',`${unassigned.length} upcoming shift${unassigned.length>1?'s':''} have no sober bro assigned. Next: ${fds(unassigned[0].date)}.`,'warning','sober');
+    pushAuto('sober_unassigned_'+today,'Unassigned Social Monitor Shifts',`${unassigned.length} upcoming shift${unassigned.length>1?'s':''} have no social monitor assigned. Next: ${fds(unassigned[0].date)}.`,'warning','sober');
   }
 
   const openCases=D.cases.filter(c=>!['resolved','dismissed'].includes(c.status));

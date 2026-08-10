@@ -55,7 +55,7 @@
       <option value="Vice President" style="color:#1e293b;background:#fff">Vice President — full access</option>
       <option value="Treasurer" style="color:#1e293b;background:#fff">Treasurer — Finance</option>
       <option value="Secretary" style="color:#1e293b;background:#fff">Secretary — Attendance, Notes, Members</option>
-      <option value="Risk Manager" style="color:#1e293b;background:#fff">Risk Manager — Sober Bros, Attendance</option>
+      <option value="Risk Manager" style="color:#1e293b;background:#fff">Risk Manager — Social Monitors, Attendance</option>
       <option value="Recruitment" style="color:#1e293b;background:#fff">Recruitment — Recruitment CRM</option>
       <option value="Scholarship" style="color:#1e293b;background:#fff">Scholarship — Academics</option>
       <option value="Philanthropy" style="color:#1e293b;background:#fff">Philanthropy</option>
@@ -64,7 +64,7 @@
       <option value="House Manager" style="color:#1e293b;background:#fff">House Manager — House Mgmt</option>
       <option value="Membership Educator" style="color:#1e293b;background:#fff">Membership Educator — New Member Education</option>
       <option value="Chaplain" style="color:#1e293b;background:#fff">Chaplain — Chaplain Hub</option>
-      <option value="Social" style="color:#1e293b;background:#fff">Social — Sober Bros, Social Events</option>
+      <option value="Social" style="color:#1e293b;background:#fff">Social — Social Monitors, Social Events</option>
       <option value="Public Relations" style="color:#1e293b;background:#fff">Public Relations</option>
       <option value="General Member" style="color:#1e293b;background:#fff">General Member — read-only</option>
     </select>
@@ -195,7 +195,7 @@
   </div>
   <div class="ns" data-section="governance"><div class="nl">Governance</div>
     <div class="ni" data-page="judicial" tabindex="0" role="button" onclick="rbacNav('judicial',this)"><i class="ti ti-scale"></i>Judicial Board<span class="nbdg nb-r" id="judicial-sb-badge" style="display:none">0</span></div>
-    <div class="ni" data-page="sober" tabindex="0" role="button" onclick="rbacNav('sober',this)"><i class="ti ti-shield-check"></i>Sober Bros</div>
+    <div class="ni" data-page="sober" tabindex="0" role="button" onclick="rbacNav('sober',this)"><i class="ti ti-shield-check"></i>Social Monitors</div>
   </div>
   <div class="ns" data-section="members"><div class="nl">Members</div>
     <div class="ni" data-page="members" tabindex="0" role="button" onclick="rbacNav('members',this)"><i class="ti ti-user-circle"></i>Members</div>
@@ -378,7 +378,7 @@
           <!-- Sober Bros -->
           <div class="card d2-card">
             <div class="card-hd">
-              <span class="card-t d2-card-t"><i class="ti ti-shield-check d2-card-ico" style="color:var(--gn)"></i>Sober Bros — This Weekend</span>
+              <span class="card-t d2-card-t"><i class="ti ti-shield-check d2-card-ico" style="color:var(--gn)"></i>Social Monitors — This Weekend</span>
               <button class="card-a" onclick="rbacNav('sober',null)">Schedule →</button>
             </div>
             <div id="d-sober"></div>
@@ -645,6 +645,7 @@
         <div class="card">
           <div class="card-hd">
             <span class="card-t">Chapter Bylaws</span>
+            <span style="font-size:11px;color:var(--ht)">Example bylaws for demo purposes only</span>
           </div>
           <div id="j-bylaws" style="padding-top:4px"></div>
         </div>
@@ -653,9 +654,9 @@
 
     <div class="page" id="page-sober">
       <div class="ph">
-        <div class="ph-left"><h2 class="page-title">Sober Brothers</h2><div class="page-sub">Weekend shift scheduling and coverage tracking</div></div>
+        <div class="ph-left"><h2 class="page-title">Social Monitors</h2><div class="page-sub">Weekend shift scheduling and coverage tracking</div></div>
         <div class="ph-actions" id="sober-toolbar">
-          <div class="fld" style="margin-bottom:0"><label for="sb-pledge-date" style="font-size:9.5px">Pledge shadows start</label><input id="sb-pledge-date" type="date" onchange="sbSetPledgeShadowStart(this.value)" style="height:29px;padding:0 9px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx);outline:none"></div>
+          <div class="fld" style="margin-bottom:0"><label for="sb-pledge-date" style="font-size:9.5px">New member training starts</label><input id="sb-pledge-date" type="date" onchange="sbSetPledgeShadowStart(this.value)" style="height:29px;padding:0 9px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx);outline:none"></div>
           <button class="btn" id="sober-import-btn" onclick="openM('m-simport')"><i class="ti ti-upload"></i>Import</button>
           <button class="btn btn-p" id="sober-add-btn" onclick="openM('m-addweekend')"><i class="ti ti-plus"></i>Add Weekend</button>
         </div>
@@ -695,14 +696,14 @@
     <!-- ── KCREW & CHORES ── -->
     <div class="page" id="page-kcrew">
       <div class="ph">
-        <div class="ph-left"><h2 class="page-title">House Management</h2><div class="page-sub">Kcrew meal schedule and weekly chore assignments</div></div>
+        <div class="ph-left"><h2 class="page-title">House Management</h2><div class="page-sub">Meal Duties schedule and weekly chore assignments</div></div>
       </div>
       <div class="d2-stats" id="kc-kpi" style="margin-bottom:13px"></div>
-      <div id="kc-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only — only the President, Vice President, House Manager, and House Manager Assistant can edit KCrew and chore assignments.</span></div>
+      <div id="kc-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only — only the President, Vice President, House Manager, and House Manager Assistant can edit Meal Duties and chore assignments.</span></div>
       <div class="card" style="margin-bottom:13px">
         <div class="card-hd">
-          <span class="card-t"><i class="ti ti-tools-kitchen-2" style="margin-right:6px;color:var(--navy)"></i>Kcrew Schedule</span>
-          <span style="font-size:11px;color:var(--ht)">Select who is on Kcrew — auto-saves</span>
+          <span class="card-t"><i class="ti ti-tools-kitchen-2" style="margin-right:6px;color:var(--navy)"></i>Meal Duties Schedule</span>
+          <span style="font-size:11px;color:var(--ht)">Select who is on Meal Duties — auto-saves</span>
         </div>
         <div id="kc-schedule"></div>
       </div>
@@ -2770,7 +2771,7 @@
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addweekend'))">Cancel</button><button class="btn btn-p" onclick="sbAddWeekend()">Add Weekend</button></div>
 </div></div>
 
-<div class="mo" role="dialog" aria-modal="true" id="m-simport" onclick="closeM(event,this)"><div class="md"><div class="md-t">Import Sober Bro Schedule<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-simport'))"><i class="ti ti-x"></i></button></div>
+<div class="mo" role="dialog" aria-modal="true" id="m-simport" onclick="closeM(event,this)"><div class="md"><div class="md-t">Import Social Monitor Schedule<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-simport'))"><i class="ti ti-x"></i></button></div>
   <div style="border:2px dashed var(--bdr);border-radius:10px;padding:26px;text-align:center;margin-bottom:13px">
     <i class="ti ti-file-spreadsheet" style="font-size:26px;color:var(--ht);display:block;margin:0 auto 7px"></i>
     <div style="font-size:13px;font-weight:500;margin-bottom:4px">Drop .xlsx or .csv here</div>

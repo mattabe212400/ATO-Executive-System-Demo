@@ -225,7 +225,7 @@ function dashBuildAlerts(avg,isViewer){
   }
   const unassigned=sbFlatSlots().filter(s=>isUp(s.date)&&!s.memberId);
   if(unassigned.length){
-    alerts.push({type:'sober',icon:'ti-shield-exclamation',bg:'background:var(--bl-bg)',ic:'color:var(--bl-tx)',title:`${unassigned.length} unassigned sober bro shift${unassigned.length>1?'s':''}`,body:`Next: ${fds(unassigned[0].date)} · Needs coverage`});
+    alerts.push({type:'sober',icon:'ti-shield-exclamation',bg:'background:var(--bl-bg)',ic:'color:var(--bl-tx)',title:`${unassigned.length} unassigned social monitor shift${unassigned.length>1?'s':''}`,body:`Next: ${fds(unassigned[0].date)} · Needs coverage`});
   }
   const openCases=D.cases.filter(c=>!['resolved','dismissed'].includes(c.status));
   if(openCases.length&&!isViewer&&jbCanAccess&&jbCanAccess()){

@@ -37,7 +37,7 @@ This repo is the actual production frontend, running against fictional seed data
 | **Finance** | Dues ledger (tiered by in-house/out-of-house/new-member rate), expense log, budget tracking, fine management (including fines issued directly from Attendance for an Unexcused Miss), national dues, payment plans |
 | **Recruitment CRM** | Rushee pipeline (prospect → bid → pledge), funnel chart, stage conversion rates, rush event schedule |
 | **Judicial Board** | JB Hearing and Membership Review case tracks, document attachments, hearing scheduling, outcome logging, importable chapter bylaws |
-| **Sober Bros** | Weekly sober-monitor grid (mirrors a real chapter spreadsheet — one card per weekend, Thu/Fri/Sat columns, per-day slot counts), pledge-shadow mode (new members shadow active brothers on Thu/Fri once a start date is set), CSV import |
+| **Social Monitors** | Weekly sober-monitor grid (one card per weekend, Thu/Fri/Sat columns, per-day slot counts), new-member training mode (new members shadow active brothers on Thu/Fri once a start date is set), CSV import |
 | **Members** | Full roster with GPA, class year, membership status, role, contact info, mobile card view, CSV import (add or bulk-update by name match) |
 | **Academics** | GPA distribution, chapter average, scholarship tracking, academic warning list, CSV grade import — hard-gated to authorized roles |
 | **Committees** | Committee roster, chair assignment, custom positions, per-committee event calendar and file storage |
@@ -53,10 +53,12 @@ This repo is the actual production frontend, running against fictional seed data
 | **Reports** | Exportable summaries: semester report, officer report, financial report, attendance report |
 | **Files & Documents** | Position-based folder storage, chapter-wide document library, per-committee file spaces |
 | **Settings** | Chapter profile, positions & permissions (read-only display), enabled modules, officer account list |
-| **House Management** | Weekly meal-prep crew schedule (lunch/dinner slot assignment), chore checklist across house areas with day-specific recurrence |
+| **House Management** | Weekly Meal Duties schedule (lunch/dinner slot assignment), example chore checklist across house areas with day-specific recurrence |
 | **House Life** | Room assignments and a configurable priority-points rubric for room/parking selection |
 
-CSV import (Members, Academics, Tasks, Sober Bros, Mentor Program Agenda) parses the file entirely in the browser and merges rows into the in-memory demo dataset — nothing is uploaded anywhere, and nothing survives a page refresh, consistent with the rest of this demo.
+CSV import (Members, Academics, Tasks, Social Monitors, Mentor Program Agenda) parses the file entirely in the browser and merges rows into the in-memory demo dataset — nothing is uploaded anywhere, and nothing survives a page refresh, consistent with the rest of this demo.
+
+> Bylaws, budget categories, and the house chore checklist shown in this demo are illustrative examples, not any real chapter's actual documents.
 
 > **Not in this demo:** platform-level, multi-chapter administration (provisioning new chapters, cross-chapter officer approval). That capability exists in the production system this demo is based on, but is intentionally out of scope here since this demo shows a single chapter's operations, not platform administration.
 
@@ -68,14 +70,14 @@ RBAC operates on two layers: **page access** (which modules appear in the sideba
 
 ### Page Access
 
-Every exec-tier position shares a common view baseline (Dashboard, Calendar, Tasks, Files, Settings, Analytics, Reports, Health Scorecard, Transition Hub, Committees, Notes, Attendance, Finance, Philanthropy, Community Service, Alumni, Sober Bros, Chaplain Hub, New Member Education, Members, House Mgmt, Recruitment CRM, Social Events, House Life). Specialized positions get **edit** rights layered on top of that:
+Every exec-tier position shares a common view baseline (Dashboard, Calendar, Tasks, Files, Settings, Analytics, Reports, Health Scorecard, Transition Hub, Committees, Notes, Attendance, Finance, Philanthropy, Community Service, Alumni, Social Monitors, Chaplain Hub, New Member Education, Members, House Mgmt, Recruitment CRM, Social Events, House Life). Specialized positions get **edit** rights layered on top of that:
 
 | Position | Additional Edit Access |
 |---|---|
 | President / Vice President | Full access to every module (lead) |
 | Treasurer | Finance |
 | Secretary | Attendance, Notes, Members, House Life |
-| Risk Manager | Sober Bros, Attendance, + view on Academics |
+| Risk Manager | Social Monitors, Attendance, + view on Academics |
 | Recruitment | Recruitment CRM |
 | Scholarship | Academics |
 | Philanthropy | Philanthropy |
@@ -84,9 +86,9 @@ Every exec-tier position shares a common view baseline (Dashboard, Calendar, Tas
 | House Manager | House Mgmt |
 | Membership Educator | New Member Education |
 | Chaplain | Chaplain Hub |
-| Social | Sober Bros, Social Events |
+| Social | Social Monitors, Social Events |
 | Public Relations | View baseline only |
-| General Member (viewer) | Read-only on Calendar, Members, Committees, Philanthropy, Community Service, Alumni, Chaplain Hub, Attendance, Notes, Sober Bros, House Mgmt, Social Events, House Life — no Dashboard, Tasks, Judicial Board, Academics, Transition Hub, Health Scorecard, Reports, Finance, Files, Settings, Analytics, or Recruitment CRM, and no edit controls anywhere |
+| General Member (viewer) | Read-only on Calendar, Members, Committees, Philanthropy, Community Service, Alumni, Chaplain Hub, Attendance, Notes, Social Monitors, House Mgmt, Social Events, House Life — no Dashboard, Tasks, Judicial Board, Academics, Transition Hub, Health Scorecard, Reports, Finance, Files, Settings, Analytics, or Recruitment CRM, and no edit controls anywhere |
 
 Every position can also edit Calendar and the Transition Hub, regardless of what else it owns — those two aren't tied to any single position's domain.
 
@@ -116,18 +118,18 @@ The demo auto-signs in as **James Mitchell, President of Epsilon Chapter at Over
 - **Finance** — tiered dues (in-house / out-of-house / new-member rate) for all 18 members, 7 expenses mapped to real budget categories, budget line items, payment history, 2 outstanding fines
 - **14 rushees** — across 5 funnel stages with bid scores, recruiter assignments, and 5 rush events
 - **Judicial cases** — 3 cases (2 active — one JB Hearing, one Membership Review — and 1 resolved) with bylaw citations and hearing dates
-- **3 sober-monitor weekends** — a fully-staffed past weekend, an upcoming one with pledge shadowing active and one open slot, and a formal weekend with a Wednesday pre-party and a bumped-up Saturday slot count
+- **3 social monitor weekends** — a fully-staffed past weekend, an upcoming one with new-member training active and one open slot, and a formal weekend with a Wednesday pre-party and a bumped-up Saturday slot count
 - **4 committees** — with chairs and member rosters
 - **Philanthropy** — 3 fundraising events, a fundraising log, 2 partner organizations, 2 vendors/donors
 - **Community Service** — 2 service events, hours logged for 12 members, 2 service locations
 - **Chaplain Hub** — 2 devotionals log entries, 3 bible studies, 6 brotherhood/morale events across all 4 planning stages, a 12-item ritual checklist, and the full 13-chapter Bible Study curriculum (auto-seeded structure, same as production)
-- **New Member Education + Peer Mentor Program** — 4 requirements tracked for 3 new members, 4 education sessions, 2 mentor groups, and a seeded 10-week mentor agenda
+- **New Member Education + Peer Mentor Program** — 3 requirements tracked for 3 new members, 4 education sessions, 2 mentor groups, and a seeded 10-week mentor agenda
 - **Social Events** — 3 events (a completed mixer, an in-progress formal with full vendor/budget detail, and an early-stage date party), 4 vendors
 - **Announcements** — 3 seeded posts, one pinned, demonstrating the Dashboard broadcast widget
 - **5 alumni contacts** — with engagement status, outreach log, and upcoming alumni event
 - **15 transition hub entries** — handoff docs for all officer positions, with position-specific content and key contacts
 - **3 meeting notes** — structured chapter minutes with officer reports, honors, and action items
-- **House Management** — weekly meal-prep crew schedule across 7 live-in members, default chore checklist with seeded weekly check-ins
+- **House Management** — weekly Meal Duties schedule across 7 live-in members, example chore checklist with seeded weekly check-ins
 - **House Life** — 5 rooms, 3 parking spots, and a 3-item priority-points rubric
 
 ---

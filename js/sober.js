@@ -23,7 +23,7 @@ function canEditSober(){
 }
 
 function sbDenied(){
-  toast('Only the President, Vice President, and Risk Manager can edit the sober schedule.','error');
+  toast('Only the President, Vice President, and Risk Manager can edit the social monitor schedule.','error');
 }
 
 // ── DEFAULTS & MIGRATION ──
@@ -128,7 +128,7 @@ function sbUpdateKpiOnly(){
     statStrip('Weekends Scheduled',D.shifts.weekends.length,getSemester(),'neutral')+
     statStrip('Active Slots Filled',filled+'/'+upcoming.length,'Upcoming coverage','neutral')+
     statStrip('Unassigned',unassigned.length,unassigned.length>0?'Need coverage':'All covered',unassigned.length>0?'down':'neutral')+
-    statStrip('Pledge Shadows',D.shifts.pledgeShadowStart?('Since '+fds(D.shifts.pledgeShadowStart)):'Not started','Thu/Fri: 2 active + pledges','neutral');
+    statStrip('New Member Training',D.shifts.pledgeShadowStart?('Since '+fds(D.shifts.pledgeShadowStart)):'Not started','Thu/Fri: 2 active + new members','neutral');
 
   document.getElementById('s-alert').innerHTML=unassigned.length>0
     ?`<div class="bnr danger"><i class="ti ti-alert-circle" style="font-size:13px"></i>${unassigned.length} slot${unassigned.length>1?'s':''} need${unassigned.length===1?'s':''} coverage before the event.</div>`
@@ -140,7 +140,7 @@ function sbRenderSchedule(){
   const el=document.getElementById('s-schedule');
   if(!el)return;
   if(!D.shifts.weekends.length){
-    el.innerHTML=es('ti-shield-check','green','No weekends scheduled','Add a weekend to start building the sober bro schedule.',
+    el.innerHTML=es('ti-shield-check','green','No weekends scheduled','Add a weekend to start building the social monitor schedule.',
       ro?'':`<button class="btn btn-p" onclick="openM('m-addweekend')"><i class="ti ti-plus"></i>Add Weekend</button>`);
     return;
   }
@@ -205,12 +205,12 @@ function sbDayColumn(w,dk,ro){
     const dropdowns=Array.from({length:activeCount}).map((_,i)=>
       `<select ${ro?'disabled':`onchange="sbSlotChange('${w.id}','${dk}',${i},this.value)"`} style="${fieldStyle};margin-bottom:4px">${memberOpts(day.memberIds[i]||'')}</select>`
     ).join('');
-    const addSlotBtn=(ro||day.slotCount>=8)?'':`<button onclick="sbAddSlot('${w.id}','${dk}')" style="font-size:10.5px;background:none;border:none;color:var(--sky-tx);cursor:pointer;padding:3px 0 6px;display:flex;align-items:center;gap:3px"><i class="ti ti-plus" style="font-size:10px"></i>Add sober bro</button>`;
+    const addSlotBtn=(ro||day.slotCount>=8)?'':`<button onclick="sbAddSlot('${w.id}','${dk}')" style="font-size:10.5px;background:none;border:none;color:var(--sky-tx);cursor:pointer;padding:3px 0 6px;display:flex;align-items:center;gap:3px"><i class="ti ti-plus" style="font-size:10px"></i>Add social monitor</button>`;
 
     let pledgeBlock='';
     if(pledgeOn){
       const key=w.id+'-'+dk;
-      const lbl=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select pledges —';
+      const lbl=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select new members —';
       if(ro){
         pledgeBlock=`<div style="font-size:11.5px;padding:4px 0;color:${day.pledgeIds.length?'var(--tx)':'var(--ht)'}">${lbl}</div>`;
       }else{
@@ -246,7 +246,7 @@ function sbDayColumn(w,dk,ro){
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
       <span style="font-size:10px;color:var(--ht)">Slots needed</span>
       <input type="number" min="0" max="8" value="${day.slotCount}" ${ro?'disabled':`onchange="sbUpdateSlotCount('${w.id}','${dk}',this.value)"`} style="width:48px;font-size:11px;padding:3px 5px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);color:var(--tx)${ro?';opacity:.6':''}">
-      ${pledgeOn&&day.slotCount>0?`<span style="font-size:9.5px;color:var(--mt)">(${activeCount} active + pledges)</span>`:''}
+      ${pledgeOn&&day.slotCount>0?`<span style="font-size:9.5px;color:var(--mt)">(${activeCount} active + new members)</span>`:''}
     </div>
     ${body}
   </div>`;
@@ -334,7 +334,7 @@ function sbPledgeToggle(weekendId,dayKey,memberId,checked){
   const key=weekendId+'-'+dayKey;
   const lbl=document.getElementById('sbp-lbl-'+key);
   if(lbl){
-    const text=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select pledges —';
+    const text=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select new members —';
     lbl.textContent=text;
     lbl.style.color=day.pledgeIds.length?'var(--tx)':'var(--ht)';
   }
