@@ -1,4 +1,6 @@
-/* OpsCore 2.0 Demo — Sober Bros (weekly shift grid) */
+// ══════════════════════════════════════════════
+// SOBER BROS — weekly shift grid
+// ══════════════════════════════════════════════
 // Mirrors the chapter's real sober-monitor spreadsheet: one row per weekend, Thu/Fri/Sat
 // columns, 3 assignable slots per day by default. Once D.shifts.pledgeShadowStart is reached,
 // each day drops to (slotCount-1) active-member dropdowns plus a multi-select pledge/new-member
@@ -7,23 +9,32 @@
 // applies here too).
 
 // Thu/Fri/Sat are the regular weekend pattern, always shown. Wed/Sun are occasional extra
-// event days — hidden by default (slotCount:0) until a weekend explicitly needs one, via the
-// "+ Wednesday Event"/"+ Sunday Event" buttons on that weekend's card.
+// event days — hidden by default (slotCount:0, sbDayIsActive() below filters them out of the
+// rendered grid) until a weekend explicitly needs one, via the "+ Wednesday Event"/"+ Sunday
+// Event" buttons on that weekend's card.
 const SB_DAY_KEYS   = ['wed','thu','fri','sat','sun'];
 const SB_DAY_LABEL  = {wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday',sun:'Sunday'};
 const SB_DAY_OFFSET = {wed:-1,thu:0,fri:1,sat:2,sun:3};
 const SB_EXTRA_DAYS = ['wed','sun'];
 
-function sbDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function sbToday(){ return sbDateStr(new Date()); }
+// ── SOBER BRO ACCESS ──
+function canEditSober(){
+  return canEditPage('sober');
+}
 
 function sbDenied(){
   toast('Only the President, Vice President, and Risk Manager can edit the sober schedule.','error');
 }
 
 // ── DEFAULTS & MIGRATION ──
+// D.shifts used to be a flat array of {id,event,date,start,end,memberId,confirmed,noShow}.
+// That shape can't express "3 people on Thursday", so it's preserved read-only under .legacy
+// rather than silently discarded.
 function sbEnsureDefaults(){
-  if(Array.isArray(D.shifts))D.shifts={pledgeShadowStart:'',weekends:[]};
+  if(Array.isArray(D.shifts)){
+    const legacy=D.shifts;
+    D.shifts={pledgeShadowStart:'',weekends:[],legacy};
+  }
   if(!D.shifts)D.shifts={pledgeShadowStart:'',weekends:[]};
   if(!D.shifts.weekends)D.shifts.weekends=[];
   if(D.shifts.pledgeShadowStart==null)D.shifts.pledgeShadowStart='';
@@ -49,7 +60,7 @@ function sbDayDate(weekend,dayKey){
   if(!weekend.thuDate)return'';
   const d=new Date(weekend.thuDate+'T12:00:00');
   d.setDate(d.getDate()+SB_DAY_OFFSET[dayKey]);
-  return sbDateStr(d);
+  return localDateStr(d);
 }
 
 // Pledge shadows only ever cover Thursday and Friday shifts — Saturday, and the occasional
@@ -108,16 +119,16 @@ function renderSober(){
 
 function sbUpdateKpiOnly(){
   const slots=sbFlatSlots();
-  const today=sbToday();
+  const today=localDateStr();
   const upcoming=slots.filter(s=>s.date>=today);
   const unassigned=upcoming.filter(s=>!s.memberId);
   const filled=upcoming.length-unassigned.length;
 
   document.getElementById('s-kpi').innerHTML=
-    kpi('Weekends Scheduled',D.shifts.weekends.length,getSemester(),'neutral')+
-    kpi('Active Slots Filled',filled+'/'+upcoming.length,'Upcoming coverage','neutral')+
-    kpi('Unassigned',unassigned.length,unassigned.length>0?'Need coverage':'All covered',unassigned.length>0?'down':'neutral')+
-    kpi('Pledge Shadows',D.shifts.pledgeShadowStart?('Since '+formatDateShort(D.shifts.pledgeShadowStart)):'Not started','Thu/Fri: 2 active + pledges','neutral');
+    statStrip('Weekends Scheduled',D.shifts.weekends.length,getSemester(),'neutral')+
+    statStrip('Active Slots Filled',filled+'/'+upcoming.length,'Upcoming coverage','neutral')+
+    statStrip('Unassigned',unassigned.length,unassigned.length>0?'Need coverage':'All covered',unassigned.length>0?'down':'neutral')+
+    statStrip('Pledge Shadows',D.shifts.pledgeShadowStart?('Since '+fds(D.shifts.pledgeShadowStart)):'Not started','Thu/Fri: 2 active + pledges','neutral');
 
   document.getElementById('s-alert').innerHTML=unassigned.length>0
     ?`<div class="bnr danger"><i class="ti ti-alert-circle" style="font-size:13px"></i>${unassigned.length} slot${unassigned.length>1?'s':''} need${unassigned.length===1?'s':''} coverage before the event.</div>`
@@ -150,14 +161,14 @@ function sbAddExtraDay(weekendId,dayKey){
   const day=w.days[dayKey];
   day.slotCount=3;
   day.memberIds=[null,null,null];
-  saveData();
+  saveD('shifts');
   renderSober();
 }
 
 function sbWeekendCard(w,ro){
   const satDate=sbDayDate(w,'sat');
-  const isPast=satDate&&satDate<sbToday();
-  const rangeLabel=w.thuDate?`${formatDateShort(w.thuDate)} – ${formatDateShort(satDate)}`:'Undated weekend';
+  const isPast=satDate&&satDate<localDateStr();
+  const rangeLabel=w.thuDate?`${fds(w.thuDate)} – ${fds(satDate)}`:'Undated weekend';
   const visibleDays=SB_DAY_KEYS.filter(dk=>sbDayIsActive(w,dk));
   const addExtraBtns=ro?'':SB_EXTRA_DAYS.filter(dk=>!sbDayIsActive(w,dk)).map(dk=>
     `<button class="btn" style="height:24px;font-size:10.5px;padding:0 7px" onclick="sbAddExtraDay('${w.id}','${dk}')"><i class="ti ti-plus"></i>${SB_DAY_LABEL[dk]} Event</button>`
@@ -165,7 +176,7 @@ function sbWeekendCard(w,ro){
   return`<div class="card" style="margin-bottom:13px${isPast?';opacity:.6':''}">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;flex-wrap:wrap;gap:8px">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-weight:600;font-size:13px">${rangeLabel}</span>
+        <span style="font-weight:600;font-size:13px">${esc(rangeLabel)}</span>
         ${isPast?'<span class="badge bm2" style="font-size:9px">Past</span>':''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -190,24 +201,24 @@ function sbDayColumn(w,dk,ro){
   if(day.slotCount===0){
     body=`<div style="font-size:11px;color:var(--ht);padding:6px 0">No coverage needed</div>`;
   }else{
-    const memberOpts=sel=>['<option value="">— Unassigned —</option>',...sbActiveMembers().map(m=>`<option value="${m.id}"${sel===m.id?' selected':''}>${m.name}</option>`)].join('');
+    const memberOpts=sel=>['<option value="">— Unassigned —</option>',...sbActiveMembers().map(m=>`<option value="${m.id}"${sel===m.id?' selected':''}>${esc(m.name)}</option>`)].join('');
     const dropdowns=Array.from({length:activeCount}).map((_,i)=>
       `<select ${ro?'disabled':`onchange="sbSlotChange('${w.id}','${dk}',${i},this.value)"`} style="${fieldStyle};margin-bottom:4px">${memberOpts(day.memberIds[i]||'')}</select>`
     ).join('');
-    const addSlotBtn=(ro||day.slotCount>=8)?'':`<button onclick="sbAddSlot('${w.id}','${dk}')" style="font-size:10.5px;background:none;border:none;color:var(--navy,var(--gold-tx));cursor:pointer;padding:3px 0 6px;display:flex;align-items:center;gap:3px"><i class="ti ti-plus" style="font-size:10px"></i>Add sober bro</button>`;
+    const addSlotBtn=(ro||day.slotCount>=8)?'':`<button onclick="sbAddSlot('${w.id}','${dk}')" style="font-size:10.5px;background:none;border:none;color:var(--sky-tx);cursor:pointer;padding:3px 0 6px;display:flex;align-items:center;gap:3px"><i class="ti ti-plus" style="font-size:10px"></i>Add sober bro</button>`;
 
     let pledgeBlock='';
     if(pledgeOn){
       const key=w.id+'-'+dk;
-      const lbl=day.pledgeIds.length?day.pledgeIds.map(id=>getMember(id).name.split(' ')[0]).join(', '):'— Select pledges —';
+      const lbl=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select pledges —';
       if(ro){
         pledgeBlock=`<div style="font-size:11.5px;padding:4px 0;color:${day.pledgeIds.length?'var(--tx)':'var(--ht)'}">${lbl}</div>`;
       }else{
         const pledgeChecks=sbPledgeMembers().map(m=>{
           const checked=day.pledgeIds.includes(m.id)?'checked':'';
           return`<label style="display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:11.5px;white-space:nowrap" onmouseover="this.style.background='rgba(0,0,0,.04)'" onmouseout="this.style.background=''">
-            <input type="checkbox" ${checked} onchange="sbPledgeToggle('${w.id}','${dk}','${m.id}',this.checked)" style="width:14px;height:14px;flex-shrink:0">
-            ${m.name}
+            <input type="checkbox" ${checked} onchange="sbPledgeToggle('${w.id}','${dk}','${m.id}',this.checked)" style="accent-color:var(--sky);width:14px;height:14px;flex-shrink:0">
+            ${esc(m.name)}
           </label>`;
         }).join('');
         pledgeBlock=`<div style="position:relative;margin-top:2px">
@@ -228,10 +239,10 @@ function sbDayColumn(w,dk,ro){
 
   return`<div style="border:1px solid var(--bdr);border-radius:8px;padding:9px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mt)">${SB_DAY_LABEL[dk]}${date?' · '+formatDateShort(date):''}</span>
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mt)">${SB_DAY_LABEL[dk]}${date?' · '+fds(date):''}</span>
       ${clearBtn}
     </div>
-    <input value="${day.name}" placeholder="Event title" ${ro?'disabled':`onchange="sbUpdateDayLabel('${w.id}','${dk}',this.value)"`} style="${fieldStyle};margin-bottom:6px;font-weight:500">
+    <input value="${esc(day.name)}" placeholder="Event title" ${ro?'disabled':`onchange="sbUpdateDayLabel('${w.id}','${dk}',this.value)"`} style="${fieldStyle};margin-bottom:6px;font-weight:500">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
       <span style="font-size:10px;color:var(--ht)">Slots needed</span>
       <input type="number" min="0" max="8" value="${day.slotCount}" ${ro?'disabled':`onchange="sbUpdateSlotCount('${w.id}','${dk}',this.value)"`} style="width:48px;font-size:11px;padding:3px 5px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);color:var(--tx)${ro?';opacity:.6':''}">
@@ -246,7 +257,7 @@ function sbUpdateDayLabel(weekendId,dayKey,value){
   if(!canEditSober()){sbDenied();return;}
   const w=D.shifts.weekends.find(x=>x.id===weekendId);if(!w)return;
   w.days[dayKey].name=(value||'').trim();
-  saveData();
+  saveD('shifts');
 }
 
 function sbUpdateSlotCount(weekendId,dayKey,value){
@@ -259,12 +270,13 @@ function sbUpdateSlotCount(weekendId,dayKey,value){
   day.slotCount=n;
   while(day.memberIds.length<n)day.memberIds.push(null);
   if(day.memberIds.length>n)day.memberIds.length=n;
-  saveData();
+  saveD('shifts');
   renderSober();
 }
 
 // Quick "one more sober bro needed this day" — bumps the slot count by one without having to
-// go find the Slots number input.
+// go find the Slots number input (works the same whether or not pledge-shadow mode is on, since
+// it's the active-slot count, slotCount-1 when pledges are active, that grows by one).
 function sbAddSlot(weekendId,dayKey){
   if(!canEditSober()){sbDenied();return;}
   const w=D.shifts.weekends.find(x=>x.id===weekendId);if(!w)return;
@@ -272,11 +284,12 @@ function sbAddSlot(weekendId,dayKey){
   if(day.slotCount>=8){toast('Max 8 slots per day','error');return;}
   day.slotCount++;
   day.memberIds.push(null);
-  saveData();
+  saveD('shifts');
   renderSober();
 }
 
-// "No party this day" — clears the day's label, slots, and any assignments.
+// "No party this day" — clears the day's label, slots, and any assignments (slotCount 0 already
+// renders as "No coverage needed"; type a number back into Slots to bring it back).
 async function sbClearDay(weekendId,dayKey){
   if(!canEditSober()){sbDenied();return;}
   const w=D.shifts.weekends.find(x=>x.id===weekendId);if(!w)return;
@@ -290,7 +303,7 @@ async function sbClearDay(weekendId,dayKey){
   day.slotCount=0;
   day.memberIds=[];
   day.pledgeIds=[];
-  saveData();
+  saveD('shifts');
   renderSober();
 }
 
@@ -298,7 +311,7 @@ function sbSlotChange(weekendId,dayKey,slotIndex,value){
   if(!canEditSober()){sbDenied();return;}
   const w=D.shifts.weekends.find(x=>x.id===weekendId);if(!w)return;
   w.days[dayKey].memberIds[slotIndex]=value||null;
-  saveData();
+  saveD('shifts');
   sbUpdateKpiOnly();
 }
 
@@ -321,11 +334,11 @@ function sbPledgeToggle(weekendId,dayKey,memberId,checked){
   const key=weekendId+'-'+dayKey;
   const lbl=document.getElementById('sbp-lbl-'+key);
   if(lbl){
-    const text=day.pledgeIds.length?day.pledgeIds.map(id=>getMember(id).name.split(' ')[0]).join(', '):'— Select pledges —';
+    const text=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select pledges —';
     lbl.textContent=text;
     lbl.style.color=day.pledgeIds.length?'var(--tx)':'var(--ht)';
   }
-  saveData();
+  saveD('shifts');
 }
 
 // ── WEEKEND CRUD ──
@@ -343,7 +356,7 @@ function sbAddWeekend(){
   for(let i=0;i<weeks;i++){
     const d=new Date(base);
     d.setDate(d.getDate()+i*7);
-    const ds=sbDateStr(d);
+    const ds=localDateStr(d);
     if(D.shifts.weekends.some(w=>w.thuDate===ds))continue;
     D.shifts.weekends.push({
       id:uid(),
@@ -359,7 +372,7 @@ function sbAddWeekend(){
     added++;
   }
   if(!added){toast('Those weekends are already on the schedule','error');return;}
-  saveData();
+  saveD('shifts');
   closeM(null,document.getElementById('m-addweekend'));
   if(dateInput)dateInput.value='';
   if(weeksInput)weeksInput.value='1';
@@ -371,23 +384,31 @@ async function sbDeleteWeekend(id){
   if(!canEditSober()){sbDenied();return;}
   const ok=await confirmDialog('Delete Weekend','Remove this weekend and all its shift assignments?');
   if(!ok)return;
+  const idx=D.shifts.weekends.findIndex(w=>w.id===id);
+  const removed=idx>=0?D.shifts.weekends[idx]:null;
   D.shifts.weekends=D.shifts.weekends.filter(w=>w.id!==id);
-  await saveData();
-  renderSober();
-  renderDash();
-  toast('Weekend removed','info');
+  try{
+    await saveD('shifts');
+    renderSober();
+    renderDash();
+    toast('Weekend removed','info');
+  }catch(e){
+    if(removed)D.shifts.weekends.splice(idx,0,removed);
+    toast('Failed to remove weekend. Please try again.','error');
+  }
 }
 
 function sbSetPledgeShadowStart(value){
   if(!canEditSober()){sbDenied();return;}
   D.shifts.pledgeShadowStart=value||'';
-  saveData();
+  saveD('shifts');
   renderSober();
 }
 
 // ── IMPORT ──
 // Columns: Thursday Date, Thu Event, Thu Members, Fri Event, Fri Members, Sat Event, Sat Members
-// "Members" cells are semicolon-separated names, matched against the roster by substring.
+// "Members" cells are semicolon-separated names, matched against the roster the same
+// substring-match way the old single-member import did.
 function sbHandleImport(input){
   if(!canEditSober()){sbDenied();return;}
   const f=input.files[0];if(!f)return;
@@ -429,13 +450,12 @@ function sbHandleImport(input){
       added++;
     });
     if(added){
-      saveData();
+      saveD('shifts');
       renderSober();
       toast(added+' weekend'+(added>1?'s':'')+' imported','success');
       closeM(null,document.getElementById('m-simport'));
     }else{
-      const prev=document.getElementById('si-prev');
-      if(prev)prev.innerHTML=`<div class="bnr danger"><i class="ti ti-alert-circle" style="font-size:13px"></i>Could not parse file. Expected columns: Thursday Date, Thu Event, Thu Members, Fri Event, Fri Members, Sat Event, Sat Members</div>`;
+      document.getElementById('si-prev').innerHTML=`<div class="bnr danger"><i class="ti ti-alert-circle" style="font-size:13px"></i>Could not parse file. Expected columns: Thursday Date, Thu Event, Thu Members, Fri Event, Fri Members, Sat Event, Sat Members</div>`;
     }
   };
   reader.readAsText(f);

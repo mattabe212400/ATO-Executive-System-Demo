@@ -1,4 +1,6 @@
-/* OpsCore 2.0 Demo — Global Search */
+﻿// ══════════════════════════════════════════════════
+// GLOBAL SEARCH
+// ══════════════════════════════════════════════════
 let _gsTimer = null;
 let _gsFocusIdx = -1;
 let _gsResults = [];
@@ -9,7 +11,7 @@ const GS_CATS = {
   tasks:       {icon:'ti-checkbox',      bg:'var(--gn-bg)',  ic:'var(--gn-tx)', bs:'background:var(--gn-bg);color:var(--gn-tx)', bl:'Task'},
   notes:       {icon:'ti-notes',         bg:'var(--am-bg)',  ic:'var(--am-tx)', bs:'background:var(--am-bg);color:var(--am-tx)', bl:'Meeting Note'},
   events:      {icon:'ti-calendar-event',bg:'var(--bl-bg)',  ic:'var(--bl-tx)', bs:'background:var(--bl-bg);color:var(--bl-tx)', bl:'Event'},
-  files:       {icon:'ti-file',          bg:'var(--surf2)',       ic:'var(--mt)', bs:'background:var(--surf2);color:var(--mt)',          bl:'File'},
+  files:       {icon:'ti-file',          bg:'var(--surf2)',  ic:'var(--mt)', bs:'background:var(--surf2);color:var(--mt)',    bl:'File'},
   recruitment: {icon:'ti-user-plus',     bg:'var(--gn-bg)',  ic:'var(--gn-tx)', bs:'background:var(--gn-bg);color:var(--gn-tx)', bl:'Rushee'},
   cases:       {icon:'ti-scale',         bg:'var(--rd-bg)',  ic:'var(--rd-tx)', bs:'background:var(--rd-bg);color:var(--rd-tx)', bl:'J-Board Case'},
   finance:     {icon:'ti-cash',          bg:'var(--gn-bg)',  ic:'var(--gn-tx)', bs:'background:var(--gn-bg);color:var(--gn-tx)', bl:'Finance'},
@@ -48,11 +50,10 @@ function gsSearch(q) {
   // ── Tasks ──
   (D.tasks || []).forEach(t => {
     if (t.title.toLowerCase().includes(lq) || (t.desc||'').toLowerCase().includes(lq)) {
-      const assignee = getMember(t.assignedTo);
       results.push({
         cat: 'tasks', id: t.id,
         title: t.title,
-        sub: (t.priority||'').charAt(0).toUpperCase()+(t.priority||'').slice(1)+' priority · '+assignee.name+(t.dueDate?' · Due '+formatDateShort(t.dueDate):''),
+        sub: (t.priority||'').charAt(0).toUpperCase()+(t.priority||'').slice(1)+' priority · '+(t.positionTitle||'Unassigned')+(t.dueDate?' · Due '+fds(t.dueDate):''),
         status: t.status,
         action: () => { rbacNav('tasks', null); setTimeout(() => openEditTask(t.id), 150); }
       });
@@ -66,7 +67,7 @@ function gsSearch(q) {
       results.push({
         cat: 'notes', id: n.id,
         title: n.title,
-        sub: formatDateShort(n.date) + ' · ' + (n.type||'Chapter') + ' meeting',
+        sub: fds(n.date) + ' · ' + (n.type||'Chapter') + ' meeting',
         action: () => { rbacNav('notes', null); setTimeout(() => openNoteDetail(n.id), 150); }
       });
     }
@@ -78,7 +79,7 @@ function gsSearch(q) {
       results.push({
         cat: 'events', id: e.id,
         title: e.title,
-        sub: formatDateShort(e.date) + (e.start?' · '+to12h(e.start):'') + (e.location?' · '+e.location:'') + (e.mandatory?' · Required':''),
+        sub: fds(e.date) + (e.start?' · '+to12h(e.start)+(e.endTime?'–'+to12h(e.endTime):''):'') + (e.location?' · '+e.location:'') + (e.mandatory?' · Required':''),
         action: () => {
           const d = new Date(e.date + 'T12:00:00');
           CAL_YEAR = d.getFullYear(); CAL_MONTH = d.getMonth();
@@ -94,7 +95,7 @@ function gsSearch(q) {
       results.push({
         cat: 'files', id: f.id,
         title: f.name,
-        sub: (f.folder||'General') + ' · ' + f.size + ' · ' + formatDateShort(f.date),
+        sub: (f.folder||'General') + ' · ' + f.size + ' · ' + fds(f.date),
         action: () => { rbacNav('files', null); }
       });
     }
@@ -114,12 +115,12 @@ function gsSearch(q) {
 
   // ── Judicial Cases ──
   (D.cases || []).forEach(c => {
-    const memberName = getMember(c.member).name;
+    const memberName = mB(c.member).name;
     if (c.caseNum.toLowerCase().includes(lq) || memberName.toLowerCase().includes(lq) || (c.desc||'').toLowerCase().includes(lq) || (c.type||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'cases', id: c.id,
         title: c.caseNum + ' — ' + memberName,
-        sub: c.type + ' · ' + c.status + (c.hearingDate?' · '+formatDateShort(c.hearingDate):''),
+        sub: c.type + ' · ' + c.status + (c.hearingDate?' · '+fds(c.hearingDate):''),
         action: () => { rbacNav('judicial', null); }
       });
     }
@@ -127,12 +128,12 @@ function gsSearch(q) {
 
   // ── Finance: Fines ──
   ((D.finance||{}).fines || []).forEach(f => {
-    const m = getMember(f.memberId);
+    const m = mB(f.memberId);
     if ((m.name||'').toLowerCase().includes(lq) || (f.reason||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'finance', id: f.id,
         title: '$' + f.amount + ' fine — ' + m.name,
-        sub: f.reason + ' · ' + f.status + (f.date ? ' · ' + formatDateShort(f.date) : ''),
+        sub: f.reason + ' · ' + f.status + (f.date ? ' · ' + fds(f.date) : ''),
         action: () => { rbacNav('finance', null); setTimeout(() => finTab(document.querySelector('[data-tab=fin-fines]'), 'fin-fines'), 150); }
       });
     }
@@ -144,7 +145,7 @@ function gsSearch(q) {
       results.push({
         cat: 'finance', id: e.id,
         title: '$' + e.amount + ' — ' + (e.description||'Expense'),
-        sub: (e.category||'') + (e.date ? ' · ' + formatDateShort(e.date) : ''),
+        sub: (e.category||'') + (e.date ? ' · ' + fds(e.date) : ''),
         action: () => { rbacNav('finance', null); setTimeout(() => finTab(document.querySelector('[data-tab=fin-budget]'), 'fin-budget'), 150); }
       });
     }
@@ -156,7 +157,7 @@ function gsSearch(q) {
       results.push({
         cat: 'alumni', id: a.id,
         title: a.name,
-        sub: (a.employer||'—') + ' · ' + (a.location||'—') + ' · ' + (a.engagement||'Unknown'),
+        sub: (a.employer||'—') + ' · ' + (a.location||'—'),
         action: () => { rbacNav('alumni', null); }
       });
     }
@@ -238,7 +239,6 @@ function gsOnFocus() {
 }
 
 function gsOnKey(e) {
-  if (e.key === 'Escape') { cmdkClose(); gsClear(); return; }
   const dd = document.getElementById('gs-dropdown');
   const items = dd.querySelectorAll('.gs-item');
   if (!items.length) {
@@ -271,9 +271,6 @@ function gsFocusItem(items) {
 function gsPickIdx(idx) {
   const item = _gsResults[idx];
   if (!item) return;
-  const q = document.getElementById('gs-input')?.value.trim();
-  if (q && typeof gsTrackRecentSearch === 'function') gsTrackRecentSearch(q);
-  if (item.cat === 'members' && typeof gsTrackRecentMember === 'function') gsTrackRecentMember(item.id, item.title);
   gsClear();
   if (item.action) item.action();
 }
@@ -281,7 +278,6 @@ function gsPickIdx(idx) {
 function gsClose() {
   document.getElementById('gs-dropdown').classList.remove('open');
   _gsFocusIdx = -1;
-  if (typeof renderCmdkQuickAccess === 'function') renderCmdkQuickAccess();
 }
 
 function gsClear() {
@@ -292,24 +288,18 @@ function gsClear() {
   inp.blur();
 }
 
-// Close the command palette when clicking outside its modal
+// Close dropdown when clicking outside
 document.addEventListener('click', e => {
-  const overlay = document.getElementById('cmdk-overlay');
-  if (overlay && overlay.classList.contains('open') && !overlay.querySelector('.cmdk-modal').contains(e.target)) {
-    cmdkClose();
-  }
+  if (!document.getElementById('gs-wrap')?.contains(e.target)) gsClose();
 });
 
-// Keyboard shortcut: / or Cmd+K opens the command palette
+// Keyboard shortcut: / or Cmd+K to focus search
 document.addEventListener('keydown', e => {
   if ((e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
     e.preventDefault();
-    cmdkOpen();
+    const inp = document.getElementById('gs-input');
+    if (inp) { inp.focus(); inp.select(); }
   }
 });
 
-
-// ══════════════════════════════════════════════════
-// REPORTS — Automated Chapter Reports
-// ══════════════════════════════════════════════════
 

@@ -1,110 +1,78 @@
-/* OpsCore 2.0 Demo — Responsive Breakpoints */
-@media(max-width:900px){
-  .rp-body{grid-template-columns:1fr}
-  .rp-sidebar{position:static}
-  .rp-kpi-row{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:480px){
-  .rp-kpi-row{grid-template-columns:1fr 1fr}
-}
-
-/* ── ATTENDANCE ANALYTICS ── */
-.att-tabs{display:flex;gap:0;border-bottom:2px solid var(--bdr);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.att-tabs::-webkit-scrollbar{display:none}
-@media(max-width:1100px){
-  #rc-row2,#rc-row3{grid-template-columns:1fr 1fr!important}
-}
-@media(max-width:768px){
-  #rc-row2,#rc-row3{grid-template-columns:1fr!important}
-  .rc-hfunnel-row{grid-template-columns:80px minmax(0,1fr) 60px}
-  .rc-hfunnel-label{font-size:9.5px}
-}
-
-/* ── RECRUITMENT FUNNEL 2.0 ── */
-.rc-funnel{display:flex;gap:0;margin-bottom:13px}
-.rc-funnel-stage{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
-.rc-funnel-bar{height:32px;width:100%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;color:#fff;position:relative;cursor:pointer;transition:filter .15s}
-.rc-funnel-bar:hover{filter:brightness(1.08)}
-.rc-funnel-bar::after{content:'';position:absolute;right:-8px;top:0;bottom:0;width:0;height:0;border-top:16px solid transparent;border-bottom:16px solid transparent;z-index:2}
-.rc-funnel-stage:last-child .rc-funnel-bar::after{display:none}
-.rc-funnel-label{font-size:9px;color:var(--mt);margin-top:5px;text-align:center;line-height:1.3}
-.rc-funnel-count{font-size:13px;font-weight:700;margin-top:1px}
-
-.rc-card{background:var(--bg);border:1px solid var(--bdr);border-radius:9px;padding:9px 11px;cursor:pointer;transition:border-color .15s,box-shadow .12s,transform .12s;user-select:none}
-.rc-card:hover{border-color:var(--sky);box-shadow:0 2px 8px rgba(79,182,236,.14);transform:translateY(-1px)}
-.rc-card.dragging{opacity:.5;transform:scale(.97)}
-.rc-col-drop{transition:background .12s}
-.rc-col-drop.drag-over{background:var(--sky-bg)}
-
-.rc-score{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:20px;border-radius:5px;font-size:10px;font-weight:700;padding:0 6px}
-.rc-score.hot{background:var(--am-bg);color:var(--am-tx)}
-.rc-score.good{background:var(--gn-bg);color:var(--gn-tx)}
-.rc-score.mid{background:var(--bl-bg);color:var(--bl-tx)}
-.rc-score.low{background:var(--surf2);color:var(--ht)}
-.rc-score.dnb{background:var(--rd-bg);color:var(--rd-tx)}
-
-.rc-tag{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:99px;font-size:9.5px;font-weight:500;background:var(--surf2);color:var(--mt);cursor:pointer;transition:background .1s}
-.rc-tag.active{background:var(--bl-bg);color:var(--bl-tx)}
-.rc-tag.hot{background:var(--am-bg);color:var(--am-tx)}
-.rc-tag.legacy{background:var(--gold-bg);color:var(--gold-tx)}
-.rc-tag.athlete{background:var(--gn-bg);color:var(--gn-tx)}
-.rc-tag.leader{background:var(--am-bg);color:var(--am-tx)}
-.rc-tag.dnb{background:var(--rd-bg);color:var(--rd-tx)}
-
-.rc-note{background:var(--surf2);border-radius:7px;padding:8px 10px;font-size:11.5px;line-height:1.5;color:var(--tx)}
-.rc-note-meta{font-size:10px;color:var(--ht);margin-bottom:4px;display:flex;justify-content:space-between}
-.rc-kanban{display:grid;gap:9px;overflow-x:auto;padding-bottom:4px}
-.rc-col{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden;min-width:160px}
-.rc-col-head{padding:9px 11px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;border-top:2px solid transparent}
-.rc-col-body{padding:7px;min-height:180px;display:flex;flex-direction:column;gap:5px}
-.rc-profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.rc-stat{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px}
-.rc-stat:last-child{border-bottom:none}
-.rc-ldr-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bdr)}
-.rc-ldr-row:last-child{border-bottom:none}
-.rc-medal{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
-
-@media(max-width:1100px){
-  .sb{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);height:100dvh;box-shadow:4px 0 24px rgba(0,0,0,.15)}
+﻿@media(max-width:1100px){
+  .sb{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);height:100dvh;box-shadow:4px 0 24px rgba(0,0,0,.5)}
   .sb.open{transform:translateX(0)}
-  .sb.collapsed{width:244px}
-  .sb.collapsed .sb-word,.sb.collapsed .nl,.sb.collapsed .ni span,.sb.collapsed .nbdg,.sb.collapsed .sb-collapse-row span,.sb.collapsed .sb-user-text{display:revert}
-  .sb.collapsed .ni{justify-content:flex-start;padding:8px 10px}
-  .sb.collapsed .sb-user{justify-content:flex-start;padding:8px 10px}
-  .sb-collapse-row{display:none}
   #sb-close-btn{display:flex!important}
   .sb-hamburger{display:flex}
   .main{width:100%}
   .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fg{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .g21{grid-template-columns:1fr}
+  .g21{grid-template-columns:minmax(0,1fr)}
   .md{width:min(470px,calc(100vw - 32px));max-height:88vh}
-  #d-quick-actions{grid-template-columns:repeat(3,1fr)!important}
+  .se-pos-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .se-pos-perm-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   #tr-folders{grid-template-columns:repeat(3,minmax(0,1fr))!important}
   #fi-folders{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-  /* New components */
-  .d2-kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .d2-body{grid-template-columns:1fr}
-  .d2-hero{grid-template-columns:1fr;gap:14px}
-  .d2-hero-div{display:none}
-  #rc-row2,#rc-row3{grid-template-columns:1fr 1fr!important}
-  .rp-body{grid-template-columns:1fr}
+  .rp-body{grid-template-columns:minmax(0,1fr)}
   .rp-sidebar{position:static}
 }
 
+/* ── MOBILE MEMBER CARDS ── */
+.m-mob-card{cursor:pointer;transition:border-color .12s}
+.m-mob-card:hover{border-color:var(--sky)}
+#m-mobile-cards{display:none}
+
+/* ── MOBILE TABLE CARDS (shared) ── same table→card swap as Members, extended to
+   Attendance, Academics, Finance Dues/National/Fines/Expense Log, and Community Service Hours. */
+.mob-card{transition:border-color .12s}
+.mob-card.clickable{cursor:pointer}
+.mob-card.clickable:hover{border-color:var(--sky)}
+#a-mobile-cards,#a-events-mobile-cards,#ac-mobile-cards,#fin-dues-mobile-cards,#fin-natl-mobile-cards,#cs-hours-mobile-cards,#fin-fines-mobile-cards,#fin-expense-mobile-cards,#fin-plans-mobile-cards,#rc-mobile-cards,#co-mem-mobile-cards,#j-res-mobile-cards,#ph-events-mobile-cards,#al-mobile-cards,#soc-events-mobile-cards{display:none}
+
 @media(max-width:768px){
   /* ── CORE ── */
-  /* iOS Safari auto-zooms the viewport on focus when an input's computed font-size is under
-     16px — every form field in this app is 12px, so force 16px here (!important beats even
-     inline style="font-size:12px" attributes without having to touch every element). */
-  input,select,textarea{font-size:16px!important}
   body{font-size:12.5px}
+  /* iOS Safari auto-zooms the whole page on focus of any field computed under 16px — this
+     catches every input/select/textarea app-wide (including the few with inline font-size
+     overrides in attendance.js/committees.js/sober.js, which !important is needed to beat). */
+  input,select,textarea{font-size:16px!important}
+  /* ── TOUCH TARGETS: floor every tappable control toward Apple/Google's ~40-44px guidance.
+     min-height/min-width (not height/width) so this floors the used size even for the many
+     inline height:22px-ish buttons scattered through table-row/kanban-card actions app-wide —
+     min-height wins over an explicit height per the CSS box model, no per-template edits needed. */
+  .btn{min-height:40px}
+  .btn-sm{min-height:36px!important}
+  .btn-xs{min-height:34px!important}
+  .ib{min-width:40px;min-height:40px}
+  .md-x{min-width:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
+  .tc{min-width:24px;min-height:24px}
+  .att-check{min-width:26px;min-height:26px}
+  .tgl{width:40px;height:22px}
+  .tgl::after{width:18px;height:18px;top:2px}
+  .tgl.on::after{left:20px}
+  .tgl.off::after{left:2px}
   .content{padding:11px 12px}
   .topbar{padding:0 12px;gap:7px}
+  .tb-title{max-width:110px}
   .tb-date{display:none}
-  .g4,.g3,.g2,.g21,.gg{grid-template-columns:1fr!important}
-  .two-col{grid-template-columns:minmax(0,1fr)!important}
-  #d-officer-row{grid-template-columns:1fr!important}
+  /* ── MEMBERS: swap table for cards on mobile ── */
+  #m-tbl-card{display:none}
+  #m-mobile-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 0}
+  /* ── Same swap for Attendance / Academics / Finance Dues+National+Fines+Expense+Plans / CS Hours / Recruitment ── */
+  #a-tbl-card,#a-events-tbl-card,#ac-tbl-card,#fin-dues-tbl-card,#fin-natl-tbl-card,#cs-hours-tbl-card,#fin-fines-tbl-card,#fin-expense-tbl-card,#fin-plans-tbl-card,#rc-tbl-card,#co-mem-tbl-card,#j-res-tbl-card,#ph-events-tbl-card,#al-tbl-card,#soc-events-tbl-card{display:none}
+  #a-mobile-cards,#a-events-mobile-cards,#ac-mobile-cards,#fin-dues-mobile-cards,#fin-natl-mobile-cards,#cs-hours-mobile-cards,#fin-fines-mobile-cards,#fin-expense-mobile-cards,#fin-plans-mobile-cards,#rc-mobile-cards,#co-mem-mobile-cards,#j-res-mobile-cards,#ph-events-mobile-cards,#al-mobile-cards,#soc-events-mobile-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 0}
+  /* minmax(0,1fr), not bare 1fr — a bare 1fr track's automatic minimum size is still based on
+     its item's min-content (a wide .tw-wrapped table, a nowrap price/date column, etc.), so the
+     grid item can overflow its own track's box even once collapsed to one column, forcing the
+     WHOLE .content area to scroll horizontally instead of the intended per-table .tw scroll.
+     minmax(0,1fr) zeroes the track's automatic minimum, the same fix .cal-cell needed. */
+  .g4,.g3,.g2,.g21,.gg{grid-template-columns:minmax(0,1fr)!important}
+  #d-officer-row{grid-template-columns:minmax(0,1fr)!important}
+  /* Explicit ids instead of a >div:last-child structural selector — that pattern silently
+     stopped matching Chaplain Hub's grids once #ch-full-view/#ch-member-view were introduced,
+     since the grids became grandchildren instead of direct children (see the audit's C-01-
+     adjacent mobile-responsiveness finding). Targeting the grid elements directly here can't
+     go stale the same way if the surrounding DOM changes again. */
+  #ch-analytics-grid,#ch-events-grid{grid-template-columns:minmax(0,1fr)!important}
   .fg{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .pl{width:110px}
   .card{padding:11px 12px}
@@ -119,12 +87,13 @@
   .cal-cell{min-height:54px;padding:3px}
   .cal-pip{font-size:8.5px;padding:1px 3px}
   .cal-day-num{font-size:10.5px;width:18px;height:18px}
+  #cal-filt select{width:100%;min-width:0}
+  .cal-ev-label{display:none}
   .kv{font-size:19px}
-  #d-quick-actions{grid-template-columns:repeat(2,1fr)!important}
   #tr-folders{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   #fi-folders{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .btn{max-width:100%}
-  .card-hd .btn{height:26px;font-size:11px;padding:0 9px}
+  .card-hd .btn{min-height:34px;font-size:11px;padding:0 9px}
   .rw{flex-wrap:wrap}
   #notes-g{grid-template-columns:1fr!important}
   .case-actions{flex-wrap:wrap}
@@ -137,18 +106,6 @@
 
   /* ── TOPBAR: hide title when search is open ── */
   .gs-wrap{max-width:none;flex:1}
-  .tb-breadcrumb{display:none}
-  .qc-btn .btn-icon-label{display:none}
-  .qc-btn{padding:0 9px}
-  .tb-dd{width:min(300px,calc(100vw - 24px));right:-8px}
-  .notif-dd{width:min(340px,calc(100vw - 24px))}
-  #cmdk-overlay{padding-top:6vh}
-  .cmdk-modal{max-height:86vh;border-radius:16px}
-  .cmdk-header{height:56px;padding:0 15px;gap:10px}
-  .cmdk-header input{font-size:16px}
-  .cmdk-esc{display:none}
-  .cmdk-empty-lg{padding:34px 18px 22px}
-  .cmdk-qsec{padding:12px 15px}
 
   /* ── FINANCE TABS: scrollable on mobile ── */
   #fin-tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -157,14 +114,8 @@
   .fin-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
   .fin-profile-grid{grid-template-columns:1fr!important}
 
-  /* ── DASHBOARD 2.0 ── */
-  .d2-hero{padding:14px 15px;grid-template-columns:1fr}
-  .d2-hero-div{display:none}
+  /* ── DASHBOARD ── */
   .d2-hero-health{gap:12px}
-  .d2-qa-grid{grid-template-columns:repeat(2,1fr)}
-  .d2-kpi-row{grid-template-columns:repeat(2,1fr)}
-  .d2-body{grid-template-columns:1fr}
-  .d2-off-card{grid-template-columns:minmax(0,1fr) 44px 44px 72px;gap:6px;padding:7px 8px}
 
   /* ── ATTENDANCE ANALYTICS ── */
   #att-row1,#att-row2{grid-template-columns:1fr!important}
@@ -172,20 +123,22 @@
   .att-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
   .att-ev-label{width:90px}
 
-  /* ── RECRUITMENT FUNNEL ── */
-  #rc-row2,#rc-row3{grid-template-columns:1fr!important}
+  /* ── RECRUITMENT ── */
   .rc-hfunnel-row{grid-template-columns:80px minmax(0,1fr) 60px}
   .rc-hfunnel-label{font-size:9.5px}
-  .rc-kanban{grid-template-columns:repeat(3,minmax(150px,1fr))!important}
+  /* Kanban: stay full comfortable card width and let one stage take focus at a time via
+     horizontal snap-scroll, instead of shrinking every column to fit — see .rc-kanban base rule. */
+  .rc-kanban{grid-auto-flow:column;grid-auto-columns:minmax(min(78vw,280px),1fr);grid-template-columns:none!important;scroll-snap-type:x proximity}
+  .rc-col{scroll-snap-align:start}
 
   /* ── REPORTS ── */
-  .rp-body{grid-template-columns:1fr}
+  .rp-body{grid-template-columns:minmax(0,1fr)}
   .rp-sidebar{position:static}
   .rp-header{flex-direction:column;align-items:flex-start;gap:6px}
   .rp-preview-wrap{padding:14px 13px}
-  .rp-kpi-row{grid-template-columns:repeat(2,1fr)!important}
+  .rp-kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .rp-actions-bar{flex-wrap:wrap;gap:7px}
-  #rp-menu{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px}
+  #rp-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px}
   .rp-item{border-left:none;border-radius:8px;border:1px solid var(--bdr)}
   .rp-item.active{border-color:var(--sky);background:var(--sky-bg)}
   .rp-sidebar-lbl{display:none}
@@ -193,72 +146,78 @@
   /* ── PAGE-SPECIFIC TOOLBARS: wrap gracefully ── */
   #att-toolbar,#sober-toolbar{flex-wrap:wrap}
   .page-toolbar{flex-wrap:wrap;gap:7px}
+
+  /* ── PAGE HEADERS: stack title above actions ── */
+  .ph{flex-direction:column;align-items:flex-start}
+  .ph-actions{width:100%;flex-wrap:wrap}
+  .ph-actions .sbar{flex:1;min-width:140px;margin-bottom:0!important}
+
+  /* ── TABLES: enforce min-width so .tw containers activate horizontal scroll ── */
+  .tbl{min-width:460px}
+  .rp-table{min-width:460px}
+
+  /* ── COMMITTEES: override inline grid style ── */
+  #co-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+  /* ── TASKS KANBAN ── */
+  .kb{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+  /* ── ACADEMICS TABS: horizontal scroll instead of wrapping ── */
+  #ac-tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  #ac-tabs-bar::-webkit-scrollbar{display:none}
+  .ac-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
+
+  /* ── COMMITTEES: tabs scroll instead of wrapping ── */
+  #co-tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  #co-tabs-bar::-webkit-scrollbar{display:none}
+  .co-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
+
+  /* ── HOUSE LIFE: tabs scroll instead of wrapping; rank/criteria tables scroll horizontally ── */
+  #hl-tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  #hl-tabs-bar::-webkit-scrollbar{display:none}
+  .hl-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
+  #hl-rank-table{min-width:460px}
+  #hl-criteria-table{min-width:380px}
+
+  /* ── BIBLE STUDY PROGRAM: tabs scroll instead of wrapping; the PDF viewer swaps to a
+     resource card instead of forcing a tiny unreadable iframe; KPI/overview grids stack ── */
+  #bs-tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap!important}
+  #bs-tabs-bar::-webkit-scrollbar{display:none}
+  .bs-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
+  .bs-pdf-embed{display:none!important}
+  .bs-pdf-mobile-card{display:block!important}
+  .bs-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .bs-overview-grid{grid-template-columns:1fr!important}
+  .se-pos-grid{grid-template-columns:1fr!important}
+  .se-pos-perm-grid{grid-template-columns:1fr!important}
+
+  /* ── VENDORS, ALUMNI, PHILANTHROPY, RITUAL: tables inside pages scroll ── */
+  #page-vendors .card,#page-alumni .card,#page-philanthropy .card,#page-ritual .card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ── FINANCE: dues/fines/budget/national/plans tab content ── */
+  #fin-dues,#fin-fines,#fin-budget,#fin-national,#fin-plans,#fin-settings{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ── ACADEMICS PANES: table content scroll ── */
+  #ac-pane-members,#ac-pane-history,#ac-pane-checks{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ── HOUSE MANAGEMENT: Chore Manager's 5-column row (3 text inputs + day select + delete)
+     has no room to shrink on a phone — scroll it instead of squeezing every input to ~40px. ── */
+  #kc-chore-manager{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .kc-chore-header,.kc-chore-row{min-width:520px}
+
+  /* ── MEETING NOTES: officer-report grid — 2 columns of textareas is unreadably narrow on a
+     phone, stack them instead. ── */
+  #mn-officers-list>div{grid-template-columns:1fr!important}
+
+  /* ── REPORT PREVIEW: wide tables inside reports scroll ── */
+  .rp-preview-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ── HEALTH SCORECARD: dimension bars adjust ── */
+  .hs-dim-bar-row{flex-wrap:wrap;gap:4px}
+
+  /* ── GLOBAL TABLE SAFETY NET: any table not already in a .tw that overflows ── */
+  .card table{max-width:none}
 }
-
-@media(max-width:480px){
-  /* ── CORE ── */
-  #fi-folders,#tr-folders{grid-template-columns:1fr 1fr!important}
-  .folder-icon{width:32px;height:32px;font-size:16px}
-  .folder-name{font-size:11.5px}
-  .kv{font-size:17px}
-  .topbar{padding:0 10px;height:48px}
-  .cal-cell{min-height:38px}
-  .cal-day-num{font-size:9px;width:15px;height:15px}
-
-  /* ── DASHBOARD HERO: stack health ring above dims ── */
-  .d2-hero-health{flex-direction:column;align-items:flex-start;gap:10px}
-  .d2-qa-grid{grid-template-columns:1fr 1fr}
-  .d2-kpi-row{grid-template-columns:1fr 1fr}
-  .d2-off-card{grid-template-columns:minmax(0,1fr) 38px 38px 62px;gap:4px;padding:6px 7px}
-  .d2-off-stat-val{font-size:11px}
-
-  /* ── REPORTS ── */
-  #rp-menu{grid-template-columns:1fr}
-  .rp-kpi-row{grid-template-columns:1fr 1fr!important}
-
-  /* ── RECRUITMENT ── */
-  .rc-scorecard{padding:9px 10px}
-  #rc-row2,#rc-row3{grid-template-columns:1fr!important}
-
-  /* ── TABLES: hide lower priority columns ── */
-  .tbl th:last-child,.tbl td:last-child{display:none}
-  .tbl th:nth-child(4),.tbl td:nth-child(4){display:none}
-
-  /* ── MODALS ── */
-  .md{padding:13px 12px}
-  .md-t{font-size:13px}
-
-  /* ── BUTTONS: icon-only on very small ── */
-  .btn-icon-label{display:none}
-}
-
-@media(max-width:380px){
-  .content{padding:8px 9px}
-  .topbar{gap:5px}
-  .d2-off-card{grid-template-columns:minmax(0,1fr) 36px 56px;gap:3px}
-  .d2-off-card>.d2-off-stat:first-of-type{display:none} /* hide attendance col, keep tasks + status */
-  .att-tabs .att-tab{padding:0 9px;font-size:11px}
-  .rp-item-sub{display:none}
-}
-
-@media(max-width:1100px){
-  .d2-hero{grid-template-columns:1fr;gap:14px}
-  .d2-hero-div{display:none}
-  .d2-kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .d2-body{grid-template-columns:1fr}
-}
-@media(max-width:768px){
-  .d2-hero{padding:14px 15px}
-  .d2-qa-grid{grid-template-columns:repeat(2,1fr)}
-  .d2-kpi-row{grid-template-columns:repeat(2,1fr)}
-  .d2-off-card{grid-template-columns:minmax(0,1fr) 44px 44px 72px;gap:6px;padding:7px 8px}
-}
-@media(max-width:480px){
-  .d2-qa-grid{grid-template-columns:1fr 1fr}
-  .d2-kpi-row{grid-template-columns:1fr 1fr}
-}
-
-@media(max-width:768px){.gs-wrap{max-width:none;flex:1}.tb-date{display:none}}
 
 /* ── MOBILE BOTTOM NAVIGATION ── */
 .mobile-bnav{display:none}
@@ -302,10 +261,6 @@
 
   /* hamburger replaced by bottom nav on phones */
   .sb-hamburger{display:none!important}
-
-  /* compact demo banner — hide the text label, keep role switcher */
-  .demo-banner-label{display:none!important}
-  #demo-banner{padding:6px 12px}
 }
 
 @media(max-width:480px){
@@ -315,127 +270,46 @@
   .mbn-item i{font-size:24px}
 }
 
-/* ── CALENDAR DAY NAME HEADERS ── */
-.cal-dn{padding:8px;text-align:center;font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em}
-.cal-dn-s{display:none}
-
-/* ── CALENDAR MOBILE ── */
-@media(max-width:768px){
-  /* filter row scrolls, no clipping */
-  #cal-filt{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;gap:4px}
-  #cal-filt::-webkit-scrollbar{display:none}
-  #cal-filt .btn{flex-shrink:0;white-space:nowrap;height:26px;font-size:10.5px;padding:0 9px}
-}
-
 @media(max-width:480px){
-  /* single-letter day names */
-  .cal-dn{padding:5px 2px;font-size:8.5px;letter-spacing:0}
-  .cal-dn-l{display:none}
-  .cal-dn-s{display:inline}
-  /* icon-only New Event button */
-  .cal-ev-label{display:none}
-  #cal-filt .btn{height:24px;font-size:10px;padding:0 7px}
-}
-
-/* ── COMMITTEES GRID MOBILE ── */
-@media(max-width:768px){
+  /* ── CORE ── */
+  #m-mobile-cards,#a-mobile-cards,#a-events-mobile-cards,#ac-mobile-cards,#fin-dues-mobile-cards,#fin-natl-mobile-cards,#cs-hours-mobile-cards,#fin-fines-mobile-cards,#fin-expense-mobile-cards,#fin-plans-mobile-cards,#rc-mobile-cards,#co-mem-mobile-cards,#j-res-mobile-cards,#ph-events-mobile-cards,#al-mobile-cards,#soc-events-mobile-cards{grid-template-columns:1fr}
   #co-grid{grid-template-columns:1fr!important}
-}
-@media(min-width:481px) and (max-width:768px){
-  #co-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-}
+  .kb{grid-template-columns:1fr!important}
+  #fi-folders,#tr-folders{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+  .folder-icon{width:32px;height:32px;font-size:16px}
+  .folder-name{font-size:11.5px}
+  .kv{font-size:17px}
+  .topbar{padding:0 10px;height:48px}
+  .tb-title{max-width:74px}
+  .cal-cell{min-height:38px}
+  .cal-day-num{font-size:9px;width:15px;height:15px}
 
-/* ── HOUSE MANAGEMENT (KCREW) ── */
+  /* ── DASHBOARD ── */
+  .d2-off-card{grid-template-columns:minmax(0,1fr) 38px 38px 62px;gap:4px;padding:6px 7px}
+  .d2-off-stat-val{font-size:11px}
 
-/* KPI: force 3-across at all sizes — 3 small cards fit fine even on 375px */
-#kc-kpi{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  /* ── REPORTS ── */
+  #rp-menu{grid-template-columns:minmax(0,1fr)}
+  .rp-kpi-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
 
-/* Chore manager: 5-column editor row scrolls rather than overflows */
-#kc-chore-manager{overflow-x:auto;-webkit-overflow-scrolling:touch}
-#kc-chore-rows,
-#kc-chore-manager>div:first-child{min-width:520px}
+  /* ── TABLES: hide lower priority columns ── */
+  .tbl th:last-child,.tbl td:last-child{display:none}
+  .tbl th:nth-child(4),.tbl td:nth-child(4){display:none}
 
-@media(max-width:768px){
-  /* Chores table: hide Notes column — drops required min-width from 680→440px */
-  #kc-chores table th:nth-child(2),
-  #kc-chores table td:nth-child(2){display:none}
-  #kc-chores table{min-width:440px!important}
+  /* ── MODALS ── */
+  .md{padding:13px 12px}
+  .md-t{font-size:13px}
 
-  /* Read-only bar: let long text wrap gracefully */
-  #kc-ro-bar{flex-wrap:wrap;gap:4px}
-}
-
-@media(max-width:480px){
-  /* Chores table: also hide Day badge column — drops to ~320px min-width */
-  #kc-chores table th:nth-child(3),
-  #kc-chores table td:nth-child(3){display:none}
-  #kc-chores table{min-width:320px!important}
-
-  /* Schedule tables: smaller selects + narrower Slot label column */
-  #kc-schedule select{font-size:10px!important;padding:3px 4px!important}
-  #kc-schedule table{min-width:340px!important}
-  #kc-schedule td:first-child,
-  #kc-schedule th:first-child{width:46px!important;font-size:10px!important}
-
-  /* Schedule section headers: drop icon to save horizontal space */
-  #kc-schedule .ti-sun,
-  #kc-schedule .ti-moon{display:none}
-
-  /* KPI: stack to 1-col only on very small phones */
-  #kc-kpi{grid-template-columns:1fr!important}
-}
-
-/* ── TOUCH EXPERIENCE ──
-   :hover doesn't fire reliably on touch devices, so primary interactive elements need their
-   own :active feedback, and touch targets need to clear the ~44px minimum recommended by
-   Apple/Google. Scoped to @media(hover:none) so mouse/trackpad users keep the existing hover
-   behavior unchanged — this only affects devices that are actually touch-primary. */
-button,.btn,.ni,.ib,.qc-btn,.tab-pill,.att-tab,.fin-tab,.rc-tab,.gs-item,.cmdk-chip,
-.cmdk-action-item,.tb-dd-item,.sb-pop-item,.sb-collapse-row,.sb-user,.mbn-item,
-.tk-card,.rc-card,.fc,.drawer-close,.md-x,.gs-clear,.cmdk-esc{
-  -webkit-tap-highlight-color:transparent;
-}
-@media(hover:none){
-  .btn:active,.ib:active,.qc-btn:active,.tb-dd-item:active,.sb-pop-item:active,
-  .cmdk-action-item:active,.att-tab:active:not(.active),.fin-tab:active:not(.active),
-  .rc-tab:active:not(.active){opacity:.65}
-  .ni:active,.sb-collapse-row:active,.sb-user:active,.mbn-item:active,
-  .cmdk-chip:active,.gs-item:active{background:rgba(0,0,0,.06)}
-  .sb.collapsed .ni:active,.ni.active:active{background:rgba(255,255,255,.1)}
-  .tk-card:active,.rc-card:active,.fc:active{transform:scale(.98)}
-}
-
-@media(max-width:768px){
-  /* Touch targets: bump the small chrome controls (icon buttons, nav rows, toggles,
-     checkboxes) up toward the 44px guideline. Dense per-row table action buttons (which set
-     their own small inline height, e.g. height:23px) are intentionally left alone — forcing
-     those to 44px would blow out every data table's row height app-wide; they stay reachable
-     via pinch-zoom, which the viewport meta tag does not block. */
-  .ib{width:40px;height:40px}
-  .ni{min-height:44px}
-  .sb-collapse-row,.sb-user{min-height:44px}
-  .tgl{width:38px;height:22px}
-  .tgl::after{width:16px;height:16px;top:3px}
-  .tgl.on::after{left:20px}
-  .tgl.off::after{left:2px}
-  .tc{width:19px;height:19px}
-  .tk-row,.al-row{padding-top:9px;padding-bottom:9px}
-  .qc-btn{min-height:40px}
-  .cmdk-esc,.gs-clear{min-width:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center}
-
-  /* Drawers become bottom sheets on mobile instead of a right-side slide-in panel */
-  .drawer{top:auto;right:0;left:0;bottom:0;width:100%;max-height:88vh;border-radius:18px 18px 0 0;
-    transform:translateY(100%);box-shadow:0 -16px 48px rgba(0,0,0,.25)}
-  .drawer-overlay.open .drawer{transform:translateY(0)}
+  /* ── BUTTONS: icon-only on very small ── */
+  .btn-icon-label{display:none}
 }
 
 @media(max-width:380px){
-  #kc-kpi{grid-template-columns:1fr!important}
-  #kc-chores table{min-width:280px!important}
-}
-
-/* ── OTIS WIDGET POSITION ── */
-@media(max-width:768px){
-  /* Float above the mobile bottom nav bar */
-  #otis-widget{bottom:calc(60px + env(safe-area-inset-bottom,0px) + 10px)!important}
+  .content{padding:8px 9px}
+  .topbar{gap:5px}
+  .tb-title{max-width:50px}
+  .d2-off-card{grid-template-columns:minmax(0,1fr) 36px 56px;gap:3px}
+  .d2-off-card>.d2-off-stat:first-of-type{display:none} /* hide attendance col, keep tasks + status */
+  .att-tabs .att-tab{padding:0 9px;font-size:11px}
+  .rp-item-sub{display:none}
 }

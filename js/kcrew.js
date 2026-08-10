@@ -1,4 +1,6 @@
-/* OpsCore 2.0 Demo — House Management: Kcrew & Chores */
+// ══════════════════════════════════════════════
+// KCREW & CHORES
+// ══════════════════════════════════════════════
 
 const KC_DAYS_LUNCH  = ['mon','tue','wed','thu','fri'];
 const KC_DAYS_DINNER = ['mon','tue','wed','thu'];
@@ -26,7 +28,7 @@ const KC_DEFAULT_CHORES = [
   {id:'cfoy',      area:'Foyers & Outside', chore:'Front foyer',                               notes:'Sweep/vacuum and mop. Wipe top of radiator. Shake rugs outside.', day:'both'},
   {id:'cbfoy',     area:'Foyers & Outside', chore:'Back foyer',                                notes:'Sweep/vacuum and mop. Wipe top of radiator. Shake rugs outside.', day:'both'},
   {id:'cout-f',    area:'Foyers & Outside', chore:'Outside (front)',                           notes:'Siphon front ash tray, pick up trash in front. Take out trash on front porch and mail room. Pick up trash on driveway side.', day:'both'},
-  {id:'cout-b',    area:'Foyers & Outside', chore:'Outside (back)',                            notes:'Siphon back ash tray and pick up/take out trash in back lot AND side of the house.', day:'both'},
+  {id:'cout-b',    area:'Foyers & Outside', chore:'Outside (back)',                            notes:'Siphon back ash tray and pick up/take out trash in back lot AND side of the house (Beta side).', day:'both'},
   // Dining Room
   {id:'cdrS',      area:'Dining Room',      chore:'Sweep dining room',                         notes:'After dinner, PUT CHAIRS UP', day:'both'},
   {id:'cdrM',      area:'Dining Room',      chore:'Mop dining room',                           notes:'After dinner, PUT CHAIRS UP', day:'both'},
@@ -46,14 +48,9 @@ const KC_DEFAULT_CHORES = [
   {id:'cbasLaun',  area:'Basement',         chore:'Laundry room',                              notes:'Sweep room, take out trash, put mop buckets under folding table, wipe down tops of machines and folding table, put detergent on shelves.', day:'both'},
 ];
 
-// ── RBAC: only President, VP, and House Manager may edit ──
+// ── RBAC: lead positions + whichever positions were granted the 'kcrew' page ──
 function canEditKcrew(){
-  if(!CURRENT_USER)return false;
-  const r=(CURRENT_USER.role||'').toLowerCase();
-  const t=(CURRENT_USER.title||'').toLowerCase();
-  if(r==='admin')return true;
-  const allowed=['president','vice president','house manager'];
-  return allowed.includes(r)||allowed.includes(t);
+  return canEditPage('kcrew');
 }
 
 // ISO week key — resets chore checks each Monday
@@ -76,6 +73,7 @@ function kcEnsureDefaults(){
   if(!D.chores.list||D.chores.list.length===0){
     D.chores.list=KC_DEFAULT_CHORES.map(c=>({...c,memberIds:[]}));
   }else{
+    // Migrate old single memberId to memberIds array
     D.chores.list.forEach(c=>{
       if(!c.memberIds){
         c.memberIds=c.memberId?[c.memberId]:[];
@@ -108,9 +106,9 @@ function renderKcrew(){
   const doneH=thuChores.filter(c=>checks[c.id+'_thu']).length;
 
   document.getElementById('kc-kpi').innerHTML=
-    kpi('Chore Assignments',assigned+'/'+list.length,'Members assigned this semester','neutral')+
-    kpi('Tuesday Check-ins',doneT+'/'+tueChores.length,'Week of '+wk,'neutral')+
-    kpi('Thursday Check-ins',doneH+'/'+thuChores.length,'Week of '+wk,'neutral');
+    statStrip('Chore Assignments',assigned+'/'+list.length,'Members assigned this semester','neutral')+
+    statStrip('Tuesday Check-ins',doneT+'/'+tueChores.length,'Week of '+wk,'neutral')+
+    statStrip('Thursday Check-ins',doneH+'/'+thuChores.length,'Week of '+wk,'neutral');
 
   const roBar=document.getElementById('kc-ro-bar');
   if(roBar)roBar.style.display=canEditKcrew()?'none':'flex';
@@ -122,7 +120,7 @@ function renderKcrew(){
 
 function renderKcSchedule(){
   const ro=!canEditKcrew();
-  const memberOpts=()=>['<option value="">— Unassigned —</option>',...sortedMembers().map(m=>`<option value="${m.id}">${m.name}</option>`)].join('');
+  const memberOpts=()=>['<option value="">— Unassigned —</option>',...sortedMembers().map(m=>`<option value="${m.id}">${esc(m.name)}</option>`)].join('');
   const selStyle=`width:100%;font-size:11.5px;padding:4px 6px;border:1px solid var(--bdr);border-radius:5px;outline:none;font-family:inherit;background:var(--surf);color:var(--tx)${ro?';opacity:.6;cursor:not-allowed':''}`;
 
   let html='';
@@ -179,7 +177,7 @@ function renderKcSchedule(){
 }
 
 function kcUpdateSlot(sel){
-  if(!canEditKcrew()){toast('Only the President, VP, or House Manager can edit House Management.','error');return;}
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit KCrew.','error');return;}
   const meal=sel.dataset.meal;
   const day=sel.dataset.day;
   const slot=parseInt(sel.dataset.slot);
@@ -188,12 +186,24 @@ function kcUpdateSlot(sel){
     D.kcrew.schedule[meal][day]=Array(slots).fill(null);
   }
   D.kcrew.schedule[meal][day][slot]=sel.value||null;
-  saveData();
+  saveD('kcrew');
 }
 
 function kcChoreLabel(memberIds){
   if(!memberIds||!memberIds.length)return'— Unassigned —';
-  return memberIds.map(id=>getMember(id).name.split(' ')[0]).join(', ');
+  return esc(memberIds.map(id=>mB(id).name.split(' ')[0]).join(', '));
+}
+
+// Chores only ever concern members who actually live in the house (the "Live-in" field on the
+// Members tab) — non-live-in members have no chore to do. `existingIds` (a chore's currently
+// assigned members) are unioned in even if not live-in, so an existing assignment never
+// silently drops off the picker — e.g. a member who moved out still shows up (and stays
+// checked) until someone unchecks them.
+function kcLiveInMembers(existingIds){
+  const liveIn=sortedMembers().filter(m=>m.liveIn);
+  const ids=new Set(liveIn.map(m=>m.id));
+  const extra=(existingIds||[]).map(id=>D.members.find(m=>m.id===id)).filter(m=>m&&!ids.has(m.id));
+  return [...liveIn,...extra];
 }
 
 function renderKcChores(wk){
@@ -212,15 +222,15 @@ function renderKcChores(wk){
     const areaChores=D.chores.list.filter(c=>c.area===area);
     if(!areaChores.length)return;
     html+=`<div style="margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--sky-tx);padding:6px 0 7px;border-bottom:2px solid var(--sky);margin-bottom:0;opacity:.7">${area}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mt);padding:6px 0 7px;border-bottom:2px solid var(--bdr);margin-bottom:0">${area}</div>
       <table style="width:100%;border-collapse:collapse;min-width:680px">
         <thead><tr style="background:var(--surf)">
           <th style="text-align:left;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600">Chore</th>
           <th style="text-align:left;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:210px">Notes</th>
           <th style="padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:50px;text-align:center">Day</th>
           <th style="text-align:left;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:180px">Assigned To</th>
-          <th style="text-align:center;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:52px">Tue ✓</th>
-          <th style="text-align:center;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:52px">Thu ✓</th>
+          <th style="text-align:center;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:52px">Tue <i class="ti ti-check" style="font-size:10px"></i></th>
+          <th style="text-align:center;padding:6px 8px;font-size:10.5px;color:var(--ht);font-weight:600;width:52px">Thu <i class="ti ti-check" style="font-size:10px"></i></th>
         </tr></thead>
         <tbody>`;
     areaChores.forEach(c=>{
@@ -233,13 +243,14 @@ function renderKcChores(wk){
 
       let assignCell;
       if(ro){
+        // Read-only: plain text label, no interactive picker
         assignCell=`<div style="font-size:11.5px;padding:4px 0;color:${lbl==='— Unassigned —'?'var(--ht)':'var(--tx)'}">${lbl}</div>`;
       }else{
-        const memberChecks=D.members.map(m=>{
+        const memberChecks=kcLiveInMembers(c.memberIds).map(m=>{
           const checked=(c.memberIds||[]).includes(m.id)?'checked':'';
           return`<label style="display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:11.5px;white-space:nowrap" onmouseover="this.style.background='rgba(0,0,0,.04)'" onmouseout="this.style.background=''">
             <input type="checkbox" ${checked} onchange="kcChoreToggle('${c.id}','${m.id}',this.checked)" style="accent-color:var(--sky);width:14px;height:14px;flex-shrink:0">
-            ${m.name}
+            ${esc(m.name)}${m.liveIn?'':' <span style="color:var(--ht);font-size:10px">(not live-in)</span>'}
           </label>`;
         }).join('');
         assignCell=`<div style="position:relative">
@@ -254,8 +265,8 @@ function renderKcChores(wk){
       }
 
       html+=`<tr style="border-bottom:1px solid var(--bdr)${allDone?';background:rgba(59,170,90,.05)':''}">
-        <td style="padding:7px 8px;font-size:12px;font-weight:500">${c.chore}</td>
-        <td style="padding:7px 8px;font-size:11px;color:var(--mt);line-height:1.4">${c.notes}</td>
+        <td style="padding:7px 8px;font-size:12px;font-weight:500">${esc(c.chore)}</td>
+        <td style="padding:7px 8px;font-size:11px;color:var(--mt);line-height:1.4">${esc(c.notes)}</td>
         <td style="padding:7px 8px;text-align:center">${dayBadge[c.day]||dayBadge.both}</td>
         <td style="padding:4px 8px;position:relative">${assignCell}</td>
         <td style="padding:7px 8px;text-align:center">
@@ -285,7 +296,7 @@ function kcPickerToggle(e, choreId){
 }
 
 function kcChoreToggle(choreId, memberId, checked){
-  if(!canEditKcrew()){toast('Only the President, VP, or House Manager can edit chore assignments.','error');return;}
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit chore assignments.','error');return;}
   const c=D.chores.list.find(x=>x.id===choreId);
   if(!c)return;
   if(!c.memberIds)c.memberIds=[];
@@ -297,16 +308,16 @@ function kcChoreToggle(choreId, memberId, checked){
     lbl.textContent=text;
     lbl.style.color=c.memberIds.length?'var(--tx)':'var(--ht)';
   }
-  saveData();
+  saveD('chores');
   kcUpdateKpiOnly();
 }
 
 function kcCheck(choreId, dayKey, checked, cb){
-  if(!canEditKcrew()){toast('Only the President, VP, or House Manager can update chore check-ins.','error');return;}
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can update chore check-ins.','error');return;}
   const wk=kcWeekKey();
   if(!D.chores.checks[wk])D.chores.checks[wk]={};
   D.chores.checks[wk][choreId+'_'+dayKey]=checked;
-  saveData();
+  saveD('chores');
   kcUpdateKpiOnly();
   const row=cb?.closest('tr');
   if(row){
@@ -332,10 +343,11 @@ function kcRenderChoreManager(){
   if(!canEditKcrew())return;
   kcEnsureDefaults();
   const list=D.chores.list;
+  // Derive area list for datalist suggestions
   const areas=[...new Set(list.map(c=>c.area))].filter(Boolean);
   el.innerHTML=`
-    <datalist id="kc-area-list">${areas.map(a=>`<option value="${a}">`).join('')}</datalist>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:5px;align-items:center;margin-bottom:5px;padding:0 4px">
+    <datalist id="kc-area-list">${areas.map(a=>`<option value="${esc(a)}">`).join('')}</datalist>
+    <div class="kc-chore-header" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:5px;align-items:center;margin-bottom:5px;padding:0 4px">
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Area</span>
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Chore</span>
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Notes</span>
@@ -356,11 +368,11 @@ function kcChoreRow(c,i){
   const inp=`style="width:100%;height:28px;padding:0 6px;border:1px solid var(--bdr);border-radius:5px;font-size:11px;font-family:inherit;color:var(--tx);background:var(--surf);outline:none"`;
   const dayOpts=KC_DAY_OPTS.map(d=>`<option value="${d}"${c.day===d?' selected':''}>${d.charAt(0).toUpperCase()+d.slice(1)}</option>`).join('');
   return`<div class="kc-chore-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--bdr)">
-    <input class="kc-cr-area" value="${c.area||''}" placeholder="Area (e.g. 2nd Floor)" list="kc-area-list" ${inp}>
-    <input class="kc-cr-chore" value="${c.chore||''}" placeholder="Chore description" ${inp}>
-    <input class="kc-cr-notes" value="${c.notes||''}" placeholder="Notes (optional)" ${inp}>
+    <input class="kc-cr-area" value="${esc(c.area||'')}" placeholder="Area (e.g. 2nd Floor)" list="kc-area-list" ${inp}>
+    <input class="kc-cr-chore" value="${esc(c.chore||'')}" placeholder="Chore description" ${inp}>
+    <input class="kc-cr-notes" value="${esc(c.notes||'')}" placeholder="Notes (optional)" ${inp}>
     <select class="kc-cr-day" ${inp} style="width:90px;flex-shrink:0">${dayOpts}</select>
-    <button onclick="kcDeleteChoreRow(this)" class="btn btn-d" style="padding:0 6px;height:26px;font-size:11px;flex-shrink:0"><i class="ti ti-trash"></i></button>
+    <button onclick="kcDeleteChoreRow(this)" class="btn btn-d" style="padding:0 6px;height:26px;font-size:11px;flex-shrink:0" aria-label="Delete chore"><i class="ti ti-trash"></i></button>
   </div>`;
 }
 
@@ -392,7 +404,7 @@ function kcSaveChores(){
   });
   if(!list.length){toast('Add at least one chore','error');return;}
   D.chores.list=list;
-  saveData();
+  saveD('chores');
   renderKcrew();
   toast('Chores saved','success');
 }
@@ -402,7 +414,7 @@ function kcResetChores(){
   if(!confirm('Reset all chores to defaults? Existing assignments will be cleared.'))return;
   D.chores.list=KC_DEFAULT_CHORES.map(c=>({...c,memberIds:[]}));
   D.chores.checks={};
-  saveData();
+  saveD('chores');
   renderKcrew();
   toast('Chores reset to defaults','success');
 }
@@ -418,7 +430,74 @@ function kcUpdateKpiOnly(){
   const doneT=tueChores.filter(c=>checks[c.id+'_tue']).length;
   const doneH=thuChores.filter(c=>checks[c.id+'_thu']).length;
   document.getElementById('kc-kpi').innerHTML=
-    kpi('Chore Assignments',assigned+'/'+list.length,'Members assigned this semester','neutral')+
-    kpi('Tuesday Check-ins',doneT+'/'+tueChores.length,'Week of '+wk,'neutral')+
-    kpi('Thursday Check-ins',doneH+'/'+thuChores.length,'Week of '+wk,'neutral');
+    statStrip('Chore Assignments',assigned+'/'+list.length,'Members assigned this semester','neutral')+
+    statStrip('Tuesday Check-ins',doneT+'/'+tueChores.length,'Week of '+wk,'neutral')+
+    statStrip('Thursday Check-ins',doneH+'/'+thuChores.length,'Week of '+wk,'neutral');
+}
+
+// ── PRINT (bulletin-board sheet) ──
+// Opens a clean, chrome-free printable page in a new tab and triggers the browser's print
+// dialog — "Save as PDF" from there is the standard way to get a PDF in a no-build-step
+// vanilla app with no PDF library. Tue/Thu boxes print blank (for pen check-off on the wall),
+// not whatever's currently checked in the app, since this is meant to be a fresh weekly sheet.
+function kcPrintChores(){
+  if(!D.chores||!D.chores.list||!D.chores.list.length){toast('No chores to print yet.','error');return;}
+  const areas=[...new Set(KC_DEFAULT_CHORES.map(c=>c.area))];
+  const dayLabel={both:'Tue &amp; Thu',tuesday:'Tuesday',thursday:'Thursday',daily:'Daily'};
+
+  let body='';
+  areas.forEach(area=>{
+    const areaChores=D.chores.list.filter(c=>c.area===area);
+    if(!areaChores.length)return;
+    body+=`<h2>${esc(area)}</h2>
+      <table>
+        <thead><tr><th>Chore</th><th>Notes</th><th>Day</th><th>Assigned To</th><th>Tue</th><th>Thu</th></tr></thead>
+        <tbody>${areaChores.map(c=>{
+          const showTue=c.day==='both'||c.day==='tuesday'||c.day==='daily';
+          const showThu=c.day==='both'||c.day==='thursday'||c.day==='daily';
+          return`<tr>
+            <td class="chore">${esc(c.chore)}</td>
+            <td class="notes">${esc(c.notes)||''}</td>
+            <td class="day">${dayLabel[c.day]||dayLabel.both}</td>
+            <td class="assigned">${kcChoreLabel(c.memberIds)}</td>
+            <td class="check">${showTue?'<span class="box"></span>':'—'}</td>
+            <td class="check">${showThu?'<span class="box"></span>':'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+  });
+
+  const chapterName=(CURRENT_USER&&CURRENT_USER.chapterName)||'Chapter';
+  const printedOn=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Chore Assignments</title>
+    <style>
+      @page{margin:0.5in}
+      body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;color:#1a1a1a;margin:0;padding:24px}
+      .hd{display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px solid #151008;padding-bottom:10px;margin-bottom:18px}
+      .hd h1{font-size:22px;margin:0}
+      .hd .sub{font-size:12px;color:#555}
+      h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#8a6d1f;border-bottom:2px solid #8a6d1f;padding-bottom:4px;margin:22px 0 8px;break-after:avoid}
+      table{width:100%;border-collapse:collapse;margin-bottom:4px;break-inside:auto}
+      tr{break-inside:avoid}
+      th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:#666;padding:6px 8px;border-bottom:1px solid #ccc}
+      td{padding:8px;font-size:12.5px;border-bottom:1px solid #e5e5e5;vertical-align:top}
+      td.chore{font-weight:600;width:20%}
+      td.notes{color:#555;width:32%}
+      td.day{width:10%}
+      td.assigned{width:20%;font-weight:500}
+      td.check{width:9%;text-align:center}
+      .box{display:inline-block;width:16px;height:16px;border:1.5px solid #333}
+      @media print{ body{padding:0} }
+    </style>
+  </head><body>
+    <div class="hd"><h1>Chore Assignments</h1><div class="sub">${esc(chapterName)} &middot; Printed ${printedOn}</div></div>
+    ${body}
+  </body></html>`;
+
+  const win=window.open('','_blank');
+  if(!win){toast('Pop-up blocked — allow pop-ups for this site to print.','error');return;}
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(),250);
 }

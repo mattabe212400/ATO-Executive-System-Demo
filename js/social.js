@@ -1,13 +1,31 @@
-/* OpsCore 2.0 Demo — Social Events & Formal Planning */
-// Events live in the shared D.events calendar (type:'social'), same pattern as Philanthropy —
-// so Social always matches what's on the Calendar, not a separate copy.
+// ══════════════════════════════════════════════
+// SOCIAL EVENTS & FORMAL PLANNING
+// ══════════════════════════════════════════════
+// Events live in the shared D.events calendar (type:'social'), same pattern as Philanthropy/
+// Community Service — so Social always matches what's on the Calendar, not a separate copy.
 // Rich planning data (venue/transportation/budget/checklist/etc.) lives in D.social.planning,
-// keyed by the same event id. RSVPs live in D.social.rsvps (a plain array, since this demo has
-// no real per-user backend to enforce a member-writes-only-their-own-doc rule).
+// keyed by the same event id. RSVPs do NOT live in D.social — see the RSVP section below for why.
 
-function socFull(){ return !!CURRENT_USER && CURRENT_USER.role!=='viewer'; }
+function canEditSocial(){ return canEditPage('social'); }
 function socEvents(){ return (D.events||[]).filter(e=>e.type==='social'); }
-function socToday(){ return new Date().toISOString().split('T')[0]; }
+
+// ── Semester scoping — events already carry a real date (date-range filter, no stamp needed);
+// planning[eventId] follows the filtered event list by id lookup, no separate field needed.
+// vendors[] is chapter-wide reference data (like Community Service's locations[]) and stays
+// unpartitioned. Detail-workspace tabs (checklist/budget/formal/vendors) inherit the lock via
+// the header's Edit/Delete buttons being disabled — see socRenderDetailOverview().
+let SOC_SELECTED_SEM=null;
+function socSem(){ return SOC_SELECTED_SEM||getSemester(); }
+function socKnownSemesters(){
+  return unionKnownSemesters(socEvents().map(e=>semesterLabelForDate(e.date)).filter(Boolean));
+}
+function socVisibleEvents(){
+  return socEvents().filter(e=>semesterLabelForDate(e.date)===socSem());
+}
+function socSemesterChanged(){
+  SOC_SELECTED_SEM=document.getElementById('soc-semester-select').value;
+  socShowList();
+}
 
 const SOC_EVENT_CATEGORIES = [
   {v:'date_party',  l:'Date Party'},
@@ -21,46 +39,45 @@ const SOC_EVENT_CATEGORIES = [
 const SOC_STATUSES = [
   {v:'idea',        l:'Idea',        c:'bm2'},
   {v:'planning',    l:'Planning',    c:'ba2'},
-  {v:'confirmed',   l:'Confirmed',   c:'bb2'},
-  {v:'rsvp_open',   l:'RSVP Open',   c:'bb2'},
-  {v:'ready',       l:'Ready',       c:'bg2'},
-  {v:'completed',   l:'Completed',   c:'bm2'},
-  {v:'cancelled',   l:'Cancelled',   c:'br2'},
+  {v:'registered',  l:'Registered',  c:'bg2'},
 ];
 function socStatusLabel(v){ return (SOC_STATUSES.find(s=>s.v===v)||{}).l || v; }
 function socStatusClass(v){ return (SOC_STATUSES.find(s=>s.v===v)||{}).c || 'bm2'; }
 function socCatLabel(v){ return (SOC_EVENT_CATEGORIES.find(c=>c.v===v)||{}).l || v; }
 function socIsFormalCat(cat){ return cat==='formal'||cat==='semi_formal'; }
 
-// General members only see events that have actually opened up — not early-stage planning,
-// which may still contain costs/vendor names not meant for the whole chapter yet.
-const SOC_MEMBER_VISIBLE_STATUSES = ['rsvp_open','ready','completed'];
+// General members only see events the Social Chair has actually opened up — not early-stage
+// planning, which may still contain costs/vendor names not meant for the whole chapter yet.
+const SOC_MEMBER_VISIBLE_STATUSES = ['registered'];
 
 function socDefaultPlan(){
   return {
     status:'idea', eventCategory:'other',
-    expectedAttendance:null, actualAttendance:null,
+    readinessOverrideNotes:'',
     venue:{name:'',address:'',contact:'',phone:'',deposit:0,totalCost:0,confirmed:false,contractStatus:'not_started',notes:''},
     transportation:{required:false,provider:'',contact:'',pickupLocation:'',departureTime:'',returnTime:'',vehicleCount:0,capacity:0,cost:0,confirmed:false,notes:''},
-    lodging:{required:false,hotel:'',contact:'',roomCount:0,bookingStatus:'not_started',cost:0,notes:''},
+    lodging:{required:false,hotel:'',address:'',contact:'',roomCount:0,bookingStatus:'not_started',cost:0,notes:''},
     catering:{provider:'',contact:'',serviceType:'',cost:0,confirmed:false,dietaryNotes:''},
     entertainment:{provider:'',contact:'',cost:0,confirmed:false,equipmentNeeds:'',notes:''},
     security:{provider:'',contact:'',staffCount:0,cost:0,confirmed:false,notes:''},
-    checklist:[], budgetItems:[],
+    checklist:[], plannedBudget:0,
   };
 }
 // Always returns a fully-shaped plan (deep-merges saved data over the defaults) so a
 // partially-saved or freshly-created event never crashes a render on a missing sub-object.
 function socPlan(eventId){
+  if(!D.social) D.social={planning:{},vendors:[]};
+  if(!D.social.planning) D.social.planning={};
   const saved = D.social.planning[eventId]||{};
   const base = socDefaultPlan();
   const merged = {...base, ...saved};
   ['venue','transportation','lodging','catering','entertainment','security'].forEach(k=>{ merged[k]={...base[k],...(saved[k]||{})}; });
   merged.checklist = saved.checklist||[];
-  merged.budgetItems = saved.budgetItems||[];
   return merged;
 }
 function socSetPlan(eventId, updater){
+  if(!D.social) D.social={planning:{},vendors:[]};
+  if(!D.social.planning) D.social.planning={};
   const cur = socPlan(eventId);
   D.social.planning[eventId] = updater(cur) || cur;
 }
@@ -72,8 +89,8 @@ function socSetPlan(eventId, updater){
 function socReadiness(plan){
   const checks=[]; const missing=[];
   checks.push(plan.venue.confirmed?1:0); if(!plan.venue.confirmed) missing.push('Venue confirmation');
-  const hasBudget = plan.budgetItems.length>0;
-  checks.push(hasBudget?1:0); if(!hasBudget) missing.push('Budget approved (add at least one budget line)');
+  const hasBudget = (parseFloat(plan.plannedBudget)||0)>0;
+  checks.push(hasBudget?1:0); if(!hasBudget) missing.push('Planned budget set');
   if(plan.transportation.required){ checks.push(plan.transportation.confirmed?1:0); if(!plan.transportation.confirmed) missing.push('Transportation confirmation'); }
   if(plan.catering.provider){ checks.push(plan.catering.confirmed?1:0); if(!plan.catering.confirmed) missing.push('Catering confirmation'); }
   if(plan.checklist.length){
@@ -81,17 +98,15 @@ function socReadiness(plan){
     checks.push(done/plan.checklist.length);
     if(done<plan.checklist.length) missing.push((plan.checklist.length-done)+' checklist item'+(plan.checklist.length-done!==1?'s':'')+' incomplete');
   }
-  if(plan.status==='completed' && plan.actualAttendance==null) missing.push('Final attendance count');
   const score = checks.length ? Math.round(100*checks.reduce((a,b)=>a+b,0)/checks.length) : 0;
   return {score, missing};
 }
 
 // ── BUDGET TOTALS ──
 function socBudgetTotals(plan){
-  const est = plan.budgetItems.reduce((s,b)=>s+(parseFloat(b.estCost)||0),0);
-  const actualPlanned = plan.budgetItems.reduce((s,b)=>s+(parseFloat(b.actualCost)||0),0);
-  const actualLogged = (D.finance?.expenses||[]).filter(e=>e.eventId===plan._eventId).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
-  return {est, actualPlanned, actualLogged, actual: actualLogged||actualPlanned};
+  const est = parseFloat(plan.plannedBudget)||0;
+  const actual = (D.finance?.expenses||[]).filter(e=>e.eventId===plan._eventId).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  return {est, actual};
 }
 
 // ══════════════════════════════════════════════
@@ -100,7 +115,7 @@ function socBudgetTotals(plan){
 let SOC_CURRENT_EVENT_ID = null;
 
 function renderSocial(){
-  const full = socFull();
+  const full = canEditSocial() || isLeadUser();
   const fullEl = document.getElementById('soc-full-view');
   const memberEl = document.getElementById('soc-member-view');
   if(fullEl) fullEl.style.display = full ? '' : 'none';
@@ -116,6 +131,9 @@ function renderSocial(){
 function socShowList(){
   document.getElementById('soc-list-view').style.display='';
   document.getElementById('soc-detail-view').style.display='none';
+  initSemesterSelect('soc-semester-select',socKnownSemesters(),socSemesterChanged,socSem());
+  const addBtn=document.getElementById('soc-add-event-btn');
+  if(addBtn)addBtn.style.display=(canEditSocial()&&isCurrentSemester(socSem()))?'':'none';
   socRenderKpis();
   socRenderAlerts();
   socRenderEventList();
@@ -123,43 +141,40 @@ function socShowList(){
 }
 
 function socRenderKpis(){
-  const events = socEvents();
-  const now = socToday();
-  const upcoming = events.filter(e=>e.date>=now && socPlan(e.id).status!=='cancelled');
-  const thisTermCount = events.length;
-  let totalBudget=0, totalRemaining=0, attSum=0, attN=0, needsAction=0;
+  const events = socVisibleEvents();
+  const now = localDateStr();
+  const upcoming = events.filter(e=>e.date>=now);
+  const thisTermCount = events.length; // "this term" = the selected semester's social events
+  let totalBudget=0, totalRemaining=0, needsAction=0;
   events.forEach(e=>{
     const plan = socPlan(e.id); plan._eventId=e.id;
     const tot = socBudgetTotals(plan);
     totalBudget += tot.est;
     totalRemaining += Math.max(0, tot.est - tot.actual);
-    if(plan.actualAttendance!=null){ attSum+=plan.actualAttendance; attN++; }
     const r = socReadiness(plan);
-    if(e.date>=now && plan.status!=='cancelled' && plan.status!=='completed' && r.missing.length) needsAction++;
+    if(e.date>=now && r.missing.length) needsAction++;
   });
   document.getElementById('soc-kpi').innerHTML =
-    kpi('Upcoming Events', upcoming.length, 'On the calendar', 'neutral') +
-    kpi('Events This Term', thisTermCount, 'All social events', 'neutral') +
-    kpi('Total Planned Budget', '$'+Math.round(totalBudget).toLocaleString(), 'Across all events', 'neutral') +
-    kpi('Budget Remaining', '$'+Math.round(totalRemaining).toLocaleString(), 'Not yet spent', totalRemaining<0?'down':'neutral') +
-    kpi('Avg Attendance', attN?Math.round(attSum/attN):'—', attN?'Completed events':'No completed events yet', 'neutral') +
-    kpi('Needs Action', needsAction, needsAction?'Missing required planning items':'All caught up', needsAction?'down':'up');
+    statStrip('Upcoming Events', upcoming.length, 'On the calendar', 'neutral') +
+    statStrip('Events This Term', thisTermCount, 'All social events', 'neutral') +
+    statStrip('Total Planned Budget', '$'+Math.round(totalBudget).toLocaleString(), 'Across all events', 'neutral') +
+    statStrip('Budget Remaining', '$'+Math.round(totalRemaining).toLocaleString(), 'Not yet spent', totalRemaining<0?'down':'neutral') +
+    statStrip('Needs Action', needsAction, needsAction?'Missing required planning items':'All caught up', needsAction?'down':'up');
 }
 
 function socRenderAlerts(){
   const el = document.getElementById('soc-alerts'); if(!el) return;
-  const now = socToday();
+  const now = localDateStr();
   const alerts = [];
-  socEvents().forEach(e=>{
+  socVisibleEvents().forEach(e=>{
     if(e.date<now) return;
     const plan = socPlan(e.id); plan._eventId=e.id;
-    if(plan.status==='cancelled'||plan.status==='completed') return;
-    if(!plan.venue.name) alerts.push({e,text:'Venue not selected',icon:'ti-map-pin'});
-    else if(!plan.venue.confirmed) alerts.push({e,text:'Venue not confirmed',icon:'ti-map-pin'});
-    if(plan.transportation.required && !plan.transportation.confirmed) alerts.push({e,text:'Transportation not confirmed',icon:'ti-bus'});
+    if(!plan.venue.name) alerts.push({e,plan,text:'Venue not selected',icon:'ti-map-pin'});
+    else if(!plan.venue.confirmed) alerts.push({e,plan,text:'Venue not confirmed',icon:'ti-map-pin'});
+    if(plan.transportation.required && !plan.transportation.confirmed) alerts.push({e,plan,text:'Transportation not confirmed',icon:'ti-bus'});
     const tot = socBudgetTotals(plan);
-    if(tot.actual > tot.est && tot.est>0) alerts.push({e,text:'Budget exceeded',icon:'ti-alert-triangle'});
-    if(plan.checklist.length){ const undone=plan.checklist.filter(c=>!c.done).length; if(undone && e.date<=socToday()) alerts.push({e,text:undone+' checklist item'+(undone!==1?'s':'')+' incomplete, event is soon',icon:'ti-list-check'}); }
+    if(tot.actual > tot.est && tot.est>0) alerts.push({e,plan,text:'Budget exceeded',icon:'ti-alert-triangle'});
+    if(plan.checklist.length){ const undone=plan.checklist.filter(c=>!c.done).length; if(undone && e.date<=localDateStr(new Date(Date.now()+7*86400000))) alerts.push({e,plan,text:undone+' checklist item'+(undone!==1?'s':'')+' incomplete, event is soon',icon:'ti-list-check'}); }
   });
   if(!alerts.length){ el.innerHTML = es('ti-circle-check','green','No planning alerts','Every upcoming event is on track.',''); return; }
   el.innerHTML = alerts.slice(0,8).map(a=>`<div class="al-row"><div class="al-ic" style="background:var(--am-bg);color:var(--am-tx)"><i class="ti ${a.icon}"></i></div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">${esc(a.e.title)}</div><div style="font-size:11px;color:var(--mt)">${esc(a.text)}</div></div><button class="btn" style="height:24px;font-size:10.5px" onclick="socOpenDetail('${a.e.id}')">View</button></div>`).join('');
@@ -167,10 +182,12 @@ function socRenderAlerts(){
 
 function socRenderEventList(){
   const el = document.getElementById('soc-events-table'); if(!el) return;
-  const canEdit = socFull();
-  const events = [...socEvents()].sort((a,b)=>a.date.localeCompare(b.date));
+  const canEdit = (canEditSocial() || isLeadUser()) && isCurrentSemester(socSem());
+  const events = [...socVisibleEvents()].sort((a,b)=>a.date.localeCompare(b.date));
+  const mobEl = document.getElementById('soc-events-mobile-cards');
   if(!events.length){
-    el.innerHTML = `<tbody><tr><td colspan="7">${es('ti-confetti','pink','No social events yet','Add a date party, mixer, or formal to start planning.', canEdit?`<button class="btn btn-p" onclick="socOpenAddEvent()"><i class="ti ti-plus"></i>Add Event</button>`:'')}</td></tr></tbody>`;
+    el.innerHTML = `<tbody><tr><td colspan="7">${es('ti-confetti','slate','No social events yet','Add a date party, mixer, or formal to start planning.', canEdit?`<button class="btn btn-p" onclick="socOpenAddEvent()"><i class="ti ti-plus"></i>Add Event</button>`:'')}</td></tr></tbody>`;
+    if(mobEl)mobEl.innerHTML = `<div style="grid-column:1/-1">${es('ti-confetti','slate','No social events yet','Add a date party, mixer, or formal to start planning.', canEdit?`<button class="btn btn-p" onclick="socOpenAddEvent()"><i class="ti ti-plus"></i>Add Event</button>`:'')}</div>`;
     return;
   }
   el.innerHTML = `<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Location</th><th>Status</th><th>Budget</th><th>Readiness</th></tr></thead><tbody>${
@@ -181,28 +198,44 @@ function socRenderEventList(){
       return `<tr style="cursor:pointer" onclick="socOpenDetail('${e.id}')">
         <td style="font-weight:500">${esc(e.title)}</td>
         <td style="color:var(--mt)">${socCatLabel(plan.eventCategory)}</td>
-        <td>${formatDateShort(e.date)}</td>
+        <td>${fds(e.date)}</td>
         <td style="color:var(--mt)">${esc(e.location)||'—'}</td>
         <td><span class="badge ${socStatusClass(plan.status)}">${socStatusLabel(plan.status)}</span></td>
         <td style="color:var(--mt)">$${Math.round(tot.actual).toLocaleString()} / $${Math.round(tot.est).toLocaleString()}</td>
-        <td><div style="display:flex;align-items:center;gap:6px"><div style="width:50px;height:5px;background:var(--surf2);border-radius:99px;overflow:hidden"><div style="height:100%;width:${r.score}%;background:${progressColor(r.score)}"></div></div><span style="font-size:10.5px;color:var(--mt)">${r.score}%</span></div></td>
+        <td><div style="display:flex;align-items:center;gap:6px"><div class="pb" style="width:50px;height:5px"><div class="pf" style="width:${r.score}%;background:${pgc(r.score)}"></div></div><span style="font-size:10.5px;color:var(--mt)">${r.score}%</span></div></td>
       </tr>`;
     }).join('')
   }</tbody>`;
+  if(mobEl)mobEl.innerHTML = events.map(e=>{
+    const plan=socPlan(e.id); plan._eventId=e.id;
+    const r = socReadiness(plan);
+    const tot = socBudgetTotals(plan);
+    return `<div class="mob-card card clickable" tabindex="0" role="button" aria-label="Open ${esc(e.title)}" onclick="socOpenDetail('${e.id}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <div style="font-weight:600;font-size:13px">${esc(e.title)}</div>
+        <span class="badge ${socStatusClass(plan.status)}" style="flex-shrink:0">${socStatusLabel(plan.status)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--mt);margin-bottom:8px">${socCatLabel(plan.eventCategory)} · ${fds(e.date)}${e.location?' · '+esc(e.location):''}</div>
+      <div style="font-size:11.5px;color:var(--mt);margin-bottom:8px">Budget: $${Math.round(tot.actual).toLocaleString()} / $${Math.round(tot.est).toLocaleString()}</div>
+      <div style="display:flex;align-items:center;gap:6px"><div class="pb" style="flex:1;height:5px"><div class="pf" style="width:${r.score}%;background:${pgc(r.score)}"></div></div><span style="font-size:10.5px;color:var(--mt);flex-shrink:0">${r.score}% ready</span></div>
+    </div>`;
+  }).join('');
 }
 
 // ── EVENT CREATE / EDIT ──
 function socOpenAddEvent(){
-  if(!socFull()){toast('Only officers with Social Events access can add events.','error');return;}
+  if(!canEditSocial()){toast('Only officers with Social Events access can add events.','error');return;}
+  if(!isCurrentSemester(socSem())){toast('This semester is read-only.','error');return;}
   ['soc-ev-title','soc-ev-date','soc-ev-start','soc-ev-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('soc-ev-cat').value='mixer';
   document.getElementById('soc-ev-id').value='';
   document.getElementById('m-soc-addevent').querySelector('.md-t').childNodes[0].textContent='New Social Event';
-  document.getElementById('m-soc-addevent').classList.add('open');
+  openM('m-soc-addevent');
 }
 function socOpenEditEventBasic(id){
-  if(!socFull()){toast('Only officers with Social Events access can edit events.','error');return;}
+  if(!canEditSocial()){toast('Only officers with Social Events access can edit events.','error');return;}
   const e = D.events.find(x=>x.id===id); if(!e) return;
+  if(!isCurrentSemester(semesterLabelForDate(e.date))){toast('This event is in a past semester and is read-only.','error');return;}
   const plan = socPlan(id);
   document.getElementById('soc-ev-title').value=e.title;
   document.getElementById('soc-ev-date').value=e.date;
@@ -211,10 +244,10 @@ function socOpenEditEventBasic(id){
   document.getElementById('soc-ev-cat').value=plan.eventCategory;
   document.getElementById('soc-ev-id').value=id;
   document.getElementById('m-soc-addevent').querySelector('.md-t').childNodes[0].textContent='Edit Social Event';
-  document.getElementById('m-soc-addevent').classList.add('open');
+  openM('m-soc-addevent');
 }
 async function socSaveEvent(){
-  if(!socFull())return;
+  if(!canEditSocial())return;
   const title=document.getElementById('soc-ev-title').value.trim();
   if(!title){toast('Event name is required','error');return;}
   const date=document.getElementById('soc-ev-date').value;
@@ -225,34 +258,55 @@ async function socSaveEvent(){
   let ev, isNew=false;
   if(editId){
     ev=D.events.find(x=>x.id===editId);
-    if(ev) Object.assign(ev,fields);
+    if(ev){
+      if(!isCurrentSemester(semesterLabelForDate(ev.date))){toast('This event is in a past semester and is read-only.','error');return;}
+      Object.assign(ev,fields);
+    }
   } else {
+    if(!isCurrentSemester(socSem())){toast('This semester is read-only.','error');return;}
     isNew=true;
     ev={id:uid(),type:'social',mandatory:false,...fields};
     D.events.push(ev);
   }
   socSetPlan(ev.id, p=>({...p, eventCategory:cat}));
-  await saveData();
-  closeM(null,document.getElementById('m-soc-addevent'));
-  if(typeof renderCalendar==='function') renderCalendar();
-  socShowList();
-  toast(isNew?'Event added':'Event updated','success');
+  try{
+    await saveD('events','social');
+    closeM(null,document.getElementById('m-soc-addevent'));
+    if(typeof renderCalendar==='function') renderCalendar();
+    socShowList();
+    toast(isNew?'Event added':'Event updated','success');
+  }catch(err){
+    if(isNew) D.events=D.events.filter(x=>x.id!==ev.id);
+    toast('Failed to save event. Please try again.','error');
+  }
 }
 async function socDeleteEvent(id){
-  if(!socFull())return;
+  if(!canEditSocial()&&!isLeadUser())return;
+  const evToDelete = D.events.find(e=>e.id===id);
+  if(evToDelete&&!isCurrentSemester(semesterLabelForDate(evToDelete.date))){toast('This event is in a past semester and is read-only.','error');return;}
   const ok = await confirmDialog('Delete Social Event','Delete this event and all of its planning data (venue, budget, checklist, vendor associations)? This cannot be undone.');
   if(!ok) return;
+  const ev = D.events.find(e=>e.id===id);
+  const removedPlan = D.social?.planning?.[id];
   D.events = D.events.filter(e=>e.id!==id);
-  if(D.social.planning) delete D.social.planning[id];
-  await saveData();
-  socShowList();
-  if(typeof renderCalendar==='function') renderCalendar();
-  toast('Event deleted','info');
+  if(D.social?.planning) delete D.social.planning[id];
+  try{
+    await saveD('events','social');
+    socShowList();
+    if(typeof renderCalendar==='function') renderCalendar();
+    toast('Event deleted','info');
+  }catch(err){
+    if(ev) D.events.push(ev);
+    if(removedPlan){ if(!D.social.planning) D.social.planning={}; D.social.planning[id]=removedPlan; }
+    toast('Failed to delete event. Please try again.','error');
+  }
 }
 
 // ══════════════════════════════════════════════
 // EVENT DETAIL WORKSPACE
 // ══════════════════════════════════════════════
+let SOC_ACTIVE_TAB = 'soc-overview';
+
 function socOpenDetail(eventId){
   SOC_CURRENT_EVENT_ID = eventId;
   document.getElementById('soc-list-view').style.display='none';
@@ -268,6 +322,7 @@ function socTab(btn, tabId){
   document.querySelectorAll('.soc-tab').forEach(t=>t.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.querySelectorAll('#soc-detail-view > .soc-panel').forEach(p=>{p.style.display = p.id===tabId ? '' : 'none';});
+  SOC_ACTIVE_TAB = tabId;
   const id = SOC_CURRENT_EVENT_ID; if(!id) return;
   if(tabId==='soc-overview') socRenderDetailOverview();
   else if(tabId==='soc-checklist') socRenderChecklist();
@@ -279,51 +334,50 @@ function socTab(btn, tabId){
 function socRenderDetailOverview(){
   const id = SOC_CURRENT_EVENT_ID; const e = D.events.find(x=>x.id===id); if(!e) return;
   const plan = socPlan(id); plan._eventId=id;
-  const canEdit = socFull();
+  const canEdit = (canEditSocial()||isLeadUser())&&isCurrentSemester(semesterLabelForDate(e.date));
   const r = socReadiness(plan);
   const days = Math.round((new Date(e.date+'T12:00:00')-new Date())/86400000);
   document.getElementById('soc-detail-title').textContent = e.title;
-  document.getElementById('soc-detail-sub').textContent = `${socCatLabel(plan.eventCategory)} · ${formatDateShort(e.date)}${e.location?' · '+e.location:''}`;
+  document.getElementById('soc-detail-sub').textContent = `${socCatLabel(plan.eventCategory)} · ${fds(e.date)}${e.location?' · '+e.location:''}`;
   document.getElementById('soc-detail-edit-btn').style.display = canEdit?'':'none';
+  const delBtn=document.getElementById('soc-detail-delete-btn'); if(delBtn)delBtn.style.display = canEdit?'':'none';
   document.getElementById('soc-overview').innerHTML = `
-    <div class="g3" style="margin-bottom:13px">
-      ${kpi('Countdown', days>=0?days+' day'+(days!==1?'s':''):'Past', days>=0?'Until event':'Event date has passed', 'neutral')}
-      ${kpi('Readiness', r.score+'%', r.missing.length?r.missing.length+' item(s) missing':'Fully ready', r.score>=80?'up':r.score>=50?'neutral':'down')}
-      ${kpi('Status', socStatusLabel(plan.status), 'Current planning stage', 'neutral')}
+    <div class="d2-stats" style="margin-bottom:13px">
+      ${statStrip('Countdown', days>=0?days+' day'+(days!==1?'s':''):'Past', days>=0?'Until event':'Event date has passed', 'neutral')}
+      ${statStrip('Readiness', r.score+'%', r.missing.length?r.missing.length+' item(s) missing':'Fully ready', r.score>=80?'up':r.score>=50?'neutral':'down')}
+      ${statStrip('Status', socStatusLabel(plan.status), 'Current planning stage', 'neutral')}
     </div>
-    ${r.missing.length?`<div class="bnr warn"><i class="ti ti-alert-triangle" style="font-size:13px"></i><div><strong>Missing to be fully ready:</strong> ${r.missing.map(esc).join(', ')}</div></div>`:''}
-    <div class="card">
-      <div class="card-hd"><span class="card-t">Status &amp; Attendance</span></div>
-      <div class="fr c3">
+    ${r.missing.length?`<div class="bnr warn" style="margin-bottom:13px"><i class="ti ti-alert-triangle" style="font-size:13px"></i><div><strong>Missing to be fully ready:</strong> ${r.missing.map(esc).join(', ')}</div></div>`:''}
+    <div class="card" style="margin-bottom:13px">
+      <div class="card-hd"><span class="card-t">Status</span></div>
+      <div class="fr">
         <div class="fld"><label>Status</label><select id="soc-ov-status" ${canEdit?'':'disabled'} onchange="socUpdateStatus()">${SOC_STATUSES.map(s=>`<option value="${s.v}"${plan.status===s.v?' selected':''}>${s.l}</option>`).join('')}</select></div>
-        <div class="fld"><label>Expected Attendance</label><input id="soc-ov-exp" type="number" min="0" value="${plan.expectedAttendance??''}" ${canEdit?'':'disabled'} onchange="socUpdateOverviewField('expectedAttendance',this.value===''?null:+this.value)"></div>
-        <div class="fld"><label>Actual Attendance</label><input id="soc-ov-act" type="number" min="0" value="${plan.actualAttendance??''}" ${canEdit?'':'disabled'} onchange="socUpdateOverviewField('actualAttendance',this.value===''?null:+this.value)"></div>
       </div>
     </div>`;
 }
 async function socUpdateStatus(){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const v=document.getElementById('soc-ov-status').value;
   await socUpdateOverviewField('status',v);
 }
 async function socUpdateOverviewField(field,val){
-  if(!socFull())return;
-  const id=SOC_CURRENT_EVENT_ID;
+  if(!(canEditSocial()||isLeadUser()))return;
+  const id=SOC_CURRENT_EVENT_ID; const prev=socPlan(id)[field];
   socSetPlan(id,p=>({...p,[field]:val}));
-  await saveData();
-  socRenderDetailOverview(); socRenderEventList();
+  try{ await saveD('social'); socRenderDetailOverview(); socRenderEventList(); }
+  catch(e){ socSetPlan(id,p=>({...p,[field]:prev})); toast('Failed to save. Please try again.','error'); }
 }
 
 // ── CHECKLIST ──
 function socRenderChecklist(){
-  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id); const canEdit=socFull();
+  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id); const canEdit=canEditSocial()||isLeadUser();
   const el=document.getElementById('soc-checklist-list'); if(!el) return;
   const addRow = canEdit?`<div class="fr c3" style="margin-bottom:11px">
       <div class="fld"><label>New item</label><input id="soc-cl-label" placeholder="e.g. Venue contract signed"></div>
-      <div class="fld"><label>Assigned to</label><select id="soc-cl-assignee"><option value="">— Unassigned —</option>${memberSelectOptions()}</select></div>
+      <div class="fld"><label>Assigned to</label><select id="soc-cl-assignee"><option value="">— Unassigned —</option>${mOpts()}</select></div>
       <div class="fld"><label>Due date</label><input id="soc-cl-due" type="date"></div>
     </div>
-    <div style="display:flex;gap:7px;margin-bottom:14px"><label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mt)"><input type="checkbox" id="soc-cl-linktask"> Also create a linked task</label><button class="btn btn-p" style="margin-left:auto" onclick="socAddChecklistItem()"><i class="ti ti-plus"></i>Add Item</button></div>`:'';
+    <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mt)"><input type="checkbox" id="soc-cl-linktask"> Also create a linked task</label><button class="btn btn-p" style="margin-left:auto" onclick="socAddChecklistItem()"><i class="ti ti-plus"></i>Add Item</button></div>`:'';
   if(!plan.checklist.length){
     el.innerHTML = addRow + es('ti-list-check','blue','No checklist items yet','Break planning into trackable steps.','');
     return;
@@ -334,13 +388,13 @@ function socRenderChecklist(){
       <div class="tc ${c.done?'done':''}" style="cursor:${canEdit?'pointer':'default'}" ${canEdit?`onclick="socToggleChecklistItem('${c.id}')"`:''}>${c.done?'<i class="ti ti-check" style="font-size:9px"></i>':''}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;${c.done?'text-decoration:line-through;color:var(--ht)':''}">${esc(c.label)}${c.linkedTaskId?' <i class="ti ti-link" title="Linked to a task" style="font-size:10px;color:var(--sky-tx)"></i>':''}</div>
-        <div style="font-size:10.5px;color:var(--ht)">${c.assignedTo?esc(getMember(c.assignedTo).name):'Unassigned'}${c.dueDate?' · Due '+formatDateShort(c.dueDate):''}</div>
+        <div style="font-size:10.5px;color:var(--ht)">${c.assignedTo?esc(mB(c.assignedTo).name):'Unassigned'}${c.dueDate?' · Due '+fds(c.dueDate):''}</div>
       </div>
       ${canEdit?`<button class="ib" style="width:22px;height:22px;font-size:11px;color:var(--rd)" onclick="socDeleteChecklistItem('${c.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}
     </div>`).join('');
 }
 async function socAddChecklistItem(){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const label=document.getElementById('soc-cl-label').value.trim();
   if(!label){toast('Item description is required','error');return;}
   const assignedTo=document.getElementById('soc-cl-assignee').value;
@@ -348,150 +402,153 @@ async function socAddChecklistItem(){
   const linkTask=document.getElementById('soc-cl-linktask').checked;
   const id=SOC_CURRENT_EVENT_ID;
   let linkedTaskId=null;
-  if(linkTask){
+  if(linkTask && typeof D.tasks!=='undefined'){
     const task={id:uid(),title:label,assignedTo,priority:'medium',status:'todo',dueDate,desc:'Linked to social event checklist.'};
     D.tasks.push(task); linkedTaskId=task.id;
   }
   const item={id:uid(),label,assignedTo,dueDate,done:false,linkedTaskId};
   socSetPlan(id,p=>({...p,checklist:[...p.checklist,item]}));
-  await saveData();
-  document.getElementById('soc-cl-label').value='';
-  socRenderChecklist();
-  if(typeof renderDash==='function') renderDash();
-  toast('Checklist item added'+(linkTask?' with linked task':''),'success');
+  try{
+    await (linkTask?saveD('social','tasks'):saveD('social'));
+    document.getElementById('soc-cl-label').value='';
+    socRenderChecklist();
+    if(typeof renderDash==='function') renderDash();
+    toast('Checklist item added'+(linkTask?' with linked task':''),'success');
+  }catch(e){
+    socSetPlan(id,p=>({...p,checklist:p.checklist.filter(c=>c.id!==item.id)}));
+    if(linkedTaskId) D.tasks=D.tasks.filter(t=>t.id!==linkedTaskId);
+    toast('Failed to add item. Please try again.','error');
+  }
 }
 async function socToggleChecklistItem(itemId){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id);
   const item=plan.checklist.find(c=>c.id===itemId); if(!item) return;
   const newDone=!item.done;
   socSetPlan(id,p=>({...p,checklist:p.checklist.map(c=>c.id===itemId?{...c,done:newDone}:c)}));
+  // If linked to a task, keep the task's status in sync as a convenience (one-way, not a live subscription)
   if(item.linkedTaskId){ const t=D.tasks.find(x=>x.id===item.linkedTaskId); if(t) t.status = newDone?'done':'todo'; }
-  await saveData();
-  socRenderChecklist(); socRenderDetailOverview();
+  try{ await (item.linkedTaskId?saveD('social','tasks'):saveD('social')); socRenderChecklist(); socRenderDetailOverview(); }
+  catch(e){ socSetPlan(id,p=>({...p,checklist:p.checklist.map(c=>c.id===itemId?{...c,done:!newDone}:c)})); toast('Failed to update. Please try again.','error'); }
 }
 async function socDeleteChecklistItem(itemId){
-  if(!socFull())return;
-  const id=SOC_CURRENT_EVENT_ID;
+  if(!(canEditSocial()||isLeadUser()))return;
+  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id);
+  const removed=plan.checklist.find(c=>c.id===itemId);
   socSetPlan(id,p=>({...p,checklist:p.checklist.filter(c=>c.id!==itemId)}));
-  await saveData();
-  socRenderChecklist();
+  try{ await saveD('social'); socRenderChecklist(); }
+  catch(e){ if(removed) socSetPlan(id,p=>({...p,checklist:[...p.checklist,removed]})); toast('Failed to remove item. Please try again.','error'); }
 }
 
-// ── BUDGET ──
+// ── BUDGET — kept deliberately simple: one planned-budget number for the whole event, plus a
+// log of what was actually spent (each logged expense also lands in Finance under the
+// 'Events Social' category, tagged with this event's id, so the two books never disagree). ──
 function socRenderBudget(){
-  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id); plan._eventId=id; const canEdit=socFull();
+  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id); plan._eventId=id; const canEdit=canEditSocial()||isLeadUser();
   const el=document.getElementById('soc-budget-body'); if(!el) return;
   const tot=socBudgetTotals(plan);
-  const kpiHtml = `<div class="g3" style="margin-bottom:13px">
-    ${kpi('Planned Budget','$'+Math.round(tot.est).toLocaleString(),'Sum of estimates','neutral')}
-    ${kpi('Actual Spend','$'+Math.round(tot.actual).toLocaleString(),tot.actualLogged?'From logged expenses':'From planning estimates','neutral')}
-    ${kpi('Variance','$'+Math.round(tot.est-tot.actual).toLocaleString(),tot.actual>tot.est?'Over budget':'Remaining',tot.actual>tot.est?'down':'up')}
+  const remaining=tot.est-tot.actual;
+  const kpiHtml = `<div class="d2-stats" style="margin-bottom:13px">
+    ${statStrip('Budget Remaining','$'+Math.round(remaining).toLocaleString(),remaining<0?'Over budget':'Left to spend',remaining<0?'down':'up')}
+    ${statStrip('Planned Budget','$'+Math.round(tot.est).toLocaleString(),'Total estimate','neutral')}
+    ${statStrip('Actual Spend','$'+Math.round(tot.actual).toLocaleString(),'From logged expenses','neutral')}
   </div>`;
-  const addRow = canEdit?`<div class="fr c3" style="margin-bottom:8px">
-      <div class="fld"><label>Category</label><select id="soc-bg-cat"><option>Venue</option><option>Transportation</option><option>Lodging</option><option>Catering</option><option>Entertainment</option><option>Security/Staffing</option><option>Decorations</option><option>Other</option></select></div>
-      <div class="fld"><label>Description</label><input id="soc-bg-desc" placeholder="What is this for?"></div>
-      <div class="fld"><label>Vendor</label><input id="soc-bg-vendor" placeholder="Optional"></div>
-    </div>
-    <div class="fr c3" style="margin-bottom:11px">
-      <div class="fld"><label>Estimated Cost</label><input id="soc-bg-est" type="number" min="0" step="0.01" value="0"></div>
-      <div class="fld"><label>Actual Cost</label><input id="soc-bg-act" type="number" min="0" step="0.01" value="0"></div>
-      <div class="fld"><label>Payment Status</label><select id="soc-bg-status"><option value="not_due">Not Due</option><option value="deposit_due">Deposit Due</option><option value="deposit_paid">Deposit Paid</option><option value="payment_due">Payment Due</option><option value="paid">Paid</option></select></div>
-    </div>
-    <button class="btn btn-p" style="margin-bottom:14px" onclick="socAddBudgetItem()"><i class="ti ti-plus"></i>Add Budget Line</button>`:'';
-  if(!plan.budgetItems.length){
-    el.innerHTML = kpiHtml + addRow + es('ti-cash','amber','No budget lines yet','Add estimated costs by category to track this event\'s spend.','');
-    return;
-  }
-  const statusBadge={not_due:'bm2',deposit_due:'ba2',deposit_paid:'bb2',payment_due:'ba2',paid:'bg2'};
-  const statusLabel={not_due:'Not Due',deposit_due:'Deposit Due',deposit_paid:'Deposit Paid',payment_due:'Payment Due',paid:'Paid'};
-  el.innerHTML = kpiHtml + addRow + `<div class="tw"><table class="tbl"><thead><tr><th>Category</th><th>Description</th><th>Vendor</th><th>Est.</th><th>Actual</th><th>Status</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    plan.budgetItems.map(b=>`<tr><td style="font-weight:500">${esc(b.category)}</td><td>${esc(b.description)||'—'}</td><td style="color:var(--mt)">${esc(b.vendor)||'—'}</td><td>$${(+b.estCost||0).toLocaleString()}</td><td>$${(+b.actualCost||0).toLocaleString()}</td><td><span class="badge ${statusBadge[b.paymentStatus]||'bm2'}">${statusLabel[b.paymentStatus]||b.paymentStatus}</span></td>${canEdit?`<td><button class="ib" style="width:22px;height:22px;font-size:11px;color:var(--rd)" onclick="socDeleteBudgetItem('${b.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
-  }</tbody></table></div>
-  ${canEdit?`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)"><div style="font-size:11.5px;color:var(--mt);margin-bottom:8px">When money actually moves, log it against the chapter's <strong>Events Social</strong> Finance category so it shows up in Finance too:</div><button class="btn" onclick="socOpenLogExpense()"><i class="ti ti-receipt"></i>Log Actual Expense to Finance</button></div>`:''}`;
+  const plannedField = `<div class="fr" style="margin-bottom:13px"><div class="fld"><label>Planned Budget</label><input id="soc-bg-planned" type="number" min="0" step="0.01" value="${plan.plannedBudget||0}" ${canEdit?'':'disabled'} onchange="socUpdatePlannedBudget(this.value)"></div></div>`;
+  const expenses=(D.finance?.expenses||[]).filter(e=>e.eventId===id).sort((a,b)=>b.date.localeCompare(a.date));
+  const expTable = expenses.length ? `<div class="tw"><table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Amount</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
+    expenses.map(e=>`<tr><td>${fds(e.date)}</td><td style="font-weight:500">${esc(e.desc)}</td><td>$${(+e.amount||0).toLocaleString()}</td>${canEdit?`<td><button class="ib" style="width:22px;height:22px;font-size:11px;color:var(--rd)" onclick="socDeleteExpense('${e.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+  }</tbody></table></div>` : es('ti-receipt','amber','No expenses logged yet','Log what this event actually costs as you spend.','');
+  el.innerHTML = kpiHtml + plannedField + (canEdit?`<button class="btn btn-p" style="margin-bottom:14px" onclick="socOpenLogExpense()"><i class="ti ti-receipt"></i>Log Expense</button>`:'') + expTable;
 }
-async function socAddBudgetItem(){
-  if(!socFull())return;
-  const description=document.getElementById('soc-bg-desc').value.trim();
-  const item={id:uid(),category:document.getElementById('soc-bg-cat').value,description,vendor:document.getElementById('soc-bg-vendor').value.trim(),estCost:parseFloat(document.getElementById('soc-bg-est').value)||0,actualCost:parseFloat(document.getElementById('soc-bg-act').value)||0,paymentStatus:document.getElementById('soc-bg-status').value,notes:''};
-  const id=SOC_CURRENT_EVENT_ID;
-  socSetPlan(id,p=>({...p,budgetItems:[...p.budgetItems,item]}));
-  await saveData();
-  socRenderBudget(); toast('Budget line added','success');
+async function socUpdatePlannedBudget(value){
+  if(!(canEditSocial()||isLeadUser()))return;
+  const id=SOC_CURRENT_EVENT_ID; const prev=socPlan(id).plannedBudget;
+  const val=value===''?0:parseFloat(value)||0;
+  socSetPlan(id,p=>({...p,plannedBudget:val}));
+  try{ await saveD('social'); socRenderBudget(); socRenderEventList(); }
+  catch(e){ socSetPlan(id,p=>({...p,plannedBudget:prev})); toast('Failed to save. Please try again.','error'); socRenderBudget(); }
 }
-async function socDeleteBudgetItem(itemId){
-  if(!socFull())return;
-  const id=SOC_CURRENT_EVENT_ID;
-  socSetPlan(id,p=>({...p,budgetItems:p.budgetItems.filter(b=>b.id!==itemId)}));
-  await saveData();
-  socRenderBudget();
+async function socDeleteExpense(expId){
+  if(!(canEditSocial()||isLeadUser()))return;
+  const ok=await confirmDialog('Delete Expense','Remove this logged expense? This also removes it from Finance.');
+  if(!ok)return;
+  const idx=(D.finance?.expenses||[]).findIndex(e=>e.id===expId);
+  if(idx<0)return;
+  const removed=D.finance.expenses[idx];
+  D.finance.expenses=D.finance.expenses.filter(e=>e.id!==expId);
+  try{ await saveFinanceLedger(); socRenderBudget(); socRenderEventList(); toast('Expense deleted','info'); }
+  catch(e){ D.finance.expenses.splice(idx,0,removed); toast('Failed to delete expense. Please try again.','error'); }
 }
 // Bridges to Finance: logs a real, dated expense under the existing 'Events Social' category,
-// tagged with this event's id so socBudgetTotals() can show real confirmed spend.
+// tagged with this event's id so socBudgetTotals() can show real confirmed spend. Does not
+// touch finance.js's own modal — this is a lightweight equivalent scoped to Social.
 function socOpenLogExpense(){
-  if(!socFull()){toast('You do not have permission to log expenses.','error');return;}
+  if(!(canEditSocial()||isLeadUser())){toast('You do not have permission to log expenses.','error');return;}
   document.getElementById('soc-exp-desc').value='';
   document.getElementById('soc-exp-amount').value='';
-  document.getElementById('soc-exp-date').value=socToday();
+  document.getElementById('soc-exp-date').value=localDateStr();
   const sel=document.getElementById('soc-exp-officer');
-  sel.innerHTML=memberSelectOptions();
+  sel.innerHTML=D.members.filter(m=>m.role!=='Member').map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   if(CURRENT_USER?.mid) sel.value=CURRENT_USER.mid;
-  document.getElementById('m-soc-logexpense').classList.add('open');
+  openM('m-soc-logexpense');
 }
 async function socLogExpenseToFinance(){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const amount=parseFloat(document.getElementById('soc-exp-amount').value);
   const desc=document.getElementById('soc-exp-desc').value.trim();
   if(!amount||amount<=0||!desc){toast('Description and a valid amount are required','error');return;}
-  if(!D.finance.expenses) D.finance.expenses=[];
-  const expense={id:'ex'+uid(),category:'Events Social',desc,amount,officer:document.getElementById('soc-exp-officer').value,date:document.getElementById('soc-exp-date').value||socToday(),eventId:SOC_CURRENT_EVENT_ID};
+  if(!D.finance) D.finance={expenses:[]}; if(!D.finance.expenses) D.finance.expenses=[];
+  const expense={id:'ex'+uid(),category:'Events Social',desc,amount,officer:document.getElementById('soc-exp-officer').value,date:document.getElementById('soc-exp-date').value||localDateStr(),eventId:SOC_CURRENT_EVENT_ID};
   D.finance.expenses.unshift(expense);
-  await saveData();
-  closeM(null,document.getElementById('m-soc-logexpense'));
-  socRenderBudget();
-  toast('Expense of $'+amount+' logged to Finance','success');
+  try{
+    await saveFinanceLedger();
+    closeM(null,document.getElementById('m-soc-logexpense'));
+    socRenderBudget();
+    socRenderEventList();
+    toast('Expense of $'+amount+' logged to Finance','success');
+  }catch(e){
+    D.finance.expenses=D.finance.expenses.filter(x=>x.id!==expense.id);
+    toast('Failed to log expense. Please try again.','error');
+  }
 }
 
 // ── VENDORS (chapter-wide directory, associated to events) ──
 function socRenderVendorsTable(){
   const el=document.getElementById('soc-vendors-table'); if(!el) return;
-  const canEdit=socFull();
-  const vendors=D.social.vendors||[];
+  const canEdit=canEditSocial()||isLeadUser();
+  const vendors=D.social?.vendors||[];
   if(!vendors.length){ el.innerHTML=`<tbody><tr><td colspan="4">${es('ti-truck-delivery','blue','No vendors yet','Track venues, transportation providers, caterers, and other vendors here.',canEdit?`<button class="btn btn-p" onclick="socOpenAddVendor()"><i class="ti ti-plus"></i>Add Vendor</button>`:'')}</td></tr></tbody>`; return; }
   el.innerHTML=`<thead><tr><th>Name</th><th>Type</th><th>Contact</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
     vendors.map(v=>`<tr><td style="font-weight:500">${esc(v.name)}</td><td style="color:var(--mt)">${esc((SOC_EVENT_CATEGORIES.find(c=>c.v===v.type)||{}).l||v.type)}</td><td style="color:var(--mt)">${esc(v.contactName)||'—'}${v.phone?' · '+esc(v.phone):''}</td>${canEdit?`<td><button class="ib" style="width:22px;height:22px;font-size:11px;color:var(--rd)" onclick="socDeleteVendor('${v.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 function socOpenAddVendor(){
-  if(!socFull()){toast('Only officers with Social Events access can add vendors.','error');return;}
+  if(!(canEditSocial()||isLeadUser())){toast('Only officers with Social Events access can add vendors.','error');return;}
   ['soc-vd-name','soc-vd-contact','soc-vd-phone','soc-vd-email','soc-vd-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('m-soc-addvendor').classList.add('open');
+  openM('m-soc-addvendor');
 }
 async function socAddVendor(){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const name=document.getElementById('soc-vd-name').value.trim();
   if(!name){toast('Vendor name is required','error');return;}
   const vendor={id:uid(),name,type:document.getElementById('soc-vd-type').value,contactName:document.getElementById('soc-vd-contact').value.trim(),phone:document.getElementById('soc-vd-phone').value.trim(),email:document.getElementById('soc-vd-email').value.trim(),notes:document.getElementById('soc-vd-notes').value.trim(),associatedEventIds:[]};
+  if(!D.social) D.social={planning:{},vendors:[]}; if(!D.social.vendors) D.social.vendors=[];
   D.social.vendors.push(vendor);
-  await saveData();
-  closeM(null,document.getElementById('m-soc-addvendor'));
-  socRenderVendorsTable();
-  if(SOC_CURRENT_EVENT_ID) socRenderEventVendors();
-  toast('Vendor added','success');
+  try{ await saveD('social'); closeM(null,document.getElementById('m-soc-addvendor')); socRenderVendorsTable(); if(SOC_CURRENT_EVENT_ID) socRenderEventVendors(); toast('Vendor added','success'); }
+  catch(e){ D.social.vendors=D.social.vendors.filter(v=>v.id!==vendor.id); toast('Failed to add vendor. Please try again.','error'); }
 }
 async function socDeleteVendor(id){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const ok=await confirmDialog('Remove Vendor','Remove this vendor from the directory?'); if(!ok) return;
+  const removed=D.social.vendors.find(v=>v.id===id);
   D.social.vendors=D.social.vendors.filter(v=>v.id!==id);
-  await saveData();
-  socRenderVendorsTable();
-  if(SOC_CURRENT_EVENT_ID) socRenderEventVendors();
-  toast('Vendor removed','info');
+  try{ await saveD('social'); socRenderVendorsTable(); if(SOC_CURRENT_EVENT_ID) socRenderEventVendors(); toast('Vendor removed','info'); }
+  catch(e){ if(removed) D.social.vendors.push(removed); toast('Failed to remove vendor. Please try again.','error'); }
 }
 function socRenderEventVendors(){
-  const id=SOC_CURRENT_EVENT_ID; const canEdit=socFull();
+  const id=SOC_CURRENT_EVENT_ID; const canEdit=canEditSocial()||isLeadUser();
   const el=document.getElementById('soc-event-vendors'); if(!el) return;
-  const vendors=D.social.vendors||[];
+  const vendors=D.social?.vendors||[];
   if(!vendors.length){ el.innerHTML=es('ti-truck-delivery','blue','No vendors in the directory yet','Add vendors from the main Social Events list, then associate them here.',''); return; }
   el.innerHTML = vendors.map(v=>{
     const assoc = (v.associatedEventIds||[]).includes(id);
@@ -499,18 +556,19 @@ function socRenderEventVendors(){
   }).join('');
 }
 async function socToggleVendorAssoc(vendorId){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const eventId=SOC_CURRENT_EVENT_ID;
   const v=D.social.vendors.find(x=>x.id===vendorId); if(!v) return;
   if(!v.associatedEventIds) v.associatedEventIds=[];
   const has=v.associatedEventIds.includes(eventId);
   v.associatedEventIds = has ? v.associatedEventIds.filter(id=>id!==eventId) : [...v.associatedEventIds,eventId];
-  await saveData();
+  try{ await saveD('social'); }
+  catch(e){ v.associatedEventIds = has ? [...v.associatedEventIds,eventId] : v.associatedEventIds.filter(id=>id!==eventId); toast('Failed to update. Please try again.','error'); }
 }
 
 // ── FORMAL PLANNING (venue/transportation/lodging/catering/entertainment/security) ──
 function socRenderFormal(){
-  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id); const canEdit=socFull();
+  const id=SOC_CURRENT_EVENT_ID; const plan=socPlan(id); const canEdit=canEditSocial()||isLeadUser();
   const el=document.getElementById('soc-formal-body'); if(!el) return;
   const dis = canEdit?'':'disabled';
   el.innerHTML = `
@@ -533,7 +591,7 @@ function socRenderFormal(){
       <div class="fr c3">
         <div class="fld"><label>Departure Time</label><input id="soc-f-trans-depart" type="time" ${dis} value="${plan.transportation.departureTime||''}"></div>
         <div class="fld"><label>Return Time</label><input id="soc-f-trans-return" type="time" ${dis} value="${plan.transportation.returnTime||''}"></div>
-        <div class="fld"><label>Vehicles / Capacity</label><div style="display:flex;gap:6px"><input id="soc-f-trans-vcount" type="number" min="0" placeholder="Vehicles" ${dis} value="${plan.transportation.vehicleCount||0}"><input id="soc-f-trans-vcap" type="number" min="0" placeholder="Capacity" ${dis} value="${plan.transportation.capacity||0}"></div></div>
+        <div class="fld"><label>Vehicles / Capacity</label><div style="display:flex;gap:6px;flex-wrap:wrap"><input id="soc-f-trans-vcount" type="number" min="0" placeholder="Vehicles" ${dis} value="${plan.transportation.vehicleCount||0}" style="flex:1;min-width:80px"><input id="soc-f-trans-vcap" type="number" min="0" placeholder="Capacity" ${dis} value="${plan.transportation.capacity||0}" style="flex:1;min-width:80px"></div></div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin:6px 0"><input type="checkbox" id="soc-f-trans-confirmed" ${dis} ${plan.transportation.confirmed?'checked':''}> Transportation confirmed</label>
       <div class="fld"><label>Notes</label><textarea id="soc-f-trans-notes" ${dis} style="height:50px">${esc(plan.transportation.notes)}</textarea></div>
@@ -573,7 +631,7 @@ function socRenderFormal(){
     </div>`;
 }
 async function socSaveFormalSection(section){
-  if(!socFull())return;
+  if(!(canEditSocial()||isLeadUser()))return;
   const id=SOC_CURRENT_EVENT_ID;
   const g=(elId)=>document.getElementById(elId);
   const sections = {
@@ -585,28 +643,28 @@ async function socSaveFormalSection(section){
     security: ()=>({provider:g('soc-f-sec-provider').value.trim(),contact:g('soc-f-sec-contact').value.trim(),staffCount:parseFloat(g('soc-f-sec-count').value)||0,cost:parseFloat(g('soc-f-sec-cost').value)||0,confirmed:g('soc-f-sec-confirmed').checked,notes:g('soc-f-sec-notes').value.trim()}),
   };
   const newVal = sections[section]();
+  const prev = socPlan(id)[section];
   socSetPlan(id,p=>({...p,[section]:newVal}));
-  await saveData();
-  socRenderDetailOverview(); socRenderEventList();
-  toast(section.charAt(0).toUpperCase()+section.slice(1)+' saved','success');
+  try{ await saveD('social'); socRenderDetailOverview(); socRenderEventList(); toast(section.charAt(0).toUpperCase()+section.slice(1)+' saved','success'); }
+  catch(e){ socSetPlan(id,p=>({...p,[section]:prev})); toast('Failed to save. Please try again.','error'); }
 }
 
-// ── MEMBER-FACING RESTRICTED VIEW ──
-// RSVP tracking was removed — general members get a read-only view of events that have
-// actually opened up, same visibility rule as before, just without the Yes/Maybe/No response.
+// ── MEMBER-FACING RESTRICTED VIEW — read-only list of upcoming social events. Used to include
+// a self-service RSVP (yes/maybe/no) backed by a separate socialRsvps Firestore collection;
+// removed, so this is now just SOC_MEMBER_VISIBLE_STATUSES-filtered event info. ──
 function socRenderMemberView(){
   const el = document.getElementById('soc-member-events'); if(!el) return;
-  const now = socToday();
+  const now = localDateStr();
   const events = socEvents().filter(e=>{
     const plan=socPlan(e.id);
     return e.date>=now && SOC_MEMBER_VISIBLE_STATUSES.includes(plan.status);
   }).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!events.length){ el.innerHTML = es('ti-confetti','pink','No upcoming social events','Check back soon for the next social event.',''); return; }
+  if(!events.length){ el.innerHTML = es('ti-confetti','slate','No upcoming social events','Check back soon for what\'s next.',''); return; }
   el.innerHTML = events.map(e=>{
     const plan=socPlan(e.id);
     return `<div class="card" style="margin-bottom:11px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div><div style="font-size:14px;font-weight:600">${esc(e.title)}</div><div style="font-size:11.5px;color:var(--mt)">${socCatLabel(plan.eventCategory)} · ${formatDateShort(e.date)}${e.start?' · '+to12h(e.start):''}${e.location?' · '+esc(e.location):''}</div></div>
+        <div><div style="font-size:14px;font-weight:600">${esc(e.title)}</div><div style="font-size:11.5px;color:var(--mt)">${socCatLabel(plan.eventCategory)} · ${fds(e.date)}${e.start?' · '+to12h(e.start):''}${e.location?' · '+esc(e.location):''}</div></div>
         <span class="badge ${socStatusClass(plan.status)}">${socStatusLabel(plan.status)}</span>
       </div>
     </div>`;

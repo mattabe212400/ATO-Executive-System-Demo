@@ -1,67 +1,47 @@
-/* OpsCore 2.0 — Design Tokens & Reset (Redesign: navy/gold enterprise SaaS) */
-*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  /* ── SURFACES ── */
-  --bg:#F8FAFC;--surf:#FFFFFF;--surf2:#F1F5F9;--surf-h:#EEF2F6;
-  --bdr:#E2E8F0;--bdr2:#CBD5E1;
+  /* ── SURFACES (clean white, subtle cool-gray page bg for depth) ── */
+  --bg:#F8FAFC;--surf:#FFFFFF;--surf2:#F2F4F7;--surf-h:#EBEDF1;
+  --bdr:#E5E7EB;--bdr2:#D3D7DF;
 
   /* ── TEXT ── */
-  --tx:#0F172A;--mt:#64748B;--ht:#94A3B8;
+  --tx:#111827;--mt:#6B7280;--ht:#9CA3AF;
+  /* True near-black pair for small floating/dark surfaces that sit outside the light UI (chart
+     tooltips, the Analytics "Dark Intelligence" header) — distinct from --tx on purpose. */
+  --ink:#1a1a18;--ink-deep:#2d2d2a;
 
-  /* ── BRAND / DARK SURFACES ── */
-  --navy:#0F172A;        /* sidebar bg, dark banners, primary headings on dark */
-  --slate:#1E293B;       /* sidebar active-row bg, sidebar border */
-  --gold:#C8A951;--gold-h:#A9862E;--gold-bg:rgba(200,169,81,.14);--gold-tx:#8A6212;
-  --sky:#60A5FA;--sky-h:#3B82F6;--sky-bg:rgba(96,165,250,.14);--sky-tx:#2563EB;
+  /* ── BRAND ── */
+  /* --gold/--sky: the brand fills (button bg, icons, chart lines, dots). Text/icons on a solid --gold
+     or --sky fill always use --on-accent (near-black), never white — white-on-gold (#C9A227) computes
+     to ~2.4:1, well under WCAG AA's 4.5:1 (see .btn-p, .lg-btn, .cal-cell.today,
+     .tc.done). One shared token instead of each component hardcoding its own near-black.
+     --gold-tx/--sky-tx: darker "on-light" variants for direct text/icon use so small text still clears WCAG AA on white. */
+  --on-accent:#151008;
+  --gold:#C9A227;--gold-h:#A48420;--gold-bg:#F9F3E1;--gold-tx:#786017;
+  --sky:#5DA9E9;--sky-h:#3694E4;--sky-bg:#EBF6FE;--sky-tx:#1A6FA8;
 
-  /* text-on-navy (sidebar) — inactive rows/labels always use these, never --mt/--ht */
-  --sb-inactive:#94A3B8;--sb-label:#64748B;
+  /* legacy alias: --navy previously carried every "primary interactive" role. Kept pointing at gold. */
+  --navy:var(--gold);--navy-h:var(--gold-h);
 
-  /* ── STATUS ── */
-  --gn:#16A34A;--gn-bg:#DCFCE7;--gn-tx:#15803D;
-  --am:#D97706;--am-bg:#FEF3C7;--am-tx:#92400E;
-  --rd:#DC2626;--rd-bg:#FEE2E2;--rd-tx:#B91C1C;
-  --bl:#2563EB;--bl-bg:var(--sky-bg);--bl-tx:#2563EB;
-
-  /* ── TYPE ── */
-  --font:'Inter',system-ui,-apple-system,sans-serif;
-  --font-mono:'IBM Plex Mono',monospace;
-  --fs-page-title:22px;--fs-page-desc:13.5px;--fs-card-title:13.5px;
-  --fs-kpi-label:11px;--fs-kpi-value:23px;
-  --fs-table-head:11px;--fs-body:13.5px;--fs-meta:11.5px;
+  /* ── STATUS (tuned for white background) ── */
+  --gn:#10B981;--gn-bg:#DEFCF2;--gn-tx:#0B835C;
+  --am:#F59E0B;--am-bg:#FEF1DD;--am-tx:#895806;
+  --rd:#EF4444;--rd-bg:#FCDEDE;--rd-tx:#840B0B;
+  --bl:var(--sky);--bl-bg:var(--sky-bg);--bl-tx:var(--sky-tx);
 
   /* ── SHAPE / ELEVATION ── */
-  --r:8px;                /* chips/pills/inputs (6-9px range) */
-  --rl:12px;               /* card/table radius */
-  --r-badge:5px;
+  /* --r-2xs/--r-xs: real, repeated existing radii (micro-chips, compact selects) formalized as
+     tokens by /impeccable polish — not yet swapped in at their ~30 existing call sites app-wide. */
+  --r-2xs:4px;--r-xs:7px;--r:8px;--rl:12px;
+  --shadow-card:0 1px 2px rgba(16,24,40,.04);
   --shadow-sm:0 1px 3px rgba(16,24,40,.06);
-  --shadow-md:0 4px 16px rgba(15,23,42,.08);
+  --shadow-md:0 4px 16px rgba(16,24,40,.08);
   --shadow-lg:0 16px 48px rgba(16,24,40,.14);
-  --shadow-modal:0 24px 64px rgba(0,0,0,.35);
-  --shadow-drawer:-16px 0 48px rgba(0,0,0,.2);
   --glass-bg:rgba(255,255,255,.85);
   --glass-blur:blur(20px) saturate(140%);
-
-  /* ── SPACING ── */
-  --content-max:1360px;--content-pad-top:28px;--content-pad-x:32px;
-  --card-pad:18px;--gap-cards:15px;--gap-tight:9px;
 
   --focus:0 0 0 2px var(--surf),0 0 0 4px var(--sky);
 }
 
-/* README-vocabulary aliases — used by new shell/component CSS; existing CSS keeps
-   using the short names above untouched. */
-:root{
-  --surface:var(--surf);--border:var(--bdr);
-  --text:var(--tx);--text-secondary:var(--mt);--text-muted:var(--ht);
-  --success:var(--gn);--success-bg:var(--gn-bg);--success-tx:var(--gn-tx);
-  --warning:var(--am);--warning-bg:var(--am-bg);--warning-tx:var(--am-tx);
-  --danger:var(--rd);--danger-bg:var(--rd-bg);--danger-tx:var(--rd-tx);
-  --info:var(--bl);--gold-hover:var(--gold-h);
-}
-
-:focus-visible{outline:none;box-shadow:var(--focus);border-radius:6px}
-.tabular-nums{font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+@media (prefers-reduced-transparency: reduce){
+  :root{--glass-bg:var(--surf);--glass-blur:none}
 }
