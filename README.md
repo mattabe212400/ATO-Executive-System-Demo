@@ -143,7 +143,7 @@ The demo auto-signs in as **James Mitchell, President of Epsilon Chapter at Over
 | Charts | Hand-rolled SVG (trend lines, donuts) + CSS flexbox bar charts — no charting library or dependency |
 | Database | Firebase Firestore (not loaded in this demo; live in production) |
 | Auth | Firebase Authentication + a position-based RBAC layer (`DEFAULT_POSITIONS`) |
-| Hosting | Vercel (demo) · Firebase Hosting (production) |
+| Hosting | Vercel |
 | Data Layer | LocalStorage offline cache + Firestore real-time sync (production only) |
 | Architecture | Single-page app, 26 modules, no build step |
 
