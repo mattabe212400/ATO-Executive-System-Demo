@@ -626,6 +626,37 @@ async function init(){
 
   renderDash();
   updateBadges();
+  demoCollapseDashboardExtras();
+}
+
+// ══════════════════════════════════════════════
+// DEMO DASHBOARD DENSITY — a cold prospect's very first frame after auto-login is the full
+// Dashboard: hero + quickbar + KPI strip + 4 left cards + 5 right cards, all above the fold on a
+// laptop. That's the right density for daily use, but backwards for a five-minute self-guided
+// demo, which should sell the value proposition before proving feature-completeness. This hides
+// only the DOM already in index.html (dashboard.js/renderDash() still populate the hidden cards'
+// content normally; they're just not shown until requested) — no page/route/component change.
+// ══════════════════════════════════════════════
+function demoCollapseDashboardExtras(){
+  const officersCard = document.getElementById('d-officers-card');
+  const soberCard = document.getElementById('d-sober') && document.getElementById('d-sober').closest('.d2-card');
+  const notesCard = document.getElementById('d-notes') && document.getElementById('d-notes').closest('.d2-card');
+  const extras = [officersCard, soberCard, notesCard].filter(Boolean);
+  if(!extras.length) return;
+  extras.forEach(card => { card.style.display = 'none'; });
+
+  const body = document.querySelector('#page-dashboard .d2-body');
+  if(!body || document.getElementById('d-show-more-toggle')) return;
+  const toggle = document.createElement('button');
+  toggle.id = 'd-show-more-toggle';
+  toggle.className = 'btn';
+  toggle.style.cssText = 'margin-top:14px;width:100%;justify-content:center';
+  toggle.innerHTML = `<i class="ti ti-chevron-down"></i>Show full dashboard (Officer KPIs, Social Monitors, Recent Notes)`;
+  toggle.onclick = () => {
+    extras.forEach(card => { card.style.display = ''; });
+    toggle.remove();
+  };
+  body.insertAdjacentElement('afterend', toggle);
 }
 
 // Demo-only replacement for the real seRenderUsers() (js/auth.js) — that one queries Firestore's
