@@ -47,9 +47,9 @@
 <!-- ── DEMO BANNER — not part of the real ATO Executive System, added for this public demo only ── -->
 <div id="demo-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#1A1F2B,#242B3A);color:#fff;font-size:11.5px;font-family:'Inter',system-ui,sans-serif;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.25)">
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <span style="background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.4);color:#E4C06B;border-radius:5px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Demo Mode</span>
-    <span style="opacity:.9">ATO Executive System · Viewing as <strong id="demo-role-label">President</strong> · All data is fictional</span>
-    <select id="demo-role-switcher" onchange="switchDemoRole(this.value)" title="Switch role to explore RBAC access control" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;font-size:10.5px;padding:2px 6px;cursor:pointer;outline:none;max-width:210px">
+    <span id="demo-banner-badge" style="background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.4);color:#E4C06B;border-radius:5px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Demo Mode</span>
+    <span id="demo-banner-text" style="opacity:.9">ATO Executive System · Viewing as <strong id="demo-role-label">President</strong> · All data is fictional</span>
+    <select id="demo-role-switcher" onchange="switchDemoRole(this.value)" title="Switch role to explore RBAC access control" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;font-size:10.5px;padding:2px 6px;cursor:pointer;outline:none;max-width:210px;min-height:26px">
       <option value="" disabled selected style="color:#1e293b;background:#fff">Switch role…</option>
       <option value="President" style="color:#1e293b;background:#fff">President: full access</option>
       <option value="Vice President" style="color:#1e293b;background:#fff">Vice President: full access</option>
@@ -70,7 +70,7 @@
     </select>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <button onclick="document.getElementById('demo-banner').style.display='none';document.body.style.paddingTop='0';document.querySelector('.sb').style.height=''" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:16px;line-height:1;padding:0 2px" title="Dismiss">×</button>
+    <button id="demo-banner-toggle" onclick="toggleDemoBanner()" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;min-width:26px;min-height:26px" title="Dismiss">×</button>
   </div>
 </div>
 

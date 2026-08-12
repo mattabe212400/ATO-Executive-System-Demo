@@ -11,7 +11,7 @@
 
 This repo is the actual production frontend, running against fictional seed data instead of a live chapter's real Firebase backend. See [Demo vs. Production](#demo-vs-production) below for exactly what that means.
 
-**[Live Demo →](https://ops-core-nine-rho.vercel.app/)** · No login required · All data is fictional seed data
+**[Live Demo →](https://demo.atoexec.com)** · No login required · All data is fictional seed data
 
 ---
 

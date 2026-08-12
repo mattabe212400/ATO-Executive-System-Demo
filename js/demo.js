@@ -670,4 +670,22 @@ function switchDemoRole(role){
   toast(`Now viewing as ${isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
 }
 
+// ══════════════════════════════════════════════
+// DEMO BANNER COLLAPSE — "×" used to call display:none on the whole #demo-banner, which also
+// removed the role switcher (the demo's main selling mechanic) with no way back short of a full
+// reload. This instead hides only the badge/explanatory text and keeps the switcher + a re-expand
+// control permanently on screen.
+// ══════════════════════════════════════════════
+function toggleDemoBanner(){
+  const badge = document.getElementById('demo-banner-badge');
+  const text = document.getElementById('demo-banner-text');
+  const btn = document.getElementById('demo-banner-toggle');
+  if(!badge || !text || !btn) return;
+  const collapsed = badge.style.display === 'none';
+  badge.style.display = collapsed ? '' : 'none';
+  text.style.display = collapsed ? '' : 'none';
+  btn.textContent = collapsed ? '×' : '▾';
+  btn.title = collapsed ? 'Dismiss' : 'Show demo info';
+}
+
 init();
