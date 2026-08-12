@@ -38,11 +38,12 @@
 .cal-legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
 .cal-legend-dot.round{border-radius:50%}
 
-/* ── Page identity: Title LG (16px/700), not the old 32px/800 .ph-title — see DESIGN.md's
-   No-Display-Type Rule. .page-title/.page-sub are the general-purpose names for any newly
-   redesigned page; .m-page-title/.m-page-sub (Members) is kept as an alias of the same rule so
-   its existing markup keeps working unchanged. Scoped to these classes rather than overriding
-   .ph-title itself, since that shared class still backs most other pages' headers untouched. */
+/* ── Page identity: Title LG (16px/700) — see DESIGN.md's No-Display-Type Rule. .page-title/
+   .page-sub are the general-purpose names for any page header; .m-page-title/.m-page-sub
+   (Members) is kept as an alias of the same rule so its existing markup keeps working unchanged.
+   Every page header now uses one of these two names — the old 32px/800 .ph-title/.ph-sub rules
+   they replaced (once the standard pattern, until this migration finished) are gone; .ph/.ph-left/
+   .ph-actions remain as the shared header layout/container classes. */
 .page-title,.m-page-title{font-size:16px;font-weight:700;line-height:1.2;color:var(--tx);letter-spacing:-.01em}
 .page-sub,.m-page-sub{font-size:11.5px;color:var(--mt);margin-top:1px}
 
@@ -135,8 +136,6 @@
 /* ── PAGE HEADER (consistent across all pages) ── */
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px}
 .ph-left{display:flex;flex-direction:column;gap:3px}
-.ph-title{font-size:32px;font-weight:800;color:var(--tx);letter-spacing:-.02em}
-.ph-sub{font-size:14.5px;color:var(--mt)}
 .ph-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 
 /* ── SECTION LABELS: unified ── */

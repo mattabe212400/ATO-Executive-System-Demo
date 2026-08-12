@@ -566,7 +566,7 @@
         </div>
       </div>
       <div class="d2-stats" id="t-kpi" style="margin-bottom:13px"></div>
-      <div class="card" style="margin-bottom:13px"><div class="card-hd"><span class="card-t">Semester Goals</span><button class="card-a" id="tasks-add-goal-btn" onclick="openM('m-addgoal')">+ Add goal</button></div><div id="t-goals"></div></div>
+      <div class="card" style="margin-bottom:13px"><div class="card-hd"><h3 class="card-t" id="tasks-goals-heading" style="margin:0">Semester Goals</h3><button class="card-a" id="tasks-add-goal-btn" onclick="openM('m-addgoal')">Add semester goal</button></div><div id="t-goals-sub" style="display:none;font-size:11.5px;color:var(--mt);margin:-6px 0 10px"></div><div id="t-goals"></div></div>
       <div class="sb2">
         <span class="sl">Task Board</span>
       </div>
@@ -2077,7 +2077,7 @@
       <!-- RESTRICTED VIEW — general members ('viewer' role) -->
       <div id="soc-member-view" style="display:none">
         <div class="ph">
-          <div class="ph-left"><div class="ph-title">Social Events</div><div class="ph-sub">Upcoming events</div></div>
+          <div class="ph-left"><h2 class="page-title">Social Events</h2><div class="page-sub">Upcoming events</div></div>
         </div>
         <div id="soc-member-events"></div>
       </div>
@@ -2709,10 +2709,9 @@
 </div></div>
 
 <div class="mo" role="dialog" aria-modal="true" id="m-addgoal" onclick="closeM(event,this)"><div class="md"><div class="md-t">New Semester Goal<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-addgoal'))"><i class="ti ti-x"></i></button></div>
-  <div class="fr"><div class="fld"><label for="ng-t">Goal title *</label><input id="ng-t" placeholder="Recruit 30 new pledges"></div></div>
-  <div class="fr c3"><div class="fld"><label for="ng-tg">Target</label><input id="ng-tg" type="number" value="100"></div><div class="fld"><label for="ng-cu">Current</label><input id="ng-cu" type="number" value="0"></div><div class="fld"><label for="ng-u">Unit</label><input id="ng-u" placeholder="pledges"></div></div>
-  <div class="fr"><div class="fld"><label for="ng-position">Position responsible *</label><select id="ng-position"></select></div></div>
-  <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addgoal'))">Cancel</button><button class="btn btn-p" onclick="addGoal()">Add Goal</button></div>
+  <div class="fr"><div class="fld"><label for="ng-position">Position *</label><select id="ng-position"></select></div></div>
+  <div class="fr"><div class="fld"><label for="ng-t">Semester goal *</label><input id="ng-t" placeholder="Example: Host three alumni professional-development workshops this semester"></div></div>
+  <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addgoal'))">Cancel</button><button class="btn btn-p" id="ng-submit" onclick="addGoal()">Add Goal</button></div>
 </div></div>
 
 <div class="mo" role="dialog" aria-modal="true" id="m-addnote" onclick="closeM(event,this)"><div class="md" style="width:620px;max-height:90vh">
