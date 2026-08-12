@@ -298,7 +298,7 @@ function openEditTask(id){
   const posSel=document.getElementById('et-position');
   if(posSel){
     const posOpts=(isLeadUser()?chapterPositionTitles():myPositionTitles()).map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
-    posSel.innerHTML=isLeadUser()?('<option value="">— Unassigned —</option>'+posOpts):posOpts;
+    posSel.innerHTML=isLeadUser()?('<option value="">Unassigned</option>'+posOpts):posOpts;
   }
   document.getElementById('et-id').value=id;
   document.getElementById('et-t').value=t.title;

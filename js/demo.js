@@ -91,14 +91,14 @@ function loadDemoData(){
   const sem = getSemester();
   const tasks = [
     {id:'t01',title:'Submit IFC compliance report',assignedTo:'President',positionTitle:'Vice President',priority:'urgent',status:'todo',dueDate:future(2),desc:'Annual IFC safety and risk management compliance report due to Greek Life office.',committeeId:null,semester:sem},
-    {id:'t02',title:'Update chapter budget spreadsheet',assignedTo:'President',positionTitle:'Treasurer',priority:'high',status:'in_progress',dueDate:future(5),desc:'Q2 budget vs actuals — include Spring Formal expenses.',committeeId:null,semester:sem},
+    {id:'t02',title:'Update chapter budget spreadsheet',assignedTo:'President',positionTitle:'Treasurer',priority:'high',status:'in_progress',dueDate:future(5),desc:'Q2 budget vs actuals, including Spring Formal expenses.',committeeId:null,semester:sem},
     {id:'t03',title:'Draft recruitment email sequence',assignedTo:'Vice President',positionTitle:'Recruitment',priority:'high',status:'in_progress',dueDate:future(4),desc:'3-email outreach sequence for Fall rush prospects.',committeeId:null,semester:sem},
     {id:'t04',title:'Book venue for Spring Formal',assignedTo:'Vice President',positionTitle:'Social',priority:'high',status:'done',dueDate:past(3),desc:'',committeeId:null,semester:sem},
-    {id:'t05',title:'Collect outstanding dues — 4 members',assignedTo:'President',positionTitle:'Treasurer',priority:'medium',status:'in_progress',dueDate:future(7),desc:'',committeeId:null,semester:sem},
+    {id:'t05',title:'Collect outstanding dues (4 members)',assignedTo:'President',positionTitle:'Treasurer',priority:'medium',status:'in_progress',dueDate:future(7),desc:'',committeeId:null,semester:sem},
     {id:'t06',title:'Schedule new member education sessions',assignedTo:'Vice President',positionTitle:'Membership Educator',priority:'medium',status:'todo',dueDate:future(10),desc:'',committeeId:null,semester:sem},
     {id:'t07',title:'Coordinate with philanthropy partner',assignedTo:'President',positionTitle:'Philanthropy',priority:'medium',status:'done',dueDate:past(7),desc:'',committeeId:null,semester:sem},
     {id:'t08',title:'Update chapter website',assignedTo:'Vice President',positionTitle:'Public Relations',priority:'low',status:'todo',dueDate:future(14),desc:'',committeeId:null,semester:sem},
-    {id:'t09',title:'Prepare scholarship report for nationals',assignedTo:'President',positionTitle:'Scholarship',priority:'high',status:'todo',dueDate:past(2),desc:'Overdue — GPA data needs to be compiled and submitted.',committeeId:null,semester:sem},
+    {id:'t09',title:'Prepare scholarship report for nationals',assignedTo:'President',positionTitle:'Scholarship',priority:'high',status:'todo',dueDate:past(2),desc:'Overdue. GPA data needs to be compiled and submitted.',committeeId:null,semester:sem},
     {id:'t10',title:'Book DJ for Spring Formal',assignedTo:'Vice President',positionTitle:'Social',priority:'medium',status:'done',dueDate:past(5),desc:'',committeeId:null,semester:sem},
     {id:'t11',title:'Post chapter meeting minutes',assignedTo:'Vice President',positionTitle:'Secretary',priority:'medium',status:'done',dueDate:past(6),desc:'',committeeId:null,semester:sem},
     {id:'t12',title:'Alumni newsletter draft',assignedTo:'President',positionTitle:'Alumni',priority:'low',status:'in_progress',dueDate:future(12),desc:'',committeeId:null,semester:sem},
@@ -115,8 +115,8 @@ function loadDemoData(){
 
   // ── NOTES ──
   const notes = [
-    {id:'n01',title:'Chapter Meeting — Week 8',type:'chapter',date:past(7),author:'m04',
-     announcements:'Spring Formal tickets on sale. Brotherhood retreat debrief shared.\nIFC compliance deadline is next week — VP following up.',
+    {id:'n01',title:'Chapter Meeting: Week 8',type:'chapter',date:past(7),author:'m04',
+     announcements:'Spring Formal tickets on sale. Brotherhood retreat debrief shared.\nIFC compliance deadline is next week. VP following up.',
      oldBusiness:'Dues collection at 87%. Treasurer sending final reminder this week.',
      newBusiness:'Recruitment kickoff event approved for '+future(3)+'. Risk Manager to file event approval.',
      actions:['VP to submit IFC compliance report by '+future(2),'Treasurer to finalize dues list','Recruitment to send kickoff invitations'],
@@ -127,13 +127,13 @@ function loadDemoData(){
        {role:'Treasurer',name:'Connor Walsh',notes:'Budget is on track. 4 members still owe semester dues. Spring Formal deposit paid.'},
        {role:'Recruitment',name:'Alex Rivera',notes:'14 rushees in pipeline. 6 are bid-ready. Kickoff event planning underway.'},
      ]},
-    {id:'n02',title:'Exec Meeting — Spring Formal Planning',type:'exec',date:past(14),author:'m01',
+    {id:'n02',title:'Exec Meeting: Spring Formal Planning',type:'exec',date:past(14),author:'m01',
      announcements:'Venue confirmed. Budget approved at $4,200.',
      oldBusiness:'DJ booked. Catering quotes received.',
      newBusiness:'Ticket pricing set at $35/person. Sales start Monday.',
      actions:['Social to open ticket sales','Treasurer to track ticket revenue'],
      officerReports:[]},
-    {id:'n03',title:'Chapter Meeting — Week 6',type:'chapter',date:past(21),author:'m04',
+    {id:'n03',title:'Chapter Meeting: Week 6',type:'chapter',date:past(21),author:'m04',
      announcements:'Philanthropy 5K registration open. Brotherhood retreat details shared.',
      oldBusiness:'New member education program on track. 3 sessions completed.',
      newBusiness:'Alumni golf outing scheduled for '+future(21)+'. Alumni chair coordinating.',
@@ -146,13 +146,13 @@ function loadDemoData(){
   // jbCases/mrCases split), not a free-text category. ──
   const cases = [
     {id:'jc01',caseNum:'JB-2024-001',member:'m13',memberName:'Owen Reed',type:'jb-hearing',status:'open',
-     bylaw:'Article II, Sec. 4 — Attendance',contact:'',
+     bylaw:'Article II, Sec. 4: Attendance',contact:'',
      resolution:'',filedBy:'m04',filedByName:'Daniel Park',docs:[],semester:sem,hearingDate:future(5)},
     {id:'jc02',caseNum:'JB-2024-002',member:'m11',memberName:'Logan Price',type:'membership-review',status:'open',
-     bylaw:'Article II, Sec. 1 — Bad Financial Risk',contact:'',
+     bylaw:'Article II, Sec. 1: Bad Financial Risk',contact:'',
      resolution:'',filedBy:'m03',filedByName:'Connor Walsh',docs:[],semester:sem,hearingDate:future(3)},
     {id:'jc03',caseNum:'JB-2023-008',member:'m15',memberName:'Brody Clark',type:'jb-hearing',status:'resolved',
-     bylaw:'Article XII — Conduct',contact:'',
+     bylaw:'Article XII: Conduct',contact:'',
      resolution:'10 hours community service completed. Case closed.',filedBy:'m01',filedByName:'James Mitchell',docs:[],semester:sem,hearingDate:past(30)},
   ];
 
@@ -214,7 +214,7 @@ function loadDemoData(){
   });
   const expenses = [
     {id:'ex01',desc:'Spring Formal venue deposit',category:'Events Social',amount:1200,date:past(18)},
-    {id:'ex02',desc:'DJ booking — Spring Formal',category:'Events Social',amount:650,date:past(10)},
+    {id:'ex02',desc:'DJ booking, Spring Formal',category:'Events Social',amount:650,date:past(10)},
     {id:'ex03',desc:'Philanthropy 5K supplies',category:'Events Philanthropy',amount:280,date:past(12)},
     {id:'ex04',desc:'Chapter house cleaning supplies',category:'Housing Miscellaneous',amount:95,date:past(8)},
     {id:'ex05',desc:'New member welcome gifts',category:'Miscellaneous',amount:340,date:past(20)},
@@ -248,7 +248,7 @@ function loadDemoData(){
     {id:'re02',name:'Philanthropy Service Day',date:future(10),time:'10:00',location:'Food Bank',type:'Service',rsvp:12,recruiters:['m05']},
     {id:'re03',name:'Bid Night',date:future(17),time:'19:00',location:'Chapter House',type:'Bid Night',rsvp:null,recruiters:['m05','m14','m01']},
     {id:'re04',name:'Sports Night',date:past(8),time:'18:00',location:'Rec Center',type:'Social',rsvp:22,recruiters:['m05','m14']},
-    {id:'re05',name:'Coffee Chat Series — Week 1',date:past(15),time:'15:00',location:'Campus Coffee Shop',type:'Informal',rsvp:8,recruiters:['m14']},
+    {id:'re05',name:'Coffee Chat Series: Week 1',date:past(15),time:'15:00',location:'Campus Coffee Shop',type:'Informal',rsvp:8,recruiters:['m14']},
   ];
 
   // ── COMMITTEES — coEnsureDefaults() (js/committees.js) backfills icon/positions/roster ──
@@ -314,40 +314,40 @@ function loadDemoData(){
   // ── TRANSITION HUB (per-position handoff docs) ──
   const transitions = [
     {id:'tr01',role:'President',outgoing:'m01',incoming:'m02',status:'in_progress',
-     content:'Key priorities for incoming President:\n• Rebuild relationship with Greek Life advisor — schedule meeting in Week 1\n• The exec team responds to consistent accountability. Weekly 1-on-1s matter more than chapter meetings.\n• ATO national visit is in October. Make sure all compliance docs are current by September.',
+     content:'Key priorities for incoming President:\n• Rebuild relationship with Greek Life advisor, schedule meeting in Week 1\n• The exec team responds to consistent accountability. Weekly 1-on-1s matter more than chapter meetings.\n• ATO national visit is in October. Make sure all compliance docs are current by September.',
      wishIKnew:'The job is 80% communication and follow-up. Set clear weekly expectations and never let a deadline slip twice. Your exec team will only move as fast as you hold them accountable.',
      contacts:[{name:'Dr. Sarah Kim',role:'Greek Life Advisor',email:'skim@overlookstate.edu',phone:'555-0101'},{name:'National Field Officer',role:'Nationals',email:'fieldofficer@ato.org',phone:'555-0199'}]},
     {id:'tr02',role:'Vice President',outgoing:'m02',incoming:'m05',status:'in_progress',
-     content:'VP runs chapter meetings and tracks officer accountability. Key things:\n• Agenda template is saved in Files — use it every week\n• The weekly exec check-in on Monday is non-negotiable\n• Attendance warnings go through you before they go to JBoard',
+     content:'VP runs chapter meetings and tracks officer accountability. Key things:\n• Agenda template is saved in Files, use it every week\n• The weekly exec check-in on Monday is non-negotiable\n• Attendance warnings go through you before they go to JBoard',
      wishIKnew:'Agenda discipline makes or breaks chapter meetings. Send it 24 hours out, stick to time limits, never let open forum run more than 5 minutes.',
      contacts:[{name:'IFC Vice President',role:'IFC Executive',email:'ifc@overlookstate.edu',phone:'555-0102'}]},
     {id:'tr03',role:'Treasurer',outgoing:'m03',incoming:null,status:'review',
-     content:'Budget spreadsheet is pinned in Files. Key handoff items:\n• IFC dues payment is due Week 2 — do not miss it, late fees compound\n• 4 members still on partial payment plans; see finance tracker\n• Semester budget is at 73% spent with 4 weeks remaining',
+     content:'Budget spreadsheet is pinned in Files. Key handoff items:\n• IFC dues payment is due Week 2: do not miss it, late fees compound\n• 4 members still on partial payment plans; see finance tracker\n• Semester budget is at 73% spent with 4 weeks remaining',
      wishIKnew:'Chase dues early and often. The first 3 weeks set the tone. Members who don\'t pay by Week 4 rarely pay voluntarily.',
      contacts:[{name:'IFC Treasurer',role:'IFC',email:'treasurer@ifc.overlookstate.edu',phone:'555-0103'}]},
     {id:'tr04',role:'Secretary',outgoing:'m04',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr05',role:'Risk Manager',outgoing:'m06',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr06',role:'Recruitment',outgoing:'m05',incoming:null,status:'complete',
-     content:'Full rushee CRM is live in the platform. Key handoff items:\n• 14 current rushees — 3 accepted, 3 bid-ready. Follow up before semester ends.\n• Rush event debrief doc is in Files\n• Recruiter performance data is in the Recruitment CRM → Overview tab',
+     content:'Full rushee CRM is live in the platform. Key handoff items:\n• 14 current rushees: 3 accepted, 3 bid-ready. Follow up before semester ends.\n• Rush event debrief doc is in Files\n• Recruiter performance data is in the Recruitment CRM → Overview tab',
      wishIKnew:'Relationships close bids, not events. Train every brother on how to have a conversation, not just a pitch.',
      contacts:[{name:'IFC Recruitment Director',role:'IFC',email:'recruitment@ifc.overlookstate.edu',phone:'555-0104'}]},
     {id:'tr07',role:'Scholarship',outgoing:'m07',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr08',role:'Philanthropy',outgoing:'m08',incoming:null,status:'complete',
-     content:'Semester philanthropy wrap-up complete. Final hours: 312 chapter hours logged.\n• Food bank partnership renewed for next semester\n• 5K run raised $1,090 — surpassed $1,000 goal\n• IFC hours report submitted on time',
+     content:'Semester philanthropy wrap-up complete. Final hours: 312 chapter hours logged.\n• Food bank partnership renewed for next semester\n• 5K run raised $1,090 (surpassed the $1,000 goal)\n• IFC hours report submitted on time',
      wishIKnew:'Know the IFC minimum hours requirement on Day 1 and set your goal above it. Transportation is usually the biggest barrier to participation.',
      contacts:[{name:'Campus Food Bank',role:'Partner Org',email:'volunteer@foodbank.org',phone:'555-0150'}]},
     {id:'tr09',role:'Social',outgoing:'m09',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr10',role:'Chaplain',outgoing:'m17',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr11',role:'Membership Educator',outgoing:'m16',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr12',role:'Alumni',outgoing:'m18',incoming:null,status:'in_progress',
-     content:'Alumni golf outing is in 3 weeks — venue and catering are confirmed.\n• 24 alumni RSVPs so far. Call list for non-responders is in Files.\n• LinkedIn alumni network has 47 connected — keep it updated after every outreach.',
+     content:'Alumni golf outing is in 3 weeks. Venue and catering are confirmed.\n• 24 alumni RSVPs so far. Call list for non-responders is in Files.\n• LinkedIn alumni network has 47 connected. Keep it updated after every outreach.',
      wishIKnew:'Alumni engagement compounds over time. A direct message from you beats a mass email every time. Stay personal.',
      contacts:[{name:'Alumni Association',role:'University',email:'alumni@overlookstate.edu',phone:'555-0200'}]},
     {id:'tr13',role:'Community Service',outgoing:'m15',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr14',role:'Public Relations',outgoing:'m10',incoming:null,status:'not_started',content:'',wishIKnew:'',contacts:[]},
     {id:'tr15',role:'House Manager',outgoing:'m14',incoming:null,status:'review',
-     content:'House inspection checklist is in Files. Outstanding items:\n• HVAC unit in east wing needs service — contact Mark Briggs at house corp\n• Deck railing repair scheduled for spring break week\n• Room assignments for next semester need to be finalized by April 15',
-     wishIKnew:'Build a relationship with house corp in Week 1. Keep a running maintenance log — it protects you when something goes wrong.',
+     content:'House inspection checklist is in Files. Outstanding items:\n• HVAC unit in east wing needs service: contact Mark Briggs at house corp\n• Deck railing repair scheduled for spring break week\n• Room assignments for next semester need to be finalized by April 15',
+     wishIKnew:'Build a relationship with house corp in Week 1. Keep a running maintenance log. It protects you when something goes wrong.',
      contacts:[{name:'Mark Briggs',role:'House Corporation',email:'mbriggs@housecorp.org',phone:'555-0300'}]},
   ];
 
@@ -362,11 +362,11 @@ function loadDemoData(){
     ],
     issues: [
       {id:'thi1',title:'Chapter house HVAC needs inspection',priority:'high',notes:'Unit in east wing hasn\'t been serviced in 18 months. House corp contact is Mark Briggs. Get this done before summer.',owner:'House Manager',open:true},
-      {id:'thi2',title:'IFC late filing from last semester — $150 fine outstanding',priority:'medium',notes:'Treasurer needs to pay this before new semester starts or it compounds.',owner:'Treasurer',open:true},
-      {id:'thi3',title:'Two members on academic probation — need follow-up plan',priority:'high',notes:'Owen Reed and Ethan Cole. Both below 2.6 GPA. Scholarship to meet with them individually in first 2 weeks.',owner:'Scholarship',open:true},
+      {id:'thi2',title:'IFC late filing from last semester: $150 fine outstanding',priority:'medium',notes:'Treasurer needs to pay this before new semester starts or it compounds.',owner:'Treasurer',open:true},
+      {id:'thi3',title:'Two members on academic probation, need follow-up plan',priority:'high',notes:'Owen Reed and Ethan Cole. Both below 2.6 GPA. Scholarship to meet with them individually in first 2 weeks.',owner:'Scholarship',open:true},
     ],
     archive: [
-      {id:'tha1',semester:'Fall 2023',summary:'Strong recruitment semester — 16 new members. Attendance averaged 88%. Spring Formal budget came in under by $400.',date:'2024-01-10'},
+      {id:'tha1',semester:'Fall 2023',summary:'Strong recruitment semester: 16 new members. Attendance averaged 88%. Spring Formal budget came in under by $400.',date:'2024-01-10'},
     ],
   };
 
@@ -394,7 +394,7 @@ function loadDemoData(){
       {id:'rm05',floor:'3rd Floor',label:'Room 302',capacity:2,occupantIds:[],order:4},
     ],
     parking: [
-      {id:'pk01',label:'Spot 1',isReserved:true,assignedMemberId:'m01',assignedLabel:'James Mitchell',carModel:'Honda Civic',licensePlate:'',notes:'President — reserved',order:0},
+      {id:'pk01',label:'Spot 1',isReserved:true,assignedMemberId:'m01',assignedLabel:'James Mitchell',carModel:'Honda Civic',licensePlate:'',notes:'President, reserved',order:0},
       {id:'pk02',label:'Spot 2',isReserved:false,assignedMemberId:'m06',assignedLabel:'Marcus Bell',carModel:'Ford F-150',licensePlate:'',notes:'',order:1},
       {id:'pk03',label:'Spot 3',isReserved:false,assignedMemberId:null,assignedLabel:'',carModel:'',licensePlate:'',notes:'Open',order:2},
     ],
@@ -562,8 +562,8 @@ function loadDemoData(){
     notifs: [], agenda: {items:[],archived:[]},
     healthHistory: [9,8,7,6,5,4,3,2,1,0].map(n=>({date:past(n),score:78+Math.round(Math.sin(n)*4)})),
     announcements: [
-      {id:'ann01',title:'Spring Formal tickets on sale now',body:'Grab your Spring Formal ticket before the RSVP deadline. Buses will pick up from the Chapter House — see the Social Events page for the full schedule.',postedBy:'m01',postedByName:'James Mitchell',postedAt:past(2),pinned:true,expiresAt:future(14)},
-      {id:'ann02',title:'Dues reminder — balance due this week',body:'A few members still have an outstanding balance for this semester. Please settle up with the Treasurer by Friday to avoid a late fee.',postedBy:'m03',postedByName:'Connor Walsh',postedAt:past(5),pinned:false,expiresAt:future(3)},
+      {id:'ann01',title:'Spring Formal tickets on sale now',body:'Grab your Spring Formal ticket before the RSVP deadline. Buses will pick up from the Chapter House, see the Social Events page for the full schedule.',postedBy:'m01',postedByName:'James Mitchell',postedAt:past(2),pinned:true,expiresAt:future(14)},
+      {id:'ann02',title:'Dues reminder: balance due this week',body:'A few members still have an outstanding balance for this semester. Please settle up with the Treasurer by Friday to avoid a late fee.',postedBy:'m03',postedByName:'Connor Walsh',postedAt:past(5),pinned:false,expiresAt:future(3)},
       {id:'ann03',title:'New member training session added',body:'New members: an extra education session has been added this semester. Check the New Member Education page for the date and location.',postedBy:'m16',postedByName:'Mason Evans',postedAt:past(9),pinned:false,expiresAt:null},
     ],
     settings,
@@ -612,7 +612,7 @@ async function init(){
   if(sbSem) sbSem.textContent = CURRENT_USER.university + ' · ' + getSemester();
   const sbChname = document.getElementById('sb-chname');
   if(sbChname) sbChname.textContent = CURRENT_USER.chapterName;
-  document.title = CURRENT_USER.chapterName + ' — ATO Executive System (Demo)';
+  document.title = CURRENT_USER.chapterName + ': ATO Executive System (Demo)';
   const ned = document.getElementById('ne-d');
   if(ned) ned.value = localDateStr(now);
   const mnd = document.getElementById('mn-d');
@@ -635,7 +635,7 @@ function seRenderUsers(){
   const el = document.getElementById('se-users');
   if(!el) return;
   const officers = D.members.filter(m => m.role && m.role !== 'Member');
-  el.innerHTML = `<div style="font-size:11.5px;color:var(--mt);padding:6px 0 10px">Signed in as <strong>${esc(CURRENT_USER.email)}</strong> · <strong>${esc(CURRENT_USER.title)}</strong> — this demo has one fixed account; use the role switcher above to explore other positions.</div>`
+  el.innerHTML = `<div style="font-size:11.5px;color:var(--mt);padding:6px 0 10px">Signed in as <strong>${esc(CURRENT_USER.email)}</strong> · <strong>${esc(CURRENT_USER.title)}</strong>. This demo has one fixed account; use the role switcher above to explore other positions.</div>`
     + officers.map(m => `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);gap:8px">
         <span style="font-size:12px;font-weight:500;color:var(--tx)">${esc(m.name)}</span>
         <span style="font-size:11px;color:var(--mt)">${esc(m.role)}</span>
@@ -667,7 +667,7 @@ function switchDemoRole(role){
   const sel = document.getElementById('demo-role-switcher');
   if(sel) sel.selectedIndex = 0;
   rbacNav(isViewer ? 'calendar' : 'dashboard', null);
-  toast(`Now viewing as ${isViewer ? 'a General Member' : role} — sidebar and edit controls reflect this role`, 'info', 3500);
+  toast(`Now viewing as ${isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
 }
 
 init();

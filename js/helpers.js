@@ -115,7 +115,7 @@ function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').repla
 // Local-timezone date-only string (YYYY-MM-DD). Not toISOString().split('T')[0], which is
 // UTC — an evening/late-night entry in US timezones can land on the wrong calendar day.
 function localDateStr(d){const dt=d instanceof Date?d:new Date();return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');}
-function mB(id){if(!id)return{name:'Unassigned',initials:'—'};return D.members.find(m=>m.id===id)||{name:'Unknown',initials:'??'};}
+function mB(id){if(!id)return{name:'Unassigned',initials:'N/A'};return D.members.find(m=>m.id===id)||{name:'Unknown',initials:'??'};}
 // Names are stored "First Last" — surname is the last whitespace-separated token, which holds
 // even for a middle name ("Mary Jane Smith" -> "Smith") and degrades gracefully for a single-
 // word name ("Cher" -> "Cher").
@@ -128,8 +128,8 @@ function mNameCompare(a,b){return mLastName(a.name).localeCompare(mLastName(b.na
 // this (not D.members directly), so ordering never leaks import/insertion order (which can
 // look "grouped by class year" after a bulk CSV import) instead of a real A-Z-by-surname roster.
 function sortedMembers(){return [...D.members].sort(mNameCompare);}
-function fd(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return'—';}}
-function fds(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return'—';}}
+function fd(d){if(!d)return'N/A';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return'N/A';}}
+function fds(d){if(!d)return'N/A';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return'N/A';}}
 function dom(d){if(!d)return'';try{return new Date(d+'T12:00:00').getDate();}catch{return'';}}
 function mos(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short'});}catch{return'';}}
 function isOv(d){if(!d)return false;try{return new Date(d+'T12:00:00')<new Date();}catch{return false;}}
@@ -257,7 +257,7 @@ function chapterPositionTitles(){
 function openM(id){
   const el=document.getElementById(id);
   el.querySelectorAll('select[id="nc-m"],select[id="nco-c"],select[id="ntr-o"],select[id="nc-filedby"]').forEach(s=>{
-    const pre=(s.id==='nc-filedby'||s.id==='nco-c')?'<option value="">— Unassigned —</option>':'';
+    const pre=(s.id==='nc-filedby'||s.id==='nco-c')?'<option value="">Unassigned</option>':'';
     s.innerHTML=pre+mOpts();
   });
   // "Assigned To" (nt-position) — any exec can now delegate a task to any position, not just
@@ -273,7 +273,7 @@ function openM(id){
   // "Assigned By" (nt-a) is no longer a choice for anyone, including leads — it's always
   // whichever position the logged-in account actually holds (their own identity), a plain
   // read-only display, not a picker. addTask() reads CURRENT_USER.title directly, not this field.
-  el.querySelectorAll('input[id="nt-a"]').forEach(s=>{ s.value=CURRENT_USER?.title||'—'; });
+  el.querySelectorAll('input[id="nt-a"]').forEach(s=>{ s.value=CURRENT_USER?.title||'N/A'; });
   // Member Role — a constrained dropdown of this chapter's real positions (plus "Member" for
   // non-officers), same canonical list every other position picker in the app uses, so a role can
   // never drift into a typo'd near-match that silently breaks position-based matching elsewhere
@@ -325,8 +325,8 @@ function openEditTrans(id){
   document.getElementById('etr-r').value=t.role;
   document.getElementById('etr-c').value=t.content||'';
   document.getElementById('etr-s').value=t.status;
-  const o=document.getElementById('etr-o');o.innerHTML='<option value="">— Unassigned —</option>'+mOpts();o.value=t.outgoing||'';
-  const i=document.getElementById('etr-i');i.innerHTML='<option value="">— TBD —</option>'+mOpts();i.value=t.incoming||'';
+  const o=document.getElementById('etr-o');o.innerHTML='<option value="">Unassigned</option>'+mOpts();o.value=t.outgoing||'';
+  const i=document.getElementById('etr-i');i.innerHTML='<option value="">TBD</option>'+mOpts();i.value=t.incoming||'';
   el.classList.add('open');
 }
 function saveTrans(){

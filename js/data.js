@@ -234,7 +234,7 @@ async function loadD(){
     console.warn('Firestore loadD error:', e.message);
     dDefaults();
     if(_firebaseConfirmed){
-      toast('Could not reach the server — showing cached data. Changes will sync when reconnected.', 'error', 6000);
+      toast('Could not reach the server, showing cached data. Changes will sync when reconnected.', 'error', 6000);
     }
   }
 }

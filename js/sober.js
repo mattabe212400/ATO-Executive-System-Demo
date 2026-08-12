@@ -201,7 +201,7 @@ function sbDayColumn(w,dk,ro){
   if(day.slotCount===0){
     body=`<div style="font-size:11px;color:var(--ht);padding:6px 0">No coverage needed</div>`;
   }else{
-    const memberOpts=sel=>['<option value="">— Unassigned —</option>',...sbActiveMembers().map(m=>`<option value="${m.id}"${sel===m.id?' selected':''}>${esc(m.name)}</option>`)].join('');
+    const memberOpts=sel=>['<option value="">Unassigned</option>',...sbActiveMembers().map(m=>`<option value="${m.id}"${sel===m.id?' selected':''}>${esc(m.name)}</option>`)].join('');
     const dropdowns=Array.from({length:activeCount}).map((_,i)=>
       `<select ${ro?'disabled':`onchange="sbSlotChange('${w.id}','${dk}',${i},this.value)"`} style="${fieldStyle};margin-bottom:4px">${memberOpts(day.memberIds[i]||'')}</select>`
     ).join('');
@@ -210,7 +210,7 @@ function sbDayColumn(w,dk,ro){
     let pledgeBlock='';
     if(pledgeOn){
       const key=w.id+'-'+dk;
-      const lbl=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select new members —';
+      const lbl=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'Select new members';
       if(ro){
         pledgeBlock=`<div style="font-size:11.5px;padding:4px 0;color:${day.pledgeIds.length?'var(--tx)':'var(--ht)'}">${lbl}</div>`;
       }else{
@@ -334,7 +334,7 @@ function sbPledgeToggle(weekendId,dayKey,memberId,checked){
   const key=weekendId+'-'+dayKey;
   const lbl=document.getElementById('sbp-lbl-'+key);
   if(lbl){
-    const text=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'— Select new members —';
+    const text=day.pledgeIds.length?esc(day.pledgeIds.map(id=>mB(id).name.split(' ')[0]).join(', ')):'Select new members';
     lbl.textContent=text;
     lbl.style.color=day.pledgeIds.length?'var(--tx)':'var(--ht)';
   }

@@ -109,10 +109,10 @@ function nmeRenderGradeChecks(){
         <div class="sh-av" style="width:22px;height:22px;font-size:8px">${esc(m.initials)}</div>
         <span style="font-weight:500;font-size:12px">${esc(m.name)}</span>
       </div></td>
-      <td style="text-align:center">${lastGpa!==null?`<span class="gpa-badge ${gpaColor(lastGpa)}">${lastGpa.toFixed(2)}</span>`:'<span style="color:var(--ht)">—</span>'}</td>
-      <td style="text-align:center;font-size:12px;font-weight:600;color:${below?'var(--rd)':'var(--gn)'}">${lastGpa!==null?(below?'<i class="ti ti-arrow-down" style="font-size:11px"></i> Below':'<i class="ti ti-check" style="font-size:11px"></i> Met'):'—'}</td>
+      <td style="text-align:center">${lastGpa!==null?`<span class="gpa-badge ${gpaColor(lastGpa)}">${lastGpa.toFixed(2)}</span>`:'<span style="color:var(--ht)">N/A</span>'}</td>
+      <td style="text-align:center;font-size:12px;font-weight:600;color:${below?'var(--rd)':'var(--gn)'}">${lastGpa!==null?(below?'<i class="ti ti-arrow-down" style="font-size:11px"></i> Below':'<i class="ti ti-check" style="font-size:11px"></i> Met'):'N/A'}</td>
       <td style="font-size:11px;color:var(--mt)">${last?fds(last.date):'Never'}</td>
-      <td style="font-size:11px;font-weight:${days!==null&&days>7?'600':'400'};color:${days!==null&&days>7?'var(--rd)':'var(--mt)'}">${days!==null?days+'d ago':'—'}</td>
+      <td style="font-size:11px;font-weight:${days!==null&&days>7?'600':'400'};color:${days!==null&&days>7?'var(--rd)':'var(--mt)'}">${days!==null?days+'d ago':'N/A'}</td>
       <td><span class="badge ${thisWeek?'bg2':days!==null&&days>7?'br2':'bm2'}">${thisWeek?'Done':days!==null&&days>7?'Overdue':'Pending'}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-p" style="height:23px;font-size:10px;padding:0 8px;margin-right:3px" onclick="openLogCheckin('${m.id}','nm')"><i class="ti ti-check"></i>Log</button>
@@ -186,8 +186,8 @@ function nmeRenderSessions(){
     [...sessions].sort((a,b)=>b.date.localeCompare(a.date)).map(s=>{
       const notesCell=canEdit
         ?`<textarea rows="1" placeholder="Agenda notes..." style="width:100%;min-width:170px;padding:4px 7px;border:1px solid var(--bdr);border-radius:6px;font-size:11px;font-family:inherit;background:var(--surf2);color:var(--tx);resize:vertical;outline:none" onblur="nmeSaveSessionNotes('${s.id}',this.value)">${esc(s.notes||'')}</textarea>`
-        :`<span style="color:var(--mt)">${s.notes?esc(s.notes):'—'}</span>`;
-      return`<tr><td style="font-weight:500">${esc(s.title)}</td><td>${fds(s.date)}</td><td style="color:var(--mt)">${s.facilitatorId?esc(mB(s.facilitatorId).name):'—'}</td><td>${notesCell}</td>${canEdit?`<td style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="nmeDeleteSession('${s.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`;
+        :`<span style="color:var(--mt)">${s.notes?esc(s.notes):'N/A'}</span>`;
+      return`<tr><td style="font-weight:500">${esc(s.title)}</td><td>${fds(s.date)}</td><td style="color:var(--mt)">${s.facilitatorId?esc(mB(s.facilitatorId).name):'N/A'}</td><td>${notesCell}</td>${canEdit?`<td style="display:flex;gap:4px;justify-content:flex-end"><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="nmeDeleteSession('${s.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`;
     }).join('')
   }</tbody>`;
 }
@@ -214,7 +214,7 @@ function nmeRenderRequirements(){
   el.innerHTML=`<thead><tr><th>Requirement</th><th>Due</th><th>Completed</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
     requirements.map(r=>{
       const done=newMembers.filter(m=>nmeReqDone(m.id,r.id)).length;
-      return `<tr><td style="font-weight:500">${esc(r.title)}</td><td>${r.due?fds(r.due):'—'}</td><td>${done}/${newMembers.length}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="nmeDeleteRequirement('${r.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`;
+      return `<tr><td style="font-weight:500">${esc(r.title)}</td><td>${r.due?fds(r.due):'N/A'}</td><td>${done}/${newMembers.length}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="nmeDeleteRequirement('${r.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`;
     }).join('')
   }</tbody>`;
 }
@@ -226,7 +226,7 @@ function nmeOpenAddSession(){
   document.getElementById('nmes-id').value='';
   document.getElementById('nmes-title').value='';
   document.getElementById('nmes-date').value=localDateStr();
-  document.getElementById('nmes-facilitator').innerHTML='<option value="">— None —</option>'+mOpts();
+  document.getElementById('nmes-facilitator').innerHTML='<option value="">None</option>'+mOpts();
   document.getElementById('nmes-notes').value='';
   openM('m-nme-addsession');
 }
@@ -314,7 +314,7 @@ function nmeOpenProgress(memberId){
   if(!canEditNewMemberEducation())return;
   const m=mB(memberId);
   document.getElementById('nmep-member-id').value=memberId;
-  document.getElementById('nmep-title').textContent=m.name+' — Progress';
+  document.getElementById('nmep-title').textContent=m.name+': Progress';
   const requirements=D.newMemberEducation.requirements||[];
   const el=document.getElementById('nmep-list');
   if(!requirements.length){ el.innerHTML=es('ti-list-check','blue','No requirements yet','Add requirements first.',''); }

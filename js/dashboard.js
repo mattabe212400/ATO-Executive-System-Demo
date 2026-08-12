@@ -163,7 +163,7 @@ function dashDrawHealth(isViewer){
   const gradeLabel={A:'A · Excellent',B:'B · Good',C:'C · Developing',F:'F · At Risk'}[grade];
   const gEl=document.getElementById('d-health-grade');
   if(gEl){gEl.className='badge '+gradeCls;gEl.textContent=gradeLabel;}
-  const summary=score>=80?'Strong across all dimensions.':score>=65?'Good standing — a few areas need attention.':score>=50?'Several dimensions below target. Exec focus needed.':'At risk — immediate action required.';
+  const summary=score>=80?'Strong across all dimensions.':score>=65?'Good standing, a few areas need attention.':score>=50?'Several dimensions below target. Exec focus needed.':'At risk, immediate action required.';
   const sumEl=document.getElementById('d-health-summary');if(sumEl)sumEl.textContent=summary;
 
   // Trend vs. the closest snapshot from ~7 days ago. D.healthHistory is written once per calendar
@@ -211,7 +211,7 @@ function dashBuildAlerts(avg,isViewer){
   const ovT=D.tasks.filter(t=>isOv(t.dueDate)&&t.status!=='done');
   if(ovT.length&&!isViewer){
     const top=ovT.sort((a,b)=>({urgent:0,high:1,medium:2,low:3}[a.priority]||2)-({urgent:0,high:1,medium:2,low:3}[b.priority]||2))[0];
-    alerts.push({type:'task',icon:'ti-clock',bg:'background:var(--am-bg)',ic:'color:var(--am-tx)',title:`${ovT.length} overdue task${ovT.length>1?'s':''}`,body:`Highest: "${top.title}" — ${top.positionTitle||'Unassigned'}`});
+    alerts.push({type:'task',icon:'ti-clock',bg:'background:var(--am-bg)',ic:'color:var(--am-tx)',title:`${ovT.length} overdue task${ovT.length>1?'s':''}`,body:`Highest: "${top.title}", ${top.positionTitle||'Unassigned'}`});
   }
   // Aligned to the canonical ATT_LOW/ATT_WARN thresholds (65/75) — previously hardcoded to
   // 70 and 65-75 here, a third disagreeing threshold scheme from the rest of the app.
@@ -221,7 +221,7 @@ function dashBuildAlerts(avg,isViewer){
   }
   const probation=D.members.filter(m=>{const r=aR(m.id);return r>=ATT_LOW&&r<ATT_WARN;});
   if(probation.length&&!isViewer){
-    alerts.push({type:'attendance',icon:'ti-alert-triangle',bg:'background:var(--am-bg)',ic:'color:var(--am-tx)',title:`${probation.length} member${probation.length>1?'s':''} nearing probation threshold`,body:probation.slice(0,2).map(m=>m.name.split(' ')[0]).join(', ')+(probation.length>2?' +'+(probation.length-2)+' more':'')+` — between ${ATT_LOW}–${ATT_WARN}%`});
+    alerts.push({type:'attendance',icon:'ti-alert-triangle',bg:'background:var(--am-bg)',ic:'color:var(--am-tx)',title:`${probation.length} member${probation.length>1?'s':''} nearing probation threshold`,body:probation.slice(0,2).map(m=>m.name.split(' ')[0]).join(', ')+(probation.length>2?' +'+(probation.length-2)+' more':'')+`, between ${ATT_LOW}–${ATT_WARN}%`});
   }
   const unassigned=sbFlatSlots().filter(s=>isUp(s.date)&&!s.memberId);
   if(unassigned.length){
@@ -229,10 +229,10 @@ function dashBuildAlerts(avg,isViewer){
   }
   const openCases=D.cases.filter(c=>!['resolved','dismissed'].includes(c.status));
   if(openCases.length&&!isViewer&&jbCanAccess&&jbCanAccess()){
-    alerts.push({type:'judicial',icon:'ti-scale',bg:'background:var(--rd-bg)',ic:'color:var(--rd-tx)',title:`${openCases.length} open Judicial Board case${openCases.length>1?'s':''}`,body:'Review required — view J-Board for details'});
+    alerts.push({type:'judicial',icon:'ti-scale',bg:'background:var(--rd-bg)',ic:'color:var(--rd-tx)',title:`${openCases.length} open Judicial Board case${openCases.length>1?'s':''}`,body:'Review required, view J-Board for details'});
   }
   if(avg<85){
-    alerts.push({type:'attendance',icon:'ti-trending-down',bg:'background:#F1F3F6',ic:'color:var(--mt)',title:`Chapter attendance at ${avg}% — below 85% target`,body:'Update attendance records to stay accurate'});
+    alerts.push({type:'attendance',icon:'ti-trending-down',bg:'background:#F1F3F6',ic:'color:var(--mt)',title:`Chapter attendance at ${avg}%, below 85% target`,body:'Update attendance records to stay accurate'});
   }
 
   const dotEl=document.getElementById('d-alerts-dot');
@@ -244,7 +244,7 @@ function dashBuildAlerts(avg,isViewer){
   const el=document.getElementById('d-alerts');
   if(!el)return;
   if(!alerts.length){
-    el.innerHTML=`<div class="es-inline ok"><i class="ti ti-circle-check"></i>All clear — no active alerts</div>`;
+    el.innerHTML=`<div class="es-inline ok"><i class="ti ti-circle-check"></i>All clear, no active alerts</div>`;
     return;
   }
   el.innerHTML=alerts.slice(0,4).map(a=>`<div class="d-alert-row"><div class="d-alert-icon" style="${a.bg}"><i class="ti ${a.icon}" style="${a.ic}"></i></div><div style="flex:1;min-width:0"><div style="font-size:11.5px;font-weight:500;line-height:1.4">${esc(a.title)}</div><div style="font-size:10.5px;color:var(--mt);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.body)}</div></div></div>`).join('');
@@ -282,7 +282,7 @@ function dashBuildAttRisk(){
     return;
   }
   const cat=r=>r<65?{label:'Warning',bg:'var(--rd-bg)',tc:'var(--rd-tx)'}:r<70?{label:'At Risk',bg:'var(--rd-bg)',tc:'var(--rd-tx)'}:r<75?{label:'Watch',bg:'var(--am-bg)',tc:'var(--am-tx)'}:{label:'Monitor',bg:'#F1F3F6',tc:'var(--mt)'};
-  el.innerHTML=`<div style="font-size:10px;color:var(--mt);margin-bottom:8px">${risk.length} member${risk.length>1?'s':''} below 80% — ${risk.filter(x=>x.r<70).length} require attention</div>`+
+  el.innerHTML=`<div style="font-size:10px;color:var(--mt);margin-bottom:8px">${risk.length} member${risk.length>1?'s':''} below 80%, ${risk.filter(x=>x.r<70).length} require attention</div>`+
     risk.slice(0,6).map(({m,r})=>{const c=cat(r);return`<div class="d-risk-row">
       <div class="sh-av" style="width:24px;height:24px;font-size:8px;background:${c.bg};color:${c.tc}">${m.initials}</div>
       <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div></div>
@@ -318,7 +318,7 @@ function dashBuildEvents(){
 }
 
 function renderAttendanceOwnOnly(){
-  const attHd=document.getElementById('att-hd');if(attHd)attHd.textContent='My Attendance — '+getSemester();
+  const attHd=document.getElementById('att-hd');if(attHd)attHd.textContent='My Attendance: '+getSemester();
   // Hide entire toolbar (tabs + action buttons) — viewer only sees their own row
   const toolbar=document.getElementById('att-toolbar');if(toolbar)toolbar.style.display='none';
   // Show only Members tab content; hide Analytics (privacy: Risk Stratification names other members) and Events
@@ -327,7 +327,7 @@ function renderAttendanceOwnOnly(){
 
   const me=(typeof _myMemberRecord==='function')?_myMemberRecord():null;
   if(!me){
-    document.getElementById('a-kpi').innerHTML=statStrip('My Attendance','—','No record linked','neutral')+statStrip('Events Attended','—','—','neutral')+statStrip('Standing','—','—','neutral')+statStrip('Threshold','75%','Chapter requirement','neutral');
+    document.getElementById('a-kpi').innerHTML=statStrip('My Attendance','N/A','No record linked','neutral')+statStrip('Events Attended','N/A','N/A','neutral')+statStrip('Standing','N/A','N/A','neutral')+statStrip('Threshold','75%','Chapter requirement','neutral');
     document.getElementById('a-table').innerHTML='<thead><tr><th>Member</th><th>Class</th><th>Attendance</th><th>Status</th></tr></thead><tbody><tr><td colspan="4" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No attendance record linked to your account yet. Contact an officer.</td></tr></tbody>';
     document.getElementById('a-mobile-cards').innerHTML='<div style="color:var(--ht);font-size:12px;padding:20px;text-align:center">No attendance record linked to your account yet. Contact an officer.</div>';
     return;
@@ -346,13 +346,13 @@ function renderAttendanceOwnOnly(){
     kpi('Events Attended',present,'of '+evCount+' total','neutral')+
     kpi('Standing','<span class="badge '+status[1]+'">'+status[0]+'</span>',r>=75?'On track':'Below 75%','neutral')+
     kpi('Chapter Threshold','75%','Minimum required','neutral');
-  document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attendance Rate</th><th>Status</th></tr></thead><tbody><tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(me.initials)}</div><span style="font-weight:500">${esc(me.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(me.classYear||'—')}</td><td style="font-weight:500;color:${col}">${r}%</td><td><span class="badge ${status[1]}">${esc(status[0])}</span></td></tr></tbody>`;
+  document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attendance Rate</th><th>Status</th></tr></thead><tbody><tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(me.initials)}</div><span style="font-weight:500">${esc(me.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(me.classYear||'N/A')}</td><td style="font-weight:500;color:${col}">${r}%</td><td><span class="badge ${status[1]}">${esc(status[0])}</span></td></tr></tbody>`;
   document.getElementById('a-mobile-cards').innerHTML=`<div class="mob-card card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <div class="sh-av" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${esc(me.initials)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(me.name)}</div>
-        <div style="font-size:11px;color:var(--mt)">${esc(me.classYear||'—')}</div>
+        <div style="font-size:11px;color:var(--mt)">${esc(me.classYear||'N/A')}</div>
       </div>
       <span class="badge ${status[1]}" style="font-size:9.5px;white-space:nowrap">${esc(status[0])}</span>
     </div>
@@ -374,7 +374,7 @@ function renderAttendance(){
   const tot=D.members.length;const avg=Math.round(D.members.reduce((s,m)=>s+aRForSemester(m.id,sem),0)/tot);
   const excused=Object.entries(D.attendance||{}).filter(([evId])=>semEventIds.has(evId)).reduce((s,[,ev])=>s+Object.values(ev).filter(v=>v==='excused').length,0);
   const absent=Object.entries(D.attendance||{}).filter(([evId])=>semEventIds.has(evId)).reduce((s,[,ev])=>s+Object.values(ev).filter(v=>v==='absent').length,0);
-  const attHd=document.getElementById('att-hd');if(attHd)attHd.textContent='Member Attendance — '+sem;
+  const attHd=document.getElementById('att-hd');if(attHd)attHd.textContent='Member Attendance: '+sem;
   document.getElementById('a-kpi').innerHTML=statStrip('Semester avg',avg+'%',sem,avg>=85?'up':'down')+statStrip('Excused Misses',excused,sem+' total','neutral')+statStrip('Unexcused Misses',absent,sem+' total',absent>20?'down':'neutral')+statStrip('Warnings issued',D.members.filter(m=>aRForSemester(m.id,sem)<75).length,'Below 75%',D.members.filter(m=>aRForSemester(m.id,sem)<75).length>0?'down':'neutral');
   document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attendance Rate</th><th>Status</th><th></th></tr></thead><tbody>${D.members.length?sortedMembers().map(m=>{const r=aRForSemester(m.id,sem);const t=attTier(r);return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div><span style="font-weight:500">${esc(m.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(m.classYear)}</td><td style="font-weight:500;color:${t.color}">${r}%</td><td><span class="badge ${t.badge}">${t.label}</span></td><td><button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(m.name)}" onclick="openEditMember('${m.id}')"><i class="ti ti-pencil"></i></button></td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No members yet. Add members to start tracking attendance.</td></tr>'}</tbody>`;
   document.getElementById('a-mobile-cards').innerHTML=D.members.length?sortedMembers().map(m=>{
@@ -397,7 +397,7 @@ function renderAttendance(){
   // Attendance can be marked for a mandatory event any time — before it happens (e.g. pre-marking
   // a known absence) or after — so the only gates here are "is this event mandatory" and "is the
   // semester it falls in still editable," not whether the event date has already passed.
-  document.getElementById('a-events').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Mandatory</th><th></th></tr></thead><tbody>${semEvents.length?semEvents.map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="${evCS(e.type)}">${esc(e.type)}</span></td><td>${fd(e.date)}</td><td>${e.mandatory?'<span class="badge br2">Required</span>':'—'}</td><td>${e.mandatory&&isCurrentSemester(sem)?`<button class="btn" style="height:23px;font-size:10.5px" onclick="openMarkAttEv('${e.id}')"><i class="ti ti-checkbox"></i>Mark</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No events yet. Create an event to start tracking attendance.</td></tr>'}</tbody>`;
+  document.getElementById('a-events').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Mandatory</th><th></th></tr></thead><tbody>${semEvents.length?semEvents.map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="${evCS(e.type)}">${esc(e.type)}</span></td><td>${fd(e.date)}</td><td>${e.mandatory?'<span class="badge br2">Required</span>':'N/A'}</td><td>${e.mandatory&&isCurrentSemester(sem)?`<button class="btn" style="height:23px;font-size:10.5px" onclick="openMarkAttEv('${e.id}')"><i class="ti ti-checkbox"></i>Mark</button>`:'N/A'}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No events yet. Create an event to start tracking attendance.</td></tr>'}</tbody>`;
   const evMobEl=document.getElementById('a-events-mobile-cards');
   if(evMobEl)evMobEl.innerHTML=semEvents.length?semEvents.map(e=>`<div class="mob-card card">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">

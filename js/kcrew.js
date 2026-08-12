@@ -116,7 +116,7 @@ function renderKcrew(){
 
 function renderKcSchedule(){
   const ro=!canEditKcrew();
-  const memberOpts=()=>['<option value="">— Unassigned —</option>',...sortedMembers().map(m=>`<option value="${m.id}">${esc(m.name)}</option>`)].join('');
+  const memberOpts=()=>['<option value="">Unassigned</option>',...sortedMembers().map(m=>`<option value="${m.id}">${esc(m.name)}</option>`)].join('');
   const selStyle=`width:100%;font-size:11.5px;padding:4px 6px;border:1px solid var(--bdr);border-radius:5px;outline:none;font-family:inherit;background:var(--surf);color:var(--tx)${ro?';opacity:.6;cursor:not-allowed':''}`;
 
   let html='';
@@ -186,7 +186,7 @@ function kcUpdateSlot(sel){
 }
 
 function kcChoreLabel(memberIds){
-  if(!memberIds||!memberIds.length)return'— Unassigned —';
+  if(!memberIds||!memberIds.length)return'Unassigned';
   return esc(memberIds.map(id=>mB(id).name.split(' ')[0]).join(', '));
 }
 
@@ -240,7 +240,7 @@ function renderKcChores(wk){
       let assignCell;
       if(ro){
         // Read-only: plain text label, no interactive picker
-        assignCell=`<div style="font-size:11.5px;padding:4px 0;color:${lbl==='— Unassigned —'?'var(--ht)':'var(--tx)'}">${lbl}</div>`;
+        assignCell=`<div style="font-size:11.5px;padding:4px 0;color:${lbl==='Unassigned'?'var(--ht)':'var(--tx)'}">${lbl}</div>`;
       }else{
         const memberChecks=kcLiveInMembers(c.memberIds).map(m=>{
           const checked=(c.memberIds||[]).includes(m.id)?'checked':'';
@@ -250,7 +250,7 @@ function renderKcChores(wk){
           </label>`;
         }).join('');
         assignCell=`<div style="position:relative">
-          <div onclick="kcPickerToggle(event,'${c.id}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:4px 7px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);min-height:28px;gap:5px;font-size:11.5px;color:${lbl==='— Unassigned —'?'var(--ht)':'var(--tx)'}">
+          <div onclick="kcPickerToggle(event,'${c.id}')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:4px 7px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);min-height:28px;gap:5px;font-size:11.5px;color:${lbl==='Unassigned'?'var(--ht)':'var(--tx)'}">
             <span id="kcp-lbl-${c.id}" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lbl}</span>
             <i class="ti ti-chevron-down" style="font-size:9px;color:var(--mt);flex-shrink:0"></i>
           </div>
@@ -267,11 +267,11 @@ function renderKcChores(wk){
         <td style="padding:4px 8px;position:relative">${assignCell}</td>
         <td style="padding:7px 8px;text-align:center">
           ${showTue?`<input type="checkbox" ${tueOk?'checked':''} ${ro?'disabled':` onchange="kcCheck('${c.id}','tue',this.checked,this)"`} style="width:16px;height:16px;accent-color:var(--sky);cursor:${ro?'not-allowed':'pointer'};${ro?'opacity:.45':''}">`:
-                   `<span style="color:var(--bdr)">—</span>`}
+                   `<span style="color:var(--bdr)">N/A</span>`}
         </td>
         <td style="padding:7px 8px;text-align:center">
           ${showThu?`<input type="checkbox" ${thuOk?'checked':''} ${ro?'disabled':` onchange="kcCheck('${c.id}','thu',this.checked,this)"`} style="width:16px;height:16px;accent-color:var(--sky);cursor:${ro?'not-allowed':'pointer'};${ro?'opacity:.45':''}">`:
-                   `<span style="color:var(--bdr)">—</span>`}
+                   `<span style="color:var(--bdr)">N/A</span>`}
         </td>
       </tr>`;
     });
@@ -456,8 +456,8 @@ function kcPrintChores(){
             <td class="notes">${esc(c.notes)||''}</td>
             <td class="day">${dayLabel[c.day]||dayLabel.both}</td>
             <td class="assigned">${kcChoreLabel(c.memberIds)}</td>
-            <td class="check">${showTue?'<span class="box"></span>':'—'}</td>
-            <td class="check">${showThu?'<span class="box"></span>':'—'}</td>
+            <td class="check">${showTue?'<span class="box"></span>':'N/A'}</td>
+            <td class="check">${showThu?'<span class="box"></span>':'N/A'}</td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
@@ -491,7 +491,7 @@ function kcPrintChores(){
   </body></html>`;
 
   const win=window.open('','_blank');
-  if(!win){toast('Pop-up blocked — allow pop-ups for this site to print.','error');return;}
+  if(!win){toast('Pop-up blocked, allow pop-ups for this site to print.','error');return;}
   win.document.write(html);
   win.document.close();
   win.focus();

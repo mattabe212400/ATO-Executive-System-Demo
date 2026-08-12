@@ -265,12 +265,12 @@ function seRenderPositions(){
     const grants = Object.entries(p.pages||{});
     const editPages = grants.filter(([,lvl])=>lvl==='edit').map(([page])=>esc((typeof PT!=='undefined'&&PT[page])||page));
     const viewPages = grants.filter(([,lvl])=>lvl!=='edit').map(([page])=>esc((typeof PT!=='undefined'&&PT[page])||page));
-    const levelBadge = p.permLevel==='lead'?'<span class="badge bb2">Lead — full access</span>':isGM?'<span class="badge bm2">Every approved member</span>':'<span class="badge bm2">Exec</span>';
+    const levelBadge = p.permLevel==='lead'?'<span class="badge bb2">Lead: full access</span>':isGM?'<span class="badge bm2">Every approved member</span>':'<span class="badge bm2">Exec</span>';
     return `<tr>
       <td style="font-weight:500">${esc(t)}</td>
       <td>${levelBadge}</td>
-      <td style="color:var(--gn-tx);font-size:11px;max-width:260px">${p.permLevel==='lead'?'All enabled modules':(editPages.join(', ')||'—')}</td>
-      <td style="color:var(--mt);font-size:11px;max-width:260px">${p.permLevel==='lead'?'—':(viewPages.join(', ')||'—')}</td>
+      <td style="color:var(--gn-tx);font-size:11px;max-width:260px">${p.permLevel==='lead'?'All enabled modules':(editPages.join(', ')||'N/A')}</td>
+      <td style="color:var(--mt);font-size:11px;max-width:260px">${p.permLevel==='lead'?'N/A':(viewPages.join(', ')||'N/A')}</td>
     </tr>`;
   }).join('')}</tbody></table>`;
 }

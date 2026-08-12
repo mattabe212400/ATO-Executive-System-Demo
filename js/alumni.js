@@ -82,8 +82,8 @@ function alRenderDirectory(){
   document.getElementById('al-table').innerHTML=`<thead><tr><th>Name</th><th>Class</th><th>Email</th><th>Phone</th><th>Initiated</th><th>Employer</th><th>Industry</th><th>Location</th><th>LinkedIn</th><th></th></tr></thead><tbody>${rows.length?rows.map(a=>{
     const li=a.linkedin?(/^https?:\/\//i.test(a.linkedin)?a.linkedin:'https://'+a.linkedin):'';
     const initD=alParseInitDate(a.initiationDate);
-    const initDate=initD?`${String(initD.getMonth()+1).padStart(2,'0')}/${String(initD.getDate()).padStart(2,'0')}/${initD.getFullYear()}`:'—';
-    return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(initials(a.name))}</div><span style="font-weight:500">${esc(a.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${alClassYear(a)||'—'}</td><td style="color:var(--mt);font-size:11px">${esc(a.email)||'—'}</td><td style="color:var(--mt)">${esc(a.phone)||'—'}</td><td style="color:var(--mt)">${initDate}</td><td>${esc(a.employer)||'—'}</td><td style="color:var(--mt)">${esc(a.industry)||'—'}</td><td style="color:var(--mt)">${esc(a.location)||'—'}</td><td>${li?`<a href="${esc(li)}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>`:'—'}</td><td>${canEdit?`<div style="display:flex;gap:5px"><button class="btn" style="height:23px;font-size:10px;padding:0 7px" onclick="alOpenEdit('${a.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button><button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteAlumni('${a.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></div>`:''}</td></tr>`;
+    const initDate=initD?`${String(initD.getMonth()+1).padStart(2,'0')}/${String(initD.getDate()).padStart(2,'0')}/${initD.getFullYear()}`:'N/A';
+    return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(initials(a.name))}</div><span style="font-weight:500">${esc(a.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${alClassYear(a)||'N/A'}</td><td style="color:var(--mt);font-size:11px">${esc(a.email)||'N/A'}</td><td style="color:var(--mt)">${esc(a.phone)||'N/A'}</td><td style="color:var(--mt)">${initDate}</td><td>${esc(a.employer)||'N/A'}</td><td style="color:var(--mt)">${esc(a.industry)||'N/A'}</td><td style="color:var(--mt)">${esc(a.location)||'N/A'}</td><td>${li?`<a href="${esc(li)}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="ti ti-brand-linkedin"></i></a>`:'N/A'}</td><td>${canEdit?`<div style="display:flex;gap:5px"><button class="btn" style="height:23px;font-size:10px;padding:0 7px" onclick="alOpenEdit('${a.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button><button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteAlumni('${a.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></div>`:''}</td></tr>`;
   }).join(''):'<tr><td colspan="10" style="text-align:center;color:var(--ht);padding:24px">No alumni in directory yet. Add the first one!</td></tr>'}</tbody>`;
   const mobEl=document.getElementById('al-mobile-cards');
   if(mobEl)mobEl.innerHTML=rows.length?rows.map(a=>{
@@ -93,7 +93,7 @@ function alRenderDirectory(){
         <div class="sh-av" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${esc(initials(a.name))}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.name)}</div>
-          <div style="font-size:11px;color:var(--mt)">${alClassYear(a)?'Class of '+alClassYear(a):'—'}${a.location?' · '+esc(a.location):''}</div>
+          <div style="font-size:11px;color:var(--mt)">${alClassYear(a)?'Class of '+alClassYear(a):'N/A'}${a.location?' · '+esc(a.location):''}</div>
         </div>
         ${li?`<a href="${esc(li)}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" style="flex-shrink:0"><i class="ti ti-brand-linkedin"></i></a>`:''}
       </div>
@@ -104,7 +104,7 @@ function alRenderDirectory(){
 }
 function alRenderEvents(){
   const ev=D.alumni.events;
-  document.getElementById('al-events-table').innerHTML=`<thead><tr><th>Event</th><th>Date</th><th>Type</th><th>Location</th><th>Notes</th></tr></thead><tbody>${ev.length?ev.sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td>${fds(e.date)}</td><td><span class="badge bb2">${esc(e.type)}</span></td><td style="color:var(--mt)">${esc(e.location)||'—'}</td><td style="color:var(--mt);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.notes)||'—'}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--ht);padding:24px">No alumni events yet.</td></tr>'}</tbody>`;
+  document.getElementById('al-events-table').innerHTML=`<thead><tr><th>Event</th><th>Date</th><th>Type</th><th>Location</th><th>Notes</th></tr></thead><tbody>${ev.length?ev.sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td>${fds(e.date)}</td><td><span class="badge bb2">${esc(e.type)}</span></td><td style="color:var(--mt)">${esc(e.location)||'N/A'}</td><td style="color:var(--mt);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.notes)||'N/A'}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--ht);padding:24px">No alumni events yet.</td></tr>'}</tbody>`;
 }
 function alRenderOutreach(){
   const log=[...D.alumni.outreach].sort((a,b)=>(b.date||'').localeCompare(a.date||''));

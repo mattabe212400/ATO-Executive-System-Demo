@@ -52,15 +52,15 @@ const BS_PDF_MAX_BYTES=700*1024;
 const BS_SEED_CHAPTERS=[
   {weekNumber:1,title:"God's Design",scripturePassages:"Genesis 1:1-13,14-15,26-27; 2:16-17; 3:1-6,15",
    summary:"Creation, image & likeness, the fall, the first Gospel",
-   leaderSummary:"Creation is intentional design — humans alone are made in God's image and likeness. The fall is a rupture of trust, not just rule-breaking. Genesis 3:15 promises a future undoing of the fall in the very moment it happens.",
+   leaderSummary:"Creation is intentional design. Humans alone are made in God's image and likeness. The fall is a rupture of trust, not just rule-breaking. Genesis 3:15 promises a future undoing of the fall in the very moment it happens.",
    groupDiscussionFocus:"Where do you see “very good” in your own life right now? What does it look like to trust God's design over your own judgment of good and evil?"},
   {weekNumber:2,title:"A New Creation",scripturePassages:"Genesis 4:17-24; 4:26-5:32; 6:1-3,8-10,11-13; 7:11-12; 9:20-27; Lev 20:11",
    summary:"Cain vs. Seth, the flood as re-creation, Noah's fall",
-   leaderSummary:"Cain and Seth represent two competing legacies. The flood deliberately echoes Genesis 1's creation language — an undoing and redoing of the world. Noah's fall right after shows a fresh start doesn't erase human weakness.",
-   groupDiscussionFocus:"What “line” are you living out — pride like Cain's, or one that keeps returning to God like Seth's? Where has a fresh start not erased temptation in your own life?"},
+   leaderSummary:"Cain and Seth represent two competing legacies. The flood deliberately echoes Genesis 1's creation language (an undoing and redoing of the world). Noah's fall right after shows a fresh start doesn't erase human weakness.",
+   groupDiscussionFocus:"What “line” are you living out: pride like Cain's, or one that keeps returning to God like Seth's? Where has a fresh start not erased temptation in your own life?"},
   {weekNumber:3,title:"Three Promises that Changed the World",scripturePassages:"Genesis 12:1-4,10-20; 15:1-6,12",
    summary:"God's three promises to Abram: nation, name, worldwide blessing",
-   leaderSummary:"Abram's call narrows the story from humanity to one family through whom the world will be blessed. In Genesis 15, God alone passes between the pieces — taking the covenant's full weight on Himself.",
+   leaderSummary:"Abram's call narrows the story from humanity to one family through whom the world will be blessed. In Genesis 15, God alone passes between the pieces, taking the covenant's full weight on Himself.",
    groupDiscussionFocus:"What is God asking you to leave behind on faith right now? Where do you see God taking the weight of a promise onto Himself rather than requiring something from you first?"},
   {weekNumber:4,title:"The Father of Faith",scripturePassages:"Genesis 16:1-4; 17:1-21; 22:1-18; Hebrews 11:17-19",
    summary:"Hagar, circumcision, the sacrifice of Isaac",
@@ -68,36 +68,36 @@ const BS_SEED_CHAPTERS=[
    groupDiscussionFocus:"Where have you tried to “help God out” instead of waiting on His timeline? What would it look like to trust God the way Abraham did on the mountain?"},
   {weekNumber:5,title:"Always Reaching for More",scripturePassages:"Genesis 25:19-34; 27:1-46; 29:15-30",
    summary:"Jacob and Esau, the stolen blessing, Jacob deceived by Laban",
-   leaderSummary:"Jacob's name means “deceiver” — his early story is defined by grasping for more than what was freely offered, and it costs him. He's later deceived by Laban the exact same way. Grace still works through him before he's changed.",
+   leaderSummary:"Jacob's name means “deceiver”: his early story is defined by grasping for more than what was freely offered, and it costs him. He's later deceived by Laban the exact same way. Grace still works through him before he's changed.",
    groupDiscussionFocus:"Where in your life are you grasping for something instead of trusting God's timing? Where have you seen “you reap what you sow” play out around you?"},
   {weekNumber:6,title:"Bringing Good Out of Evil",scripturePassages:"Genesis 37:3-36; 39:1-23; 41:1-57",
    summary:"Joseph sold into slavery, Potiphar's wife, rise to power in Egypt",
-   leaderSummary:"Joseph is betrayed, falsely accused, and imprisoned — every stage looks like abandonment, yet the Lord is with him. His rise sets up the Exodus. It anticipates his own words: what you meant for evil, God meant for good.",
+   leaderSummary:"Joseph is betrayed, falsely accused, and imprisoned. Every stage looks like abandonment, yet the Lord is with him. His rise sets up the Exodus. It anticipates his own words: what you meant for evil, God meant for good.",
    groupDiscussionFocus:"Where has something that felt like pure setback turned out to be preparation? Who is someone it is genuinely hard to forgive the way Joseph forgives his brothers?"},
   {weekNumber:7,title:"Leaving Egypt",scripturePassages:"Exodus 1:8-14; 2:1-10; 3:13-20; 5:1-2; 7:17-18; 12:1-13; 19:3-6",
    summary:"Moses, the plagues, Passover, the Exodus",
    leaderSummary:"Israel multiplies into slavery, and God raises up a reluctant deliverer in Moses. The plagues confront Egypt's gods directly. Passover establishes protection through a substitute. At Sinai, Israel is called to be a kingdom of priests.",
-   groupDiscussionFocus:"What is your “Egypt” — a comfortable but enslaving pattern God is calling you out of? What do you think God has rescued you for?"},
+   groupDiscussionFocus:"What is your “Egypt”: a comfortable but enslaving pattern God is calling you out of? What do you think God has rescued you for?"},
   {weekNumber:8,title:"A Journey that Tests the Heart",scripturePassages:"Exodus 24:1-11; 32:1-9",
    summary:"The covenant ceremony at Sinai and the golden calf",
-   leaderSummary:"The covenant ceremony at Sinai functions like Israel's wedding vow to God. Within weeks, while Moses is still on the mountain, they break it with the golden calf — the pattern for the whole wilderness generation.",
+   leaderSummary:"The covenant ceremony at Sinai functions like Israel's wedding vow to God. Within weeks, while Moses is still on the mountain, they break it with the golden calf (the pattern for the whole wilderness generation).",
    groupDiscussionFocus:"Where have you made a strong commitment and broken it faster than expected? What does Moses interceding for the people teach you about standing in the gap for others?"},
   {weekNumber:9,title:"Entering the Promised Land",scripturePassages:"Numbers 13:25-33; 14:5-10; Deut 6:4-10; 28:1-11,15-20; 30:1-8",
    summary:"The twelve spies, the two ways, circumcision of heart",
-   leaderSummary:"Twelve spies see the same land — ten see giants, two see the promise. The difference isn't the facts, it's what they focus on. Deuteronomy's “two ways” frames obedience as the path to flourishing, not a transaction.",
+   leaderSummary:"Twelve spies see the same land: ten see giants, two see the promise. The difference isn't the facts, it's what they focus on. Deuteronomy's “two ways” frames obedience as the path to flourishing, not a transaction.",
    groupDiscussionFocus:"Where are you staring at “giants” instead of the promise in front of you? What's the difference between obeying out of fear and obeying because you trust the path?"},
   {weekNumber:10,title:"A Land Without a Leader",scripturePassages:"Joshua 1:1-9; 6:1-5,15-20; 24:1-5; Judges 13:2-7; 14:5-9; 16:4-22",
    summary:"Jericho, covenant renewal at Shechem, Samson",
-   leaderSummary:"Jericho falls through obedience to a strange plan, not military strength. Judges shows what happens without strong, faithful leadership — a repeating cycle of sin, oppression, deliverance. Samson is wasted potential: gifting without character.",
+   leaderSummary:"Jericho falls through obedience to a strange plan, not military strength. Judges shows what happens without strong, faithful leadership: a repeating cycle of sin, oppression, deliverance. Samson is wasted potential: gifting without character.",
    groupDiscussionFocus:"Where do you lean on your own strategy instead of trusting an instruction from God that doesn't make sense yet? Where is Samson's tension showing up in your own life?"},
   {weekNumber:11,title:"A King After God's Own Heart",scripturePassages:"1 Samuel 17:1-51; 2 Samuel 7:1-29",
    summary:"David and Goliath, the Davidic covenant",
-   leaderSummary:"David fights Goliath so that all the earth will know there is a God in Israel — whose reputation is on the line is the real point. Second Samuel 7's Davidic covenant promises David an eternal dynasty, pointing forward to Christ.",
+   leaderSummary:"David fights Goliath so that all the earth will know there is a God in Israel (whose reputation is on the line) is the real point. Second Samuel 7's Davidic covenant promises David an eternal dynasty, pointing forward to Christ.",
    groupDiscussionFocus:"What has God already carried you through that you can draw confidence from right now? What would it look like to fight your current “giant” for God's reputation instead of your own?"},
   {weekNumber:12,title:"From Dynasty to Exile",scripturePassages:"1 Kings 3:4-15; 6:38; 7:1; 10:14,26; 11:1-8; 12:1-16; Deut 17:14-20",
    summary:"Solomon's wisdom and fall, the divided kingdom",
-   leaderSummary:"Solomon asks for wisdom and receives it, along with wealth and fame — yet his foreign wives gradually turn his heart toward other gods. The kingdom splits right after his death, beginning the slide toward exile.",
-   groupDiscussionFocus:"Solomon started stronger spiritually than almost anyone and still drifted — what small compromises are most likely to pull you off course over time?"},
+   leaderSummary:"Solomon asks for wisdom and receives it, along with wealth and fame, yet his foreign wives gradually turn his heart toward other gods. The kingdom splits right after his death, beginning the slide toward exile.",
+   groupDiscussionFocus:"Solomon started stronger spiritually than almost anyone and still drifted: what small compromises are most likely to pull you off course over time?"},
   {weekNumber:13,title:"The Climax of the Covenant",scripturePassages:"Matthew 3:1-17; 28:18-20; Genesis 3:18-19; Luke 22:44; John 19:2,30; Acts 1:1",
    summary:"John the Baptist, Christ's fulfillment of the covenants, the Church's mission",
    leaderSummary:"John the Baptist stands at the hinge between the Old and New Testaments, pointing beyond himself to the one who fulfills everything before him. Christ's death and resurrection complete the promises of Genesis 3:15, Abraham, and David all at once.",
@@ -222,7 +222,7 @@ async function bscSaveLeaderContent(){
     await setDoc(doc(_db,...bsLeaderContentPath(),'main'),BS_LEADER_CONTENT);
   }catch(err){
     console.warn('Chaplain leader content save failed:',err.message);
-    toast('Private notes saved for this session only — sync failed.','warning',5000);
+    toast('Private notes saved for this session only (sync failed).','warning',5000);
   }
 }
 
@@ -327,7 +327,7 @@ function bscRenderOverview(){
   if(kpiEl){
     kpiEl.innerHTML=[
       kpi('Progress',`${stats.completed}/${stats.total}`,'Chapters completed'),
-      kpi('Next Session',stats.upcoming?`Wk ${stats.upcoming.weekNumber} · ${fds(stats.upcoming.scheduledAt)}`:'—','Next scheduled'),
+      kpi('Next Session',stats.upcoming?`Wk ${stats.upcoming.weekNumber} · ${fds(stats.upcoming.scheduledAt)}`:'N/A','Next scheduled'),
       kpi('Sessions Held',stats.sessionsHeld,'Total this program')
     ].join('');
   }
@@ -336,7 +336,7 @@ function bscRenderOverview(){
   const srcEl=document.getElementById('bs-source-line');
   if(srcEl){
     const src=bsc.source||{};
-    srcEl.textContent=[src.name,src.organization].filter(Boolean).join(' — ');
+    srcEl.textContent=[src.name,src.organization].filter(Boolean).join(', ');
   }
   const pct=stats.total?Math.round(stats.completed/stats.total*100):0;
   const barEl=document.getElementById('bs-progress-fill'); if(barEl)barEl.style.transform='scaleX('+(pct/100)+')';
@@ -483,7 +483,7 @@ function bscRenderChapterWorkspace(){
   const idx=chs.findIndex(x=>x.id===c.id);
   const prevBtn=document.getElementById('bs-ch-prev'); if(prevBtn)prevBtn.disabled=idx<=0;
   const nextBtn=document.getElementById('bs-ch-next'); if(nextBtn)nextBtn.disabled=idx>=chs.length-1;
-  const titleEl=document.getElementById('bs-ch-title'); if(titleEl)titleEl.textContent=`Week ${c.weekNumber} — ${c.title}`;
+  const titleEl=document.getElementById('bs-ch-title'); if(titleEl)titleEl.textContent=`Week ${c.weekNumber}: ${c.title}`;
   const statusEl=document.getElementById('bs-ch-status'); if(statusEl)statusEl.innerHTML=`<span class="badge ${bsStatusClass(c.status)}">${bsStatusLabel(c.status)}</span>`;
   const schedEl=document.getElementById('bs-ch-scheduled'); if(schedEl)schedEl.textContent=c.scheduledAt?('Scheduled '+fds(c.scheduledAt)):'Not scheduled';
   const editBtn=document.getElementById('bs-ch-edit-btn'); if(editBtn)editBtn.style.display=canEdit?'':'none';
@@ -514,11 +514,11 @@ function bscRenderOverviewTab(c){
       <div class="card" style="padding:13px">
         <div class="card-t" style="margin-bottom:8px">Chapter Information</div>
         <div class="bs-info-row"><span>Week</span><b>${c.weekNumber}</b></div>
-        <div class="bs-info-row"><span>Summary</span><span>${esc(c.summary||'—')}</span></div>
-        <div class="bs-info-row"><span>Main Theme</span><span>${esc(c.mainTheme||'—')}</span></div>
-        <div class="bs-info-row"><span>Scripture</span><span>${esc(c.scripturePassages||'—')}</span></div>
-        <div class="bs-info-row"><span>Leader Pages</span><span>${esc(c.leaderPageRange||'—')}</span></div>
-        <div class="bs-info-row"><span>Discussion Pages</span><span>${esc(c.discussionPageRange||'—')}</span></div>
+        <div class="bs-info-row"><span>Summary</span><span>${esc(c.summary||'N/A')}</span></div>
+        <div class="bs-info-row"><span>Main Theme</span><span>${esc(c.mainTheme||'N/A')}</span></div>
+        <div class="bs-info-row"><span>Scripture</span><span>${esc(c.scripturePassages||'N/A')}</span></div>
+        <div class="bs-info-row"><span>Leader Pages</span><span>${esc(c.leaderPageRange||'N/A')}</span></div>
+        <div class="bs-info-row"><span>Discussion Pages</span><span>${esc(c.discussionPageRange||'N/A')}</span></div>
         <div class="bs-info-row"><span>Est. Prep Time</span><span>${c.estimatedPreparationMinutes||0} min</span></div>
         <div class="bs-info-row"><span>Est. Session</span><span>${c.estimatedSessionMinutes||0} min</span></div>
         ${c.passageToRead?`<div class="bs-subhead">Passage to Read</div><div style="font-size:12.5px">${esc(c.passageToRead)}</div>`:''}
@@ -574,7 +574,7 @@ function bscRenderPdfTab(c){
     return;
   }
   if(!c.pdf){
-    el.innerHTML=es('ti-file-off','slate','No chapter PDF has been uploaded','Upload the source PDF for this chapter — PDF files only, up to 700KB.',`<button class="btn btn-p" onclick="bscOpenUploadPdf('${c.id}')"><i class="ti ti-upload"></i>Upload PDF</button>`);
+    el.innerHTML=es('ti-file-off','slate','No chapter PDF has been uploaded','Upload the source PDF for this chapter (PDF files only, up to 700KB).',`<button class="btn btn-p" onclick="bscOpenUploadPdf('${c.id}')"><i class="ti ti-upload"></i>Upload PDF</button>`);
     return;
   }
   const sizeStr=c.pdf.sizeBytes>1048576?(c.pdf.sizeBytes/1048576).toFixed(1)+' MB':(c.pdf.sizeBytes/1024).toFixed(0)+' KB';
@@ -582,8 +582,8 @@ function bscRenderPdfTab(c){
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:13px;margin-bottom:11px;flex-wrap:wrap">
       <div>
         <div style="font-size:13px;font-weight:700">${esc(c.pdf.filename)}</div>
-        <div style="font-size:11px;color:var(--mt)">${sizeStr} · uploaded ${c.pdf.uploadedAt?fds(c.pdf.uploadedAt.slice(0,10)):'—'} by ${esc(mB(c.pdf.uploadedBy).name)} · v${c.pdf.version}${c.pdf.pageRange?' · pages '+esc(c.pdf.pageRange):''}</div>
-        ${c.pdf.sourceName?`<div style="font-size:11px;color:var(--mt)">Source: ${esc(c.pdf.sourceName)}${c.pdf.sourceOrganization?' — '+esc(c.pdf.sourceOrganization):''}</div>`:''}
+        <div style="font-size:11px;color:var(--mt)">${sizeStr} · uploaded ${c.pdf.uploadedAt?fds(c.pdf.uploadedAt.slice(0,10)):'N/A'} by ${esc(mB(c.pdf.uploadedBy).name)} · v${c.pdf.version}${c.pdf.pageRange?' · pages '+esc(c.pdf.pageRange):''}</div>
+        ${c.pdf.sourceName?`<div style="font-size:11px;color:var(--mt)">Source: ${esc(c.pdf.sourceName)}${c.pdf.sourceOrganization?', '+esc(c.pdf.sourceOrganization):''}</div>`:''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn" onclick="bscOpenPdfFullscreen('${c.id}')"><i class="ti ti-arrows-maximize"></i>Full Screen</button>
@@ -619,13 +619,13 @@ async function bscViewPdfInline(chapterId){
 async function bscOpenPdfFullscreen(chapterId){
   const c=bscChapter(chapterId); if(!c||!c.pdf)return;
   const content=await bscFetchPdf(c.pdf.contentId);
-  if(!content){toast('PDF not available — try again.','error');return;}
+  if(!content){toast('PDF not available, try again.','error');return;}
   window.open(`data:application/pdf;base64,${content.base64}`,'_blank');
 }
 async function bscDownloadPdf(chapterId){
   const c=bscChapter(chapterId); if(!c||!c.pdf)return;
   const content=await bscFetchPdf(c.pdf.contentId);
-  if(!content){toast('PDF not available — try again.','error');return;}
+  if(!content){toast('PDF not available, try again.','error');return;}
   const a=document.createElement('a');
   a.href=`data:application/pdf;base64,${content.base64}`;
   a.download=c.pdf.filename||`week-${c.weekNumber}.pdf`;
@@ -642,7 +642,7 @@ function bscUploadPdfFile(chapterId,file){
     }
     if(file.size===0){ toast(`"${file.name}" is empty.`,'error'); reject(new Error('empty file')); return; }
     if(file.size>BS_PDF_MAX_BYTES){
-      toast(`"${file.name}" is ${(file.size/1024).toFixed(0)}KB — the limit is ${(BS_PDF_MAX_BYTES/1024).toFixed(0)}KB. Compress or split the PDF and try again.`,'error',8000);
+      toast(`"${file.name}" is ${(file.size/1024).toFixed(0)}KB. The limit is ${(BS_PDF_MAX_BYTES/1024).toFixed(0)}KB. Compress or split the PDF and try again.`,'error',8000);
       reject(new Error('too large')); return;
     }
     const reader=new FileReader();
@@ -650,7 +650,7 @@ function bscUploadPdfFile(chapterId,file){
     reader.onload=async e=>{
       const b64=e.target.result.split(',')[1];
       const contentId=uid();
-      if(!_db||!_fbFns){ toast('Not connected — try again once you are back online.','error'); reject(new Error('offline')); return; }
+      if(!_db||!_fbFns){ toast('Not connected, try again once you are back online.','error'); reject(new Error('offline')); return; }
       try{
         const {doc,setDoc}=_fbFns;
         await setDoc(doc(_db,...bsPdfContentPath(),contentId),{b:b64,t:'application/pdf',filename:bscSanitizeFilename(file.name)});
@@ -669,7 +669,7 @@ function bscUploadPdfFile(chapterId,file){
         resolve();
       }catch(err){
         c.pdf=prevPdf;
-        toast(`Uploaded "${file.name}", but failed to save — please try again.`,'error');
+        toast(`Uploaded "${file.name}", but failed to save, please try again.`,'error');
         reject(err);
       }
     };
@@ -726,7 +726,7 @@ function bscRenderBulkList(){
     chs.map(c=>`<tr>
       <td>${c.weekNumber}</td>
       <td>${esc(c.title)}</td>
-      <td style="color:var(--mt);font-size:11px">${esc(c.expectedPdfFilename||'—')}</td>
+      <td style="color:var(--mt);font-size:11px">${esc(c.expectedPdfFilename||'N/A')}</td>
       <td>${c.pdf?`<span class="badge bg2">Uploaded</span>`:`<span class="badge bm2">Missing</span>`}</td>
       <td style="display:flex;gap:4px">
         <button class="btn" style="height:22px;font-size:10px" onclick="bscOpenUploadPdf('${c.id}')">${c.pdf?'Replace':'Upload'}</button>
@@ -736,7 +736,7 @@ function bscRenderBulkList(){
   }</tbody></table></div>
   <div style="margin-top:13px;border-top:1px solid var(--bdr);padding-top:11px">
     <div class="card-t" style="margin-bottom:6px">Bulk Upload</div>
-    <div style="font-size:11.5px;color:var(--mt);margin-bottom:8px">Select multiple PDFs at once — files are matched to chapters by their <code>NN_</code> filename prefix or title, and you will confirm the mapping before anything uploads.</div>
+    <div style="font-size:11.5px;color:var(--mt);margin-bottom:8px">Select multiple PDFs at once. Files are matched to chapters by their <code>NN_</code> filename prefix or title, and you will confirm the mapping before anything uploads.</div>
     <input type="file" id="bs-bulk-file-inp" accept="application/pdf,.pdf" multiple onchange="bscBulkFilesSelected(this)">
     <div id="bs-bulk-preview" style="margin-top:11px"></div>
   </div>`;
@@ -776,8 +776,8 @@ function bscRenderBulkPreview(){
   const missing=bscChapters().filter(c=>!BS_BULK_MATCHES.some(m=>m.chapterId===c.id)&&!c.pdf);
   el.innerHTML=`
     ${BS_BULK_MATCHES.length?`<div style="font-size:11.5px;font-weight:600;margin-bottom:5px">Matched (${BS_BULK_MATCHES.length})</div>
-    <div style="margin-bottom:9px">${BS_BULK_MATCHES.map(m=>`<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0"><span>Week ${m.weekNumber} — ${esc(m.title)}</span><span style="color:var(--mt)">${esc(m.file.name)} (${m.matchType})</span></div>`).join('')}</div>`:''}
-    ${BS_BULK_UNMATCHED.length?`<div style="font-size:11.5px;font-weight:600;color:var(--rd);margin-bottom:5px">Unmatched files (${BS_BULK_UNMATCHED.length}) — will not be uploaded</div>
+    <div style="margin-bottom:9px">${BS_BULK_MATCHES.map(m=>`<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0"><span>Week ${m.weekNumber}: ${esc(m.title)}</span><span style="color:var(--mt)">${esc(m.file.name)} (${m.matchType})</span></div>`).join('')}</div>`:''}
+    ${BS_BULK_UNMATCHED.length?`<div style="font-size:11.5px;font-weight:600;color:var(--rd);margin-bottom:5px">Unmatched files (${BS_BULK_UNMATCHED.length}): will not be uploaded</div>
     <div style="margin-bottom:9px">${BS_BULK_UNMATCHED.map(f=>`<div style="font-size:11.5px;color:var(--mt)">${esc(f.name)}</div>`).join('')}</div>`:''}
     ${missing.length?`<div style="font-size:11.5px;color:var(--ht)">Still missing after this upload: ${missing.map(c=>'Week '+c.weekNumber).join(', ')}</div>`:''}
     ${BS_BULK_MATCHES.length?`<button class="btn btn-p" style="margin-top:9px" onclick="bscConfirmBulkUpload()">Upload ${BS_BULK_MATCHES.length} File${BS_BULK_MATCHES.length>1?'s':''}</button>`:''}
@@ -817,7 +817,7 @@ function bscOpenScheduleModal(chapterId){
   document.getElementById('bs-sch-location').value=c.scheduledLocation||'';
   const primSel=document.getElementById('bs-sch-primary');
   if(primSel){
-    primSel.innerHTML='<option value="">— Select —</option>'+mOpts();
+    primSel.innerHTML='<option value="">Select</option>'+mOpts();
     const session=bscCurrentSession(c);
     primSel.value=(session&&session.leaderIds&&session.leaderIds[0])||'';
   }
@@ -832,7 +832,7 @@ function bscOpenScheduleModal(chapterId){
 // event straight from the Calendar is a de facto unschedule, so deleteEvent() (js/events.js)
 // clears c.scheduledAt/scheduledEventId back on this chapter when that happens.
 function bscSyncScheduleEvent(c,location,primaryLeaderId){
-  const title='Bible Study: Week '+c.weekNumber+' — '+(c.title||'');
+  const title='Bible Study: Week '+c.weekNumber+', '+(c.title||'');
   const fields={
     title, date:c.scheduledAt.slice(0,10), start:c.scheduledAt.includes('T')?c.scheduledAt.split('T')[1]:'',
     location, type:'faith', faithCategory:'bible_study', mandatory:false,
@@ -1002,9 +1002,9 @@ function bscRenderNotesTab(c){
   }
   const pn=BS_LEADER_CONTENT.privateNotes[c.id]||{chaplainNotes:'',meetingSummary:'',whatWentWell:'',whatToChangeNextTime:''};
   const canTasks=typeof canEditPage==='function'&&canEditPage('tasks');
-  const followUps=D.tasks.filter(t=>t.title&&t.title.indexOf(`Follow-up: Week ${c.weekNumber} —`)===0);
+  const followUps=D.tasks.filter(t=>t.title&&t.title.indexOf(`Follow-up: Week ${c.weekNumber},`)===0);
   el.innerHTML=`
-    <div style="font-size:11px;color:var(--rd);font-weight:600;margin-bottom:11px"><i class="ti ti-lock"></i> Private — visible only to Chaplain Hub officers</div>
+    <div style="font-size:11px;color:var(--rd);font-weight:600;margin-bottom:11px"><i class="ti ti-lock"></i> Private: visible only to Chaplain Hub officers</div>
     <div class="fr"><div class="fld"><label>Chaplain Notes</label><textarea id="bs-notes-chaplain" onblur="bscSavePrivateField('${c.id}','chaplainNotes',this.value)">${esc(pn.chaplainNotes||'')}</textarea></div></div>
     <div class="fr"><div class="fld"><label>Meeting Summary</label><textarea id="bs-notes-summary" onblur="bscSavePrivateField('${c.id}','meetingSummary',this.value)">${esc(pn.meetingSummary||'')}</textarea></div></div>
     <div class="fr c2">
@@ -1028,11 +1028,11 @@ async function bscSavePrivateField(chapterId,field,value){
   await bscSaveLeaderContent();
 }
 function bscOpenFollowUpTask(chapterId){
-  if(!canEditPage('tasks')){toast('You need Tasks access to create follow-up tasks — ask an exec to grant it in Settings.','error');return;}
+  if(!canEditPage('tasks')){toast('You need Tasks access to create follow-up tasks, ask an exec to grant it in Settings.','error');return;}
   const c=bscChapter(chapterId); if(!c)return;
   openM('m-addtask');
   const titleField=document.getElementById('nt-t');
-  if(titleField)titleField.value=`Follow-up: Week ${c.weekNumber} — ${c.title}`;
+  if(titleField)titleField.value=`Follow-up: Week ${c.weekNumber}, ${c.title}`;
 }
 
 // ══════════════════════════════════════════════
@@ -1082,7 +1082,7 @@ async function bscArchiveChapter(chapterId){
   if(!bsFull())return;
   document.querySelectorAll('.bs-card-menu').forEach(m=>m.style.display='none');
   const c=bscChapter(chapterId); if(!c)return;
-  const ok=await confirmDialog('Archive Chapter','Archive this chapter? It will be hidden from the main program view but not deleted — you can unarchive it later.','Archive',false);
+  const ok=await confirmDialog('Archive Chapter','Archive this chapter? It will be hidden from the main program view but not deleted. You can unarchive it later.','Archive',false);
   if(!ok)return;
   const prev=c.archived; c.archived=true;
   try{ await saveD('bibleStudyCurriculum'); bscRenderProgram(); toast('Chapter archived','info'); }

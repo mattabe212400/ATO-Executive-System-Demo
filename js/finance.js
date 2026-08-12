@@ -119,7 +119,7 @@ function getSemDues(memberId,semester){
 // number is what it is, rather than just the resulting dollar amount.
 function finDuesTierLabel(memberId,semester){
   const m = D.members.find(x=>x.id===memberId);
-  if(!m) return '—';
+  if(!m) return 'N/A';
   if(finDuesRec(memberId,semester)?.customDues) return 'Custom';
   if((m.memberStatus||'Active')==='New Member') return 'New Member';
   return m.liveIn?'In-House':'Out-of-House';
@@ -221,7 +221,7 @@ function finRenderOwnOnly(){
     </div>
     <div class="card">
       <div class="card-hd"><span class="card-t">My Fines</span></div>
-      <div>${myFines.length?myFines.map(f=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>${esc(f.type||'Fine')} — ${esc(f.reason||'')}</span><span style="font-weight:600;color:${f.status==='Unpaid'?'var(--rd)':'var(--gn)'}">$${f.amount.toLocaleString()} · ${f.status}</span></div>`).join(''):'<div style="padding:10px 0;color:var(--mt);font-size:12px">No fines on record.</div>'}</div>
+      <div>${myFines.length?myFines.map(f=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>${esc(f.type||'Fine')}, ${esc(f.reason||'')}</span><span style="font-weight:600;color:${f.status==='Unpaid'?'var(--rd)':'var(--gn)'}">$${f.amount.toLocaleString()} · ${f.status}</span></div>`).join(''):'<div style="padding:10px 0;color:var(--mt);font-size:12px">No fines on record.</div>'}</div>
     </div>`;
   initSemesterSelect('fin-my-semester-select',unionKnownSemesters(Object.keys(D.finance.dues?.[me.id]||{})),finOwnSemesterChanged,sem);
 }
@@ -306,7 +306,7 @@ function finRenderOverview(){
     const pct=bud?Math.min(100,Math.round(spent/bud*100)):0;
     const col=pct>=90?'var(--rd)':pct>=70?'var(--am)':getCatColor(cat);
     return`<div class="pr"><span class="pl" style="width:110px"><i class="ti ${getCatIcon(cat)} " style="font-size:11px;color:var(--ht);margin-right:4px"></i>${cat}</span><div class="pb"><div class="pf" style="width:${pct}%;background:${col}"></div></div><span style="font-size:10.5px;color:var(--mt);width:90px;text-align:right;flex-shrink:0">$${spent.toLocaleString()} / $${bud.toLocaleString()}</span></div>`;
-  }).join(''):`<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No budget allocated yet — set amounts in the Budget tab.</div>`;
+  }).join(''):`<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No budget allocated yet. Set amounts in the Budget tab.</div>`;
 
   // Recent payments feed
   const feedEl=document.getElementById('fin-feed');
@@ -383,7 +383,7 @@ function finFilterDues(){
       <td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:24px;height:24px;font-size:8.5px">${esc(m.initials)}</div><span style="font-weight:500">${esc(m.name)}</span></div></td>
       <td><span class="badge ${statusBadge[st]||'bm2'}">${st}</span></td>
       <td style="color:${bal>0?'var(--rd)':'var(--gn)'};font-weight:600">$${bal.toLocaleString()}</td>
-      <td style="text-align:center">${d.fineCount>0?`<span class="badge br2">${d.fineCount}</span>`:'—'}</td>
+      <td style="text-align:center">${d.fineCount>0?`<span class="badge br2">${d.fineCount}</span>`:'N/A'}</td>
       <td style="color:var(--gn);font-weight:500">$${d.paid.toLocaleString()}</td>
       <td style="color:var(--mt)">$${d.semesterDues.toLocaleString()}</td>
       <td><span class="badge ${finDuesTierLabel(m.id,sem)==='New Member'?'bb2':'bm2'}">${finDuesTierLabel(m.id,sem)}</span></td>
@@ -523,11 +523,11 @@ function finDrawBudgetDonut(budget){
   if(!svg)return;
   const segs=getCatNames().map(cat=>({cat,amt:budget[cat]||0,col:getCatColor(cat)})).filter(s=>s.amt>0);
   const total=segs.reduce((s,c)=>s+c.amt,0);
-  if(totalEl)totalEl.textContent=total?'$'+total.toLocaleString():'—';
+  if(totalEl)totalEl.textContent=total?'$'+total.toLocaleString():'N/A';
   const R=42,CX=55,CY=55,CIRC=2*Math.PI*R,SW=16;
   if(!total){
     svg.innerHTML=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#F1F3F6" stroke-width="${SW}"/>`;
-    if(legend)legend.innerHTML=`<div style="font-size:11px;color:var(--ht)">No budget allocated yet — set category amounts in Settings.</div>`;
+    if(legend)legend.innerHTML=`<div style="font-size:11px;color:var(--ht)">No budget allocated yet. Set category amounts in Settings.</div>`;
     return;
   }
   let offset=0,paths='';
@@ -684,7 +684,7 @@ function finFilterNational(){
     <td style="color:var(--gn);font-weight:500">$${(d.paid||0).toLocaleString()}</td>
     <td style="color:var(--mt)">$${natAmt.toLocaleString()}</td>
     <td style="color:var(--mt)">${esc(m.classYear)}</td>
-    <td style="color:var(--ht)">${d.lastPayment?fds(d.lastPayment):'—'}</td>
+    <td style="color:var(--ht)">${d.lastPayment?fds(d.lastPayment):'N/A'}</td>
     ${canEdit?`<td><button class="btn" style="height:22px;font-size:10px;padding:0 7px" onclick="finOpenNationalPaymentFor('${m.id}')"><i class="ti ti-plus"></i>Pay</button></td>`:''}
   </tr>`).join('')||`<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--ht)">No members found.</td></tr>`}
   </tbody>`;
@@ -762,7 +762,7 @@ function finRenderPlans(){
     <td style="color:${rem>0?'var(--rd)':'var(--gn)'};font-weight:600">$${rem.toLocaleString()}</td>
     <td style="color:var(--gn);font-weight:500">$${p.paid.toLocaleString()}</td>
     <td>$${p.total.toLocaleString()}</td>
-    <td style="color:var(--mt)">${p.nextDue?fds(p.nextDue):'—'}</td>
+    <td style="color:var(--mt)">${p.nextDue?fds(p.nextDue):'N/A'}</td>
     <td>${canEdit?`<button class="btn btn-d" style="height:22px;font-size:10px;padding:0 7px" onclick="deletePlan('${p.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td></tr>`;
   }).join(''):''}</tbody>${!plans.length?`<tfoot><tr><td colspan="8">${es('ti-calendar-dollar','blue','No payment plans','Create a plan for members who need installments.',canEdit?`<button class="btn btn-p" onclick="finOpenAddPlan()"><i class="ti ti-plus"></i>Create Plan</button>`:'')}</td></tr></tfoot>`:''} `;
   const mobEl=document.getElementById('fin-plans-mobile-cards');
@@ -771,7 +771,7 @@ function finRenderPlans(){
       <div class="sh-av" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${esc(m.initials)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div>
-        <div style="font-size:11px;color:var(--mt)">Next due ${p.nextDue?fds(p.nextDue):'—'}</div>
+        <div style="font-size:11px;color:var(--mt)">Next due ${p.nextDue?fds(p.nextDue):'N/A'}</div>
       </div>
       <span class="fin-plan-badge ${status}" style="flex-shrink:0">${labels[status]}</span>
     </div>
@@ -821,16 +821,16 @@ function finOpenProfile(memberId){
       </div>
       <div>
         <div class="card-t" style="margin-bottom:8px">Outstanding Fines (${fines.filter(f=>f.status==='Unpaid').length})</div>
-        ${fines.length?fines.map(f=>`<div class="fin-fine-row"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">${esc(f.type)} — $${f.amount.toLocaleString()}</div><div style="font-size:10px;color:var(--ht)">${fds(f.date)} · ${esc(f.reason)}</div></div><span class="badge ${f.status==='Paid'?'bg2':'br2'}">${esc(f.status)}</span></div>`).join(''):`<div style="font-size:11.5px;color:var(--ht);padding:8px 0">No fines</div>`}
+        ${fines.length?fines.map(f=>`<div class="fin-fine-row"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">${esc(f.type)}: $${f.amount.toLocaleString()}</div><div style="font-size:10px;color:var(--ht)">${fds(f.date)} · ${esc(f.reason)}</div></div><span class="badge ${f.status==='Paid'?'bg2':'br2'}">${esc(f.status)}</span></div>`).join(''):`<div style="font-size:11.5px;color:var(--ht);padding:8px 0">No fines</div>`}
         ${plan?`<div class="card-t" style="margin-top:11px;margin-bottom:8px">Payment Plan</div>
         <div class="fin-stat"><span style="color:var(--mt)">Total</span><span>$${plan.total.toLocaleString()}</span></div>
         <div class="fin-stat"><span style="color:var(--mt)">Paid</span><span style="color:var(--gn);font-weight:500">$${plan.paid.toLocaleString()}</span></div>
-        <div class="fin-stat"><span style="color:var(--mt)">Next Due</span><span>${plan.nextDue?fds(plan.nextDue):'—'}</span></div>`:''}
+        <div class="fin-stat"><span style="color:var(--mt)">Next Due</span><span>${plan.nextDue?fds(plan.nextDue):'N/A'}</span></div>`:''}
       </div>
     </div>
     <div>
       <div class="card-t" style="margin-bottom:8px">Payment History (${payments.length})</div>
-      ${payments.length?payments.map(p=>`<div class="fin-pay-row"><div class="fin-pay-icon" style="background:var(--gn-bg)"><i class="ti ti-cash" style="color:var(--gn)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:500">$${p.amount.toLocaleString()} — ${esc(p.type)}</div><div style="font-size:10px;color:var(--ht)">${fds(p.date)} · ${esc(p.method)}${p.notes?' · '+esc(p.notes):''}</div></div><span style="font-size:11px;font-weight:600;color:var(--gn)">+$${p.amount.toLocaleString()}</span></div>`).join(''):`<div style="font-size:11.5px;color:var(--ht);padding:6px 0">No payment history</div>`}
+      ${payments.length?payments.map(p=>`<div class="fin-pay-row"><div class="fin-pay-icon" style="background:var(--gn-bg)"><i class="ti ti-cash" style="color:var(--gn)"></i></div><div style="flex:1"><div style="font-size:12px;font-weight:500">$${p.amount.toLocaleString()}, ${esc(p.type)}</div><div style="font-size:10px;color:var(--ht)">${fds(p.date)} · ${esc(p.method)}${p.notes?' · '+esc(p.notes):''}</div></div><span style="font-size:11px;font-weight:600;color:var(--gn)">+$${p.amount.toLocaleString()}</span></div>`).join(''):`<div style="font-size:11.5px;color:var(--ht);padding:6px 0">No payment history</div>`}
     </div>`;
   modal.classList.add('open');
 }
@@ -929,7 +929,7 @@ async function finAddFine(){
 // semester's dues — attendance can only be marked for current-semester events in the first
 // place (see js/attendance.js's own semester guard), so this is never reachable for a past one.
 async function finAddAttendanceFine(memberId, eventId, eventTitle, amount){
-  const fine={id:'fn'+uid(),memberId,eventId,type:'Attendance',amount,reason:'Unexcused absence — '+eventTitle,date:localDateStr(),status:'Unpaid',paidDate:''};
+  const fine={id:'fn'+uid(),memberId,eventId,type:'Attendance',amount,reason:'Unexcused absence: '+eventTitle,date:localDateStr(),status:'Unpaid',paidDate:''};
   D.finance.fines.unshift(fine);
   const rec=finEnsureDuesRec(memberId,getSemester());
   const prevCount=rec.fineCount||0;
@@ -1089,11 +1089,11 @@ function renderSettings(){
   // System info (read-only)
   const lastLoginDisplay=CURRENT_USER&&CURRENT_USER.lastLogin?CURRENT_USER.lastLogin:'First session';
   document.getElementById('se-info').innerHTML=[
-    ['Chapter',D.settings.chapterName||CURRENT_USER?.chapterName||'—'],
-    ['University',D.settings.university||CURRENT_USER?.university||'—'],
+    ['Chapter',D.settings.chapterName||CURRENT_USER?.chapterName||'N/A'],
+    ['University',D.settings.university||CURRENT_USER?.university||'N/A'],
     ['Semester',getSemester()],
     ['Active members',D.members.length],
-    ['Your role',CURRENT_USER?CURRENT_USER.title:'—'],
+    ['Your role',CURRENT_USER?CURRENT_USER.title:'N/A'],
     ['Last login',lastLoginDisplay]
   ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12.5px"><span style="color:var(--mt)">${esc(l)}</span><span style="font-weight:500">${esc(v)}</span></div>`).join('');
 

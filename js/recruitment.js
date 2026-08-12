@@ -162,7 +162,7 @@ function rcDrawFunnel(rushees){
           </div>
         </div>
         <div class="rc-hfunnel-meta">
-          ${convRate!==null?`<span class="rc-hfunnel-conv" style="color:${convRate>=50?'var(--gn-tx)':convRate>=25?'var(--am-tx)':'var(--rd-tx)'}">↓ ${convRate}%</span>`:'<span style="font-size:9.5px;color:var(--ht)">—</span>'}
+          ${convRate!==null?`<span class="rc-hfunnel-conv" style="color:${convRate>=50?'var(--gn-tx)':convRate>=25?'var(--am-tx)':'var(--rd-tx)'}">↓ ${convRate}%</span>`:'<span style="font-size:9.5px;color:var(--ht)">N/A</span>'}
           <span class="rc-hfunnel-pct">${pct}%</span>
         </div>
       </div>`;
@@ -333,7 +333,7 @@ function rcRenderTable(){
   // The whole row already opens the profile (role="button" below) — no separate trailing view
   // button duplicating that, same fix applied to Members/Finance's row-clickable tables.
   el.innerHTML=`<thead><tr><th>Name</th><th>Year</th><th>Major</th><th>Recruiter</th><th>Stage</th><th>Events</th><th>Score</th><th>Last Contact</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${rushees.map(r=>{
-    const recName=r.recruiter?mB(r.recruiter).name.split(' ')[0]:'—';
+    const recName=r.recruiter?mB(r.recruiter).name.split(' ')[0]:'N/A';
     const daysSince=r.lastContact?Math.round((new Date()-new Date(r.lastContact+'T12:00:00'))/86400000):null;
     const contactColor=daysSince===null?'var(--ht)':daysSince>7?'var(--rd)':daysSince>4?'var(--am)':'var(--gn)';
     return`<tr style="cursor:pointer" tabindex="0" role="button" aria-label="Open ${esc(r.name)}" onclick="rcOpenProfile('${r.id}')">
@@ -473,7 +473,7 @@ function rcRenderEvents(){
   // gold reserved for primary actions per the Two-Accent Rule.
   const typeColors={'Open House':'var(--bl)','Brotherhood Event':'var(--gn)','Invite Only':'var(--mt)','Philanthropy':'var(--rd)','Athletics':'var(--am)','Study Event':'var(--mt)','Rush Dinner':'var(--bl)','IFC Event':'var(--mt)'};
   const canEdit=canEditPage('recruitment')&&isCurrentSemester(sem);
-  document.getElementById('rc-events-table').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Time</th><th>Location</th><th></th></tr></thead><tbody>${events.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="background:${typeColors[e.rcEventType]||'#F1F3F6'}22;color:${typeColors[e.rcEventType]||'var(--mt)'}">${esc(e.rcEventType||'—')}</span></td><td>${fd(e.date)}</td><td style="color:var(--mt)">${to12h(e.start)}</td><td style="color:var(--mt)">${esc(e.location)||'—'}</td><td style="white-space:nowrap">${canEdit?`<button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(e.title)}" onclick="rcOpenEditEvent('${e.id}')"><i class="ti ti-pencil"></i></button> <button class="btn btn-d" style="height:23px;font-size:10.5px" aria-label="Delete ${esc(e.title)}" onclick="rcDeleteEvent('${e.id}')"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:22px;color:var(--mt)">No events yet</td></tr>'}</tbody>`;
+  document.getElementById('rc-events-table').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Time</th><th>Location</th><th></th></tr></thead><tbody>${events.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="background:${typeColors[e.rcEventType]||'#F1F3F6'}22;color:${typeColors[e.rcEventType]||'var(--mt)'}">${esc(e.rcEventType||'N/A')}</span></td><td>${fd(e.date)}</td><td style="color:var(--mt)">${to12h(e.start)}</td><td style="color:var(--mt)">${esc(e.location)||'N/A'}</td><td style="white-space:nowrap">${canEdit?`<button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(e.title)}" onclick="rcOpenEditEvent('${e.id}')"><i class="ti ti-pencil"></i></button> <button class="btn btn-d" style="height:23px;font-size:10.5px" aria-label="Delete ${esc(e.title)}" onclick="rcDeleteEvent('${e.id}')"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:22px;color:var(--mt)">No events yet</td></tr>'}</tbody>`;
 }
 
 // ── RUSHEE PROFILE ──
@@ -488,7 +488,7 @@ function rcOpenProfile(id){
   sb.textContent=r.stage;sb.style.cssText=rcStageBadgeStyle(r.stage);
   const scoreEl=document.getElementById('rcp-score-badge');
   const bd=rcScoreBadge(r.bidScore);
-  scoreEl.textContent=r.bidScore+' — '+bd.label;scoreEl.className='rc-score '+bd.cls;
+  scoreEl.textContent=r.bidScore+', '+bd.label;scoreEl.className='rc-score '+bd.cls;
 
   const recName=r.recruiter?mB(r.recruiter).name:'Unassigned';
   const daysSince=r.lastContact?Math.round((new Date()-new Date(r.lastContact+'T12:00:00'))/86400000):null;
@@ -502,8 +502,8 @@ function rcOpenProfile(id){
         <div class="card-t" style="margin-bottom:8px">Basic Info</div>
         <div class="rc-stat"><span style="color:var(--mt)">Year</span><span style="font-weight:500">${esc(r.year)}</span></div>
         <div class="rc-stat"><span style="color:var(--mt)">Major</span><span style="font-weight:500">${esc(r.major)}</span></div>
-        <div class="rc-stat"><span style="color:var(--mt)">Hometown</span><span style="font-weight:500">${esc(r.hometown)||'—'}</span></div>
-        <div class="rc-stat"><span style="color:var(--mt)">Interests</span><span style="font-weight:500;font-size:11px">${esc(r.interests)||'—'}</span></div>
+        <div class="rc-stat"><span style="color:var(--mt)">Hometown</span><span style="font-weight:500">${esc(r.hometown)||'N/A'}</span></div>
+        <div class="rc-stat"><span style="color:var(--mt)">Interests</span><span style="font-weight:500;font-size:11px">${esc(r.interests)||'N/A'}</span></div>
         <div class="rc-stat"><span style="color:var(--mt)">Recruiter</span><span style="font-weight:500">${esc(recName)}</span></div>
         <div class="rc-stat"><span style="color:var(--mt)">Last Contact</span><span style="font-weight:500;color:${daysSince===null?'var(--ht)':daysSince>7?'var(--rd)':'var(--tx)'}">${daysSince===null?'Never':daysSince+'d ago'}</span></div>
         <div style="margin-top:11px"><div class="card-t" style="margin-bottom:7px">Tags</div>
@@ -542,7 +542,7 @@ function rcOpenProfile(id){
         <div class="card-t">Conversation Notes</div>
         ${canEdit?`<button class="btn" style="height:24px;font-size:10.5px" onclick="rcOpenAddNote('${r.id}')"><i class="ti ti-plus"></i>Add Note</button>`:''}
       </div>
-      <div id="rcp-notes">${(r.notes||[]).length?(r.notes||[]).slice().reverse().map(n=>`<div class="rc-note" style="margin-bottom:7px"><div class="rc-note-meta"><span>${esc(mB(n.by).name)}</span><span>${fds(n.date)}</span></div>${esc(n.text)}</div>`).join(''):`<div style="font-size:11.5px;color:var(--ht)">No notes yet — add your first observation.</div>`}
+      <div id="rcp-notes">${(r.notes||[]).length?(r.notes||[]).slice().reverse().map(n=>`<div class="rc-note" style="margin-bottom:7px"><div class="rc-note-meta"><span>${esc(mB(n.by).name)}</span><span>${fds(n.date)}</span></div>${esc(n.text)}</div>`).join(''):`<div style="font-size:11.5px;color:var(--ht)">No notes yet. Add your first observation.</div>`}
       </div>
     </div>`;
 

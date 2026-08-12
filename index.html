@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>ATO Executive System — Live Demo</title>
+<title>ATO Executive System: Live Demo</title>
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
@@ -51,22 +51,22 @@
     <span style="opacity:.9">ATO Executive System · Viewing as <strong id="demo-role-label">President</strong> · All data is fictional</span>
     <select id="demo-role-switcher" onchange="switchDemoRole(this.value)" title="Switch role to explore RBAC access control" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;font-size:10.5px;padding:2px 6px;cursor:pointer;outline:none;max-width:210px">
       <option value="" disabled selected style="color:#1e293b;background:#fff">Switch role…</option>
-      <option value="President" style="color:#1e293b;background:#fff">President — full access</option>
-      <option value="Vice President" style="color:#1e293b;background:#fff">Vice President — full access</option>
-      <option value="Treasurer" style="color:#1e293b;background:#fff">Treasurer — Finance</option>
-      <option value="Secretary" style="color:#1e293b;background:#fff">Secretary — Attendance, Notes, Members</option>
-      <option value="Risk Manager" style="color:#1e293b;background:#fff">Risk Manager — Social Monitors, Attendance</option>
-      <option value="Recruitment" style="color:#1e293b;background:#fff">Recruitment — Recruitment CRM</option>
-      <option value="Scholarship" style="color:#1e293b;background:#fff">Scholarship — Academics</option>
+      <option value="President" style="color:#1e293b;background:#fff">President: full access</option>
+      <option value="Vice President" style="color:#1e293b;background:#fff">Vice President: full access</option>
+      <option value="Treasurer" style="color:#1e293b;background:#fff">Treasurer: Finance</option>
+      <option value="Secretary" style="color:#1e293b;background:#fff">Secretary: Attendance, Notes, Members</option>
+      <option value="Risk Manager" style="color:#1e293b;background:#fff">Risk Manager: Social Monitors, Attendance</option>
+      <option value="Recruitment" style="color:#1e293b;background:#fff">Recruitment: Recruitment CRM</option>
+      <option value="Scholarship" style="color:#1e293b;background:#fff">Scholarship: Academics</option>
       <option value="Philanthropy" style="color:#1e293b;background:#fff">Philanthropy</option>
       <option value="Community Service" style="color:#1e293b;background:#fff">Community Service</option>
-      <option value="Alumni" style="color:#1e293b;background:#fff">Alumni — Alumni Relations</option>
-      <option value="House Manager" style="color:#1e293b;background:#fff">House Manager — House Mgmt</option>
-      <option value="Membership Educator" style="color:#1e293b;background:#fff">Membership Educator — New Member Education</option>
-      <option value="Chaplain" style="color:#1e293b;background:#fff">Chaplain — Chaplain Hub</option>
-      <option value="Social" style="color:#1e293b;background:#fff">Social — Social Monitors, Social Events</option>
+      <option value="Alumni" style="color:#1e293b;background:#fff">Alumni: Alumni Relations</option>
+      <option value="House Manager" style="color:#1e293b;background:#fff">House Manager: House Mgmt</option>
+      <option value="Membership Educator" style="color:#1e293b;background:#fff">Membership Educator: New Member Education</option>
+      <option value="Chaplain" style="color:#1e293b;background:#fff">Chaplain: Chaplain Hub</option>
+      <option value="Social" style="color:#1e293b;background:#fff">Social: Social Monitors, Social Events</option>
       <option value="Public Relations" style="color:#1e293b;background:#fff">Public Relations</option>
-      <option value="General Member" style="color:#1e293b;background:#fff">General Member — read-only</option>
+      <option value="General Member" style="color:#1e293b;background:#fff">General Member: read-only</option>
     </select>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
@@ -86,12 +86,12 @@
 <div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ── OFFLINE BANNER ── -->
-<div id="offline-banner"><i class="ti ti-wifi-off" style="font-size:13px;margin-right:6px;vertical-align:middle"></i>You are offline — changes are saved locally and will sync when reconnected.</div>
+<div id="offline-banner"><i class="ti ti-wifi-off" style="font-size:13px;margin-right:6px;vertical-align:middle"></i>You are offline, changes are saved locally and will sync when reconnected.</div>
 
 <!-- ── SYNC ERROR BANNER ── -->
 <div id="sync-error-banner" class="sync-banner" role="alert">
   <i class="ti ti-alert-triangle" style="font-size:13px;flex-shrink:0"></i>
-  <span style="flex:1">Real-time sync disconnected — your data may be out of date.</span>
+  <span style="flex:1">Real-time sync disconnected, your data may be out of date.</span>
   <button class="sync-banner-retry" onclick="startRealtimeSync();document.getElementById('sync-error-banner').style.display='none'">Retry</button>
   <button class="sync-banner-x" aria-label="Dismiss" onclick="this.closest('#sync-error-banner').style.display='none'">&times;</button>
 </div>
@@ -134,7 +134,7 @@
     <div id="lg-reset-wrap" style="display:none">
       <div style="font-size:12.5px;color:var(--mt);margin-bottom:14px;line-height:1.5">Enter your account email and we'll send you a link to reset your password.</div>
       <div class="lg-fld"><label for="rs-email">Email</label><input id="rs-email" type="email" placeholder="you@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')lgSendReset()"></div>
-      <div style="font-size:10.5px;color:var(--ht);margin:-4px 0 12px;display:flex;align-items:flex-start;gap:5px"><i class="ti ti-info-circle" style="font-size:12px;margin-top:1px;flex-shrink:0"></i><span>Reset emails sometimes land in spam/junk — check there if it doesn't arrive within a few minutes.</span></div>
+      <div style="font-size:10.5px;color:var(--ht);margin:-4px 0 12px;display:flex;align-items:flex-start;gap:5px"><i class="ti ti-info-circle" style="font-size:12px;margin-top:1px;flex-shrink:0"></i><span>Reset emails sometimes land in spam/junk, check there if it doesn't arrive within a few minutes.</span></div>
       <div id="rs-msg" style="font-size:11.5px;margin-bottom:10px;line-height:1.5"></div>
       <button class="lg-btn" id="rs-btn" onclick="lgSendReset()">Send Reset Link</button>
       <button class="lg-btn" onclick="lgSetMode('signin')" style="background:transparent;color:var(--mt);border:1px solid var(--bdr);margin-top:8px">Back to Sign In</button>
@@ -260,14 +260,14 @@
               <circle id="d-health-ring" cx="34" cy="34" r="28" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)"/>
             </svg>
             <div class="d2-health-val">
-              <span id="d-health-val">—</span>
+              <span id="d-health-val">N/A</span>
               <span class="d2-health-lbl">score</span>
             </div>
           </div>
           <div class="d2-hero-copy">
             <div class="d2-hero-top">
               <span class="d2-hero-label">Chapter Health Score</span>
-              <span class="badge" id="d-health-grade">—</span>
+              <span class="badge" id="d-health-grade">N/A</span>
             </div>
             <div class="d2-hero-summary" id="d-health-summary"></div>
             <span class="d2-hero-trend" id="d-health-trend" style="display:none"></span>
@@ -345,7 +345,7 @@
                   <circle cx="31" cy="31" r="24" fill="none" stroke="#f0f0ee" stroke-width="7"/>
                   <circle id="ring-c" cx="31" cy="31" r="24" fill="none" stroke="var(--navy)" stroke-width="7" stroke-linecap="round" transform="rotate(-90 31 31)"/>
                 </svg>
-                <div class="ring-v" id="ring-v">—</div>
+                <div class="ring-v" id="ring-v">N/A</div>
               </div>
               <div>
                 <div style="font-size:22px;font-weight:700;line-height:1;color:var(--tx)" id="ring-v2"></div>
@@ -378,7 +378,7 @@
           <!-- Sober Bros -->
           <div class="card d2-card">
             <div class="card-hd">
-              <span class="card-t d2-card-t"><i class="ti ti-shield-check d2-card-ico" style="color:var(--gn)"></i>Social Monitors — This Weekend</span>
+              <span class="card-t d2-card-t"><i class="ti ti-shield-check d2-card-ico" style="color:var(--gn)"></i>Social Monitors: This Weekend</span>
               <button class="card-a" onclick="rbacNav('sober',null)">Schedule →</button>
             </div>
             <div id="d-sober"></div>
@@ -444,7 +444,7 @@
               <div style="position:relative;width:110px;height:110px;margin-bottom:10px">
                 <svg id="att-donut" width="110" height="110" viewBox="0 0 110 110"></svg>
                 <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                  <div style="font-size:18px;font-weight:700" id="att-donut-pct">—</div>
+                  <div style="font-size:18px;font-weight:700" id="att-donut-pct">N/A</div>
                   <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:.05em">Good</div>
                 </div>
               </div>
@@ -603,7 +603,7 @@
       <div id="jb-content" style="display:none">
         <!-- Confidential notice — a standing reminder, not an alarm, so it's calm/neutral rather
              than the danger-red treatment reserved for something actually wrong. -->
-        <div class="bnr neutral"><i class="ti ti-shield-lock" style="font-size:14px;flex-shrink:0"></i><span><strong style="color:var(--tx)">Confidential.</strong> Judicial Board records are restricted to authorized officers — do not share case details outside this section.</span></div>
+        <div class="bnr neutral"><i class="ti ti-shield-lock" style="font-size:14px;flex-shrink:0"></i><span><strong style="color:var(--tx)">Confidential.</strong> Judicial Board records are restricted to authorized officers. Do not share case details outside this section.</span></div>
         <!-- Header bar -->
         <div class="ph" style="margin-bottom:13px">
           <div class="ph-left">
@@ -699,11 +699,11 @@
         <div class="ph-left"><h2 class="page-title">House Management</h2><div class="page-sub">Meal Duties schedule and weekly chore assignments</div></div>
       </div>
       <div class="d2-stats" id="kc-kpi" style="margin-bottom:13px"></div>
-      <div id="kc-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only — only the President, Vice President, House Manager, and House Manager Assistant can edit Meal Duties and chore assignments.</span></div>
+      <div id="kc-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only. Only the President, Vice President, House Manager, and House Manager Assistant can edit Meal Duties and chore assignments.</span></div>
       <div class="card" style="margin-bottom:13px">
         <div class="card-hd">
           <span class="card-t"><i class="ti ti-tools-kitchen-2" style="margin-right:6px;color:var(--navy)"></i>Meal Duties Schedule</span>
-          <span style="font-size:11px;color:var(--ht)">Select who is on Meal Duties — auto-saves</span>
+          <span style="font-size:11px;color:var(--ht)">Select who is on Meal Duties (auto-saves)</span>
         </div>
         <div id="kc-schedule"></div>
       </div>
@@ -711,7 +711,7 @@
         <div class="card-hd">
           <span class="card-t"><i class="ti ti-home-check" style="margin-right:6px;color:var(--navy)"></i>Chore Assignments</span>
           <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:11px;color:var(--ht)">Due every Tuesday and Thursday night — check off when complete</span>
+            <span style="font-size:11px;color:var(--ht)">Due every Tuesday and Thursday night, check off when complete</span>
             <button class="btn" style="height:26px;font-size:11px" onclick="kcPrintChores()"><i class="ti ti-printer"></i>Print</button>
           </div>
         </div>
@@ -734,7 +734,7 @@
       <div class="ph">
         <div class="ph-left"><h2 class="page-title">House Life</h2><div class="page-sub">Room assignments, parking, and priority points</div></div>
       </div>
-      <div id="hl-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only — only the Secretary, President, and Vice President can edit House Life.</span></div>
+      <div id="hl-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only: only the Secretary, President, and Vice President can edit House Life.</span></div>
 
       <div id="hl-tabs-bar" style="display:flex;gap:0;border-bottom:2px solid var(--bdr);margin-bottom:14px;overflow-x:auto">
         <button class="hl-tab active" data-tab="hl-pane-rooms" onclick="hlTab(this,'hl-pane-rooms')">Rooms</button>
@@ -960,7 +960,7 @@
       <div id="ac-pane-members" style="display:none">
         <div class="card">
           <div class="card-hd">
-            <span class="card-t">Chapter GPA — All Members</span>
+            <span class="card-t">Chapter GPA: All Members</span>
             <button class="btn btn-p" id="ac-update-gpa-btn" style="height:26px;font-size:11px" onclick="openUpdateGpa()"><i class="ti ti-edit"></i>Update GPAs</button>
             <button class="btn" style="height:26px;font-size:11px" onclick="openImportModal('grades')"><i class="ti ti-table-import"></i>Import Grades</button>
             <button class="btn" style="height:26px;font-size:11px" onclick="xport('academics')"><i class="ti ti-download"></i>Export</button>
@@ -1131,7 +1131,7 @@
                 <div style="position:relative;width:100px;height:100px;flex-shrink:0">
                   <svg id="fin-budget-donut" width="100" height="100" viewBox="0 0 110 110"></svg>
                   <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                    <div style="font-size:13px;font-weight:700" id="fin-budget-donut-total">—</div>
+                    <div style="font-size:13px;font-weight:700" id="fin-budget-donut-total">N/A</div>
                     <div style="font-size:8.5px;color:var(--mt);text-transform:uppercase;letter-spacing:.05em">Total</div>
                   </div>
                 </div>
@@ -1197,7 +1197,7 @@
 
             <!-- New Member Dues -->
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mt);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bdr);margin-top:11px">New Members</div>
-            <div style="font-size:11px;color:var(--mt);margin-bottom:9px">Applies to any member whose Member Status is set to "New Member" on the Members page — not derived from class year.</div>
+            <div style="font-size:11px;color:var(--mt);margin-bottom:9px">Applies to any member whose Member Status is set to "New Member" on the Members page (not derived from class year).</div>
             <div class="fr c2">
               <div class="fld">
                 <label for="fin-dues-pledge">New Member Dues Amount ($)</label>
@@ -1247,7 +1247,7 @@
         <div class="card" style="margin-top:13px">
           <div class="card-hd">
             <span class="card-t">Budget Categories</span>
-            <span style="font-size:11px;color:var(--mt)">Customize categories for your chapter — used in Budget, Expense Log, and the Log Expense form</span>
+            <span style="font-size:11px;color:var(--mt)">Customize categories for your chapter (used in Budget, Expense Log, and the Log Expense form)</span>
           </div>
           <div id="fin-cat-manager" style="margin-top:6px"></div>
         </div>
@@ -1390,7 +1390,7 @@
           <div>
             <div style="font-size:11px;font-weight:500;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Chapter Intelligence</div>
             <div style="font-size:16px;font-weight:700;color:#fff;line-height:1">Deep-dive analytics by category</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">Computed live from current data — nothing here is a stored/stale report</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">Computed live from current data. Nothing here is a stored/stale report</div>
           </div>
         </div>
         <button class="btn" onclick="rbacNav('reports',null)" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff"><i class="ti ti-file-analytics"></i>View Full Report →</button>
@@ -1407,7 +1407,7 @@
           <button class="btn" style="height:28px;font-size:11px" onclick="ciResetFilter()">Reset</button>
           <span id="ci-f-active" style="font-size:10.5px;color:var(--mt);margin-left:auto"></span>
         </div>
-        <div style="font-size:9.5px;color:var(--ht);margin-top:6px">Filters apply only where marked <span style="background:var(--surf2);padding:1px 5px;border-radius:4px;"><i class="ti ti-calendar-event"></i> Filtered</span> — some tabs (Recruitment prospects, Social events) aren't tied to a current member/class year, so the class filter doesn't apply there.</div>
+        <div style="font-size:9.5px;color:var(--ht);margin-top:6px">Filters apply only where marked <span style="background:var(--surf2);padding:1px 5px;border-radius:4px;"><i class="ti ti-calendar-event"></i> Filtered</span>, some tabs (Recruitment prospects, Social events) aren't tied to a current member/class year, so the class filter doesn't apply there.</div>
       </div>
 
       <!-- Category tabs -->
@@ -1431,7 +1431,7 @@
           <div id="ci-health-link" style="cursor:pointer" onclick="rbacNav('healthscore',null)"></div>
         </div>
         <div class="card">
-          <div class="card-hd"><span class="card-t">Operational Performance — Strongest to Weakest</span></div>
+          <div class="card-hd"><span class="card-t">Operational Performance: Strongest to Weakest</span></div>
           <div id="ci-opcompare"></div>
         </div>
       </div>
@@ -1486,7 +1486,7 @@
           <div class="card"><div class="card-hd"><span class="card-t">Recruiter Performance</span></div><div id="ci-rec-recruiters"></div></div>
         </div>
         <div class="card">
-          <div class="card-hd"><span class="card-t">All Rushees</span><span style="font-size:9.5px;color:var(--ht)">Not filterable by class year — rushees aren't members yet</span></div>
+          <div class="card-hd"><span class="card-t">All Rushees</span><span style="font-size:9.5px;color:var(--ht)">Not filterable by class year (rushees aren't members yet)</span></div>
           <div class="tw"><table class="tbl" id="ci-rec-table"></table></div>
         </div>
       </div>
@@ -1516,7 +1516,7 @@
           <div id="ci-soc-bycat"></div>
         </div>
         <div class="card">
-          <div class="card-hd"><span class="card-t">All Events</span><span style="font-size:9.5px;color:var(--ht)">Not filterable by class year — events aren't per-member</span></div>
+          <div class="card-hd"><span class="card-t">All Events</span><span style="font-size:9.5px;color:var(--ht)">Not filterable by class year (events aren't per-member)</span></div>
           <div class="tw"><table class="tbl" id="ci-soc-table"></table></div>
         </div>
       </div>
@@ -1627,7 +1627,7 @@
         <div class="fld"><label for="fi-folder-name">Folder Name *</label><input id="fi-folder-name" placeholder="e.g. House Manager"></div>
         <div class="fld"><label for="fi-folder-icon">Icon name</label><input id="fi-folder-icon" placeholder="folder" maxlength="30"></div>
       </div>
-      <div style="font-size:10.5px;color:var(--ht);margin:-6px 0 8px">Tabler icon name, e.g. "folder", "crown", "cash" — leave blank for the default folder icon.</div>
+      <div style="font-size:10.5px;color:var(--ht);margin:-6px 0 8px">Tabler icon name, e.g. "folder", "crown", "cash". Leave blank for the default folder icon.</div>
       <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:5px">
         <button class="btn" onclick="closeM(null,document.getElementById('m-fi-addfolder'))">Cancel</button>
         <button class="btn btn-p" onclick="fiAddFolder()"><i class="ti ti-folder-plus"></i>Create Folder</button>
@@ -1722,7 +1722,7 @@
     </div></div>
     <div class="mo" role="dialog" aria-modal="true" id="m-ph-logfunds" onclick="closeM(event,this)"><div class="md"><div class="md-t">Log Fundraising<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-ph-logfunds'))"><i class="ti ti-x"></i></button></div>
       <div class="fr c2"><div class="fld"><label for="pf-amount">Amount Raised ($)</label><input id="pf-amount" type="number" min="0" step="0.01" placeholder="e.g. 500"></div><div class="fld"><label for="pf-date">Date</label><input id="pf-date" type="date"></div></div>
-      <div class="fr c2"><div class="fld"><label for="pf-member">Donor / Member</label><select id="pf-member"><option value="">— Chapter / External —</option></select></div><div class="fld"><label for="pf-event">Event / Campaign</label><select id="pf-event"><option value="">-- General --</option></select></div></div>
+      <div class="fr c2"><div class="fld"><label for="pf-member">Donor / Member</label><select id="pf-member"><option value="">Chapter / External</option></select></div><div class="fld"><label for="pf-event">Event / Campaign</label><select id="pf-event"><option value="">-- General --</option></select></div></div>
       <div class="fr"><div class="fld"><label for="pf-notes">Notes</label><input id="pf-notes" placeholder="How raised, donor info, etc."></div></div>
       <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:5px"><button class="btn" onclick="closeM(null,document.getElementById('m-ph-logfunds'))">Cancel</button><button class="btn btn-p" onclick="phLogFunds()">Log Funds</button></div>
     </div></div>
@@ -2126,14 +2126,14 @@
               <circle id="hs-ring" cx="34" cy="34" r="28" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)"/>
             </svg>
             <div class="d2-health-val">
-              <span id="hs-score-val">—</span>
+              <span id="hs-score-val">N/A</span>
               <span class="d2-health-lbl">score</span>
             </div>
           </div>
           <div class="d2-hero-copy">
             <div class="d2-hero-top">
               <span class="d2-hero-label">Chapter Health Score</span>
-              <span class="badge" id="hs-grade">—</span>
+              <span class="badge" id="hs-grade">N/A</span>
             </div>
             <div class="d2-hero-summary" id="hs-summary"></div>
             <span class="d2-hero-trend" id="hs-trend" style="display:none"></span>
@@ -2187,7 +2187,7 @@
 
         <!-- Header + actions -->
         <div class="ph">
-          <div class="ph-left"><h2 class="page-title">Officer Transition Hub</h2><div class="page-sub">Handoff center for every exec role — notes, contacts, deadlines, and docs</div></div>
+          <div class="ph-left"><h2 class="page-title">Officer Transition Hub</h2><div class="page-sub">Handoff center for every exec role: notes, contacts, deadlines, and docs</div></div>
           <div class="ph-actions">
             <button class="btn" onclick="trShowSection('tr-sec-deadlines')"><i class="ti ti-calendar-due"></i>Deadlines</button>
             <button class="btn" onclick="trShowSection('tr-sec-openissues')"><i class="ti ti-alert-circle"></i>Open Issues</button>
@@ -2379,7 +2379,7 @@
            enabled here first. -->
       <div class="card" id="se-modules-card" style="margin-top:13px;display:none">
         <div class="card-hd"><span class="card-t">Enabled Modules</span></div>
-        <div style="font-size:11px;color:var(--mt);margin-bottom:10px"><i class="ti ti-lock" style="font-size:11px;margin-right:3px"></i>View only — which parts of the app this chapter uses is now managed by your platform administrator.</div>
+        <div style="font-size:11px;color:var(--mt);margin-bottom:10px"><i class="ti ti-lock" style="font-size:11px;margin-right:3px"></i>View only: which parts of the app this chapter uses is now managed by your platform administrator.</div>
         <div class="se-pos-grid" id="se-modules-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px 14px"></div>
       </div>
 
@@ -2387,7 +2387,7 @@
            room to breathe horizontally so each position card doesn't turn into a long scroll. -->
       <div class="card" id="se-positions-card" style="margin-top:13px;display:none">
         <div class="card-hd"><span class="card-t">Positions &amp; Permissions</span></div>
-        <div style="font-size:11px;color:var(--mt);margin-bottom:10px"><i class="ti ti-lock" style="font-size:11px;margin-right:3px"></i>View only — officer positions and what each one can view or edit are now managed by your platform administrator.</div>
+        <div style="font-size:11px;color:var(--mt);margin-bottom:10px"><i class="ti ti-lock" style="font-size:11px;margin-right:3px"></i>View only: officer positions and what each one can view or edit are now managed by your platform administrator.</div>
         <div class="tw"><div id="se-pos-builder"></div></div>
       </div>
     </div>
@@ -2475,7 +2475,7 @@
         <div class="d2-right">
           <div class="card">
             <div class="card-hd"><span class="card-t">Create New Chapter</span></div>
-            <div style="font-size:11.5px;color:var(--mt);margin-bottom:12px">Enter the chapter details and pre-approve the President and VP. They will be auto-approved when they register — no manual approval needed. They can then approve the rest of their exec team.</div>
+            <div style="font-size:11.5px;color:var(--mt);margin-bottom:12px">Enter the chapter details and pre-approve the President and VP. They will be auto-approved when they register. No manual approval needed. They can then approve the rest of their exec team.</div>
             <div class="fr c2">
               <div class="fld"><label for="sa-ch-name">Chapter Name</label><input id="sa-ch-name" placeholder="e.g. Gamma Upsilon" oninput="saPreviewChapterId()"></div>
               <div class="fld"><label for="sa-ch-uni">University</label><input id="sa-ch-uni" placeholder="e.g. Iowa State University"></div>
@@ -2483,7 +2483,7 @@
             <div id="sa-ch-id-preview" style="font-size:11px;color:var(--gold-tx);font-weight:500;margin:-4px 0 10px;min-height:16px"></div>
 
             <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bdr)">Enabled Modules</div>
-            <div style="font-size:11px;color:var(--mt);margin-bottom:8px">Uncheck anything this chapter doesn't use — hidden for every position, everywhere.</div>
+            <div style="font-size:11px;color:var(--mt);margin-bottom:8px">Uncheck anything this chapter doesn't use, hidden for every position, everywhere.</div>
             <div id="sa-modules-grid" class="se-pos-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin-bottom:16px"></div>
 
             <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bdr)">Positions</div>
@@ -2694,7 +2694,7 @@
   <div class="fr"><div class="fld"><label for="ne-t">Event title *</label><input id="ne-t" placeholder="Chapter Meeting" maxlength="120"></div></div>
   <div class="fr c3"><div class="fld"><label for="ne-tp">Type</label><select id="ne-tp"><option value="chapter">Chapter Event</option><option value="exec">Exec Event</option><option value="committee">Committee Meeting</option><option value="brotherhood">Brotherhood Event</option><option value="faith">Faith Event</option><option value="philanthropy">Philanthropy</option><option value="social">Social Event</option><option value="alumni">Alumni/Parent Event</option><option value="pledge">Pledge Event</option><option value="service">Community Service</option><option value="dues">Dues Deadlines</option><option value="isu">ISU Event</option><option value="homecoming">Homecoming</option><option value="recruitment">Recruitment</option></select></div><div class="fld"><label for="ne-d">Date</label><input id="ne-d" type="date"></div><div class="fld"><label for="ne-ed">End Date (optional)</label><input id="ne-ed" type="date"></div></div>
   <div class="fr c3"><div class="fld"><label for="ne-st">Start time</label><input id="ne-st" type="time" value="19:00"></div><div class="fld"><label for="ne-et">End time (optional)</label><input id="ne-et" type="time"></div><div class="fld"><label for="ne-l">Location</label><input id="ne-l" placeholder="Chapter House"></div></div>
-  <div class="fr"><div class="fld"><label for="ne-m">Mandatory?</label><select id="ne-m"><option value="1">Yes — Required</option><option value="0">No — Optional</option></select></div></div>
+  <div class="fr"><div class="fld"><label for="ne-m">Mandatory?</label><select id="ne-m"><option value="1">Yes (Required)</option><option value="0">No (Optional)</option></select></div></div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addevent'))">Cancel</button><button class="btn btn-p" onclick="addEv()">Create Event</button></div>
 </div></div>
 
@@ -2725,7 +2725,7 @@
     <div class="fld"><label for="mn-d">Date</label><input id="mn-d" type="date"></div>
   </div>
   <div class="fr c2" style="margin-bottom:11px">
-    <div class="fld"><label for="mn-t">Meeting Title *</label><input id="mn-t" placeholder="e.g. Chapter Meeting — Feb 15th, 2026"></div>
+    <div class="fld"><label for="mn-t">Meeting Title *</label><input id="mn-t" placeholder="e.g. Chapter Meeting, Feb 15th, 2026"></div>
     <div class="fld"><label for="mn-tp">Type</label><select id="mn-tp" onchange="mnBuildOfficersList()"><option value="chapter">Chapter</option><option value="exec">Exec</option><option value="retreat">Retreat</option></select></div>
   </div>
 
@@ -2761,13 +2761,13 @@
   <div class="fr c2"><div class="fld"><label for="nc-filedby">Filed By</label><select id="nc-filedby"></select></div><div class="fld"><label for="nc-contact">Contact Email</label><input id="nc-contact" type="email" placeholder="Auto-filled from member"></div></div>
   <div class="fr"><div class="fld"><label for="nc-bylaw">Bylaw Violated</label><input id="nc-bylaw" type="text" placeholder="e.g. Article IV, Section 3"></div></div>
   <div class="fr c2"><div class="fld"><label for="nc-hdate">Hearing Date</label><input id="nc-hdate" type="date"></div><div class="fld"><label for="nc-htime">Hearing Time</label><input id="nc-htime" type="time"></div></div>
-  <div style="font-size:11px;color:var(--mt);margin-top:-4px">Optional — doesn't create a Calendar event, just tracks the hearing date on this case. Status shows as "In Progress" until that date.</div>
+  <div style="font-size:11px;color:var(--mt);margin-top:-4px">Optional, doesn't create a Calendar event, just tracks the hearing date on this case. Status shows as "In Progress" until that date.</div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addcase'))">Cancel</button><button class="btn btn-p" onclick="addCase()"><i class="ti ti-gavel"></i>File Case</button></div>
 </div></div>
 
 <div class="mo" role="dialog" aria-modal="true" id="m-addweekend" onclick="closeM(event,this)"><div class="md"><div class="md-t">Add Weekend<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-addweekend'))"><i class="ti ti-x"></i></button></div>
   <div class="fr c2"><div class="fld"><label for="nw-date">Thursday date *</label><input id="nw-date" type="date"></div><div class="fld"><label for="nw-weeks">Number of weekends</label><input id="nw-weeks" type="number" min="1" max="26" value="1"></div></div>
-  <div style="font-size:11px;color:var(--mt);margin-bottom:11px">Adding more than one weekend creates consecutive weeks starting from the date above, 7 days apart. Each weekend starts with 3 open slots per day — rename or resize them (e.g. "Bid Day", 4 slots) after adding.</div>
+  <div style="font-size:11px;color:var(--mt);margin-bottom:11px">Adding more than one weekend creates consecutive weeks starting from the date above, 7 days apart. Each weekend starts with 3 open slots per day. Rename or resize them (e.g. "Bid Day", 4 slots) after adding.</div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addweekend'))">Cancel</button><button class="btn btn-p" onclick="sbAddWeekend()">Add Weekend</button></div>
 </div></div>
 
@@ -2775,7 +2775,7 @@
   <div style="border:2px dashed var(--bdr);border-radius:10px;padding:26px;text-align:center;margin-bottom:13px">
     <i class="ti ti-file-spreadsheet" style="font-size:26px;color:var(--ht);display:block;margin:0 auto 7px"></i>
     <div style="font-size:13px;font-weight:500;margin-bottom:4px">Drop .xlsx or .csv here</div>
-    <div style="font-size:11px;color:var(--mt);margin-bottom:11px">Expected columns: Thursday Date, Thu Event, Thu Members, Fri Event, Fri Members, Sat Event, Sat Members — Members are semicolon-separated names (e.g. "Jonny Hurtado; Alex Akolly")</div>
+    <div style="font-size:11px;color:var(--mt);margin-bottom:11px">Expected columns: Thursday Date, Thu Event, Thu Members, Fri Event, Fri Members, Sat Event, Sat Members. Members are semicolon-separated names (e.g. "Jonny Hurtado; Alex Akolly")</div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <label class="btn btn-p" style="cursor:pointer"><i class="ti ti-upload"></i>Browse File<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="sbHandleImport(this)"></label>
       <button class="btn" onclick="impDownloadTemplate('sober')" style="font-size:11px"><i class="ti ti-download"></i>Download Template</button>
@@ -2825,7 +2825,7 @@
 <div class="mo" role="dialog" aria-modal="true" id="m-addgradecheck" onclick="closeM(event,this)"><div class="md"><div class="md-t">Add Referral<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-addgradecheck'))"><i class="ti ti-x"></i></button></div>
   <input type="hidden" id="gc-id">
   <div class="fr"><div class="fld"><label for="gc-member">Member *</label><select id="gc-member"></select></div></div>
-  <div class="fr"><div class="fld"><label for="gc-reason">Reason / Referred By *</label><input id="gc-reason" placeholder="e.g. Standards Board — GPA below 2.5 two semesters" maxlength="200"></div></div>
+  <div class="fr"><div class="fld"><label for="gc-reason">Reason / Referred By *</label><input id="gc-reason" placeholder="e.g. Standards Board: GPA below 2.5 two semesters" maxlength="200"></div></div>
   <div class="fr c3">
     <div class="fld"><label for="gc-start">Start Date</label><input id="gc-start" type="date"></div>
     <div class="fld"><label for="gc-target">End Goal GPA *</label><input id="gc-target" type="number" step="0.01" min="0" max="4" placeholder="2.67" title="The GPA they need to reach by the end of this check period"></div>
@@ -2882,7 +2882,7 @@
   <div class="fr c2"><div class="fld"><label for="et-p">Priority</label><select id="et-p"><option value="urgent">Urgent</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div><div class="fld"><label for="et-d">Due date</label><input id="et-d" type="date"></div></div>
   <div class="fr"><div class="fld"><label for="et-s">Status</label><select id="et-s"><option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="done">Done</option><option value="cant_complete">Couldn't Complete</option></select></div></div>
   <div class="fr"><div class="fld"><label for="et-ds">Description</label><textarea id="et-ds" placeholder="Optional details..."></textarea></div></div>
-  <div id="et-view-only-note" style="display:none;font-size:11px;color:var(--mt);margin-bottom:5px"><i class="ti ti-eye" style="margin-right:4px"></i>View only — only the position that assigned this task, or a lead, can edit or delete it. Update its status from the task board.</div>
+  <div id="et-view-only-note" style="display:none;font-size:11px;color:var(--mt);margin-bottom:5px"><i class="ti ti-eye" style="margin-right:4px"></i>View only: only the position that assigned this task, or a lead, can edit or delete it. Update its status from the task board.</div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn btn-d" id="et-delete-btn" onclick="deleteTask(document.getElementById('et-id').value)"><i class="ti ti-trash"></i>Delete</button><button class="btn" onclick="closeM(null,document.getElementById('m-edittask'))">Cancel</button><button class="btn btn-p" id="et-save-btn" onclick="saveTask()">Save</button></div>
 </div></div>
 
@@ -2910,7 +2910,7 @@
 <div class="mo" role="dialog" aria-modal="true" id="m-schedulehearing" onclick="closeM(event,this)"><div class="md"><div class="md-t">Schedule Hearing<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-schedulehearing'))"><i class="ti ti-x"></i></button></div>
   <input type="hidden" id="sh-id">
   <div class="fr c2"><div class="fld"><label for="sh-date">Hearing Date</label><input id="sh-date" type="date"></div><div class="fld"><label for="sh-time">Hearing Time</label><input id="sh-time" type="time"></div></div>
-  <div style="font-size:11px;color:var(--mt);margin-top:-4px">Doesn't create a Calendar event — status shows as "In Progress" until this date.</div>
+  <div style="font-size:11px;color:var(--mt);margin-top:-4px">Doesn't create a Calendar event, status shows as "In Progress" until this date.</div>
   <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:5px"><button class="btn" onclick="closeM(null,document.getElementById('m-schedulehearing'))">Cancel</button><button class="btn btn-p" onclick="jbSaveHearing()">Save Hearing</button></div>
 </div></div>
 
@@ -2972,7 +2972,7 @@
 <div class="mo" role="dialog" aria-modal="true" id="m-hl-parking" onclick="closeM(event,this)"><div class="md"><div class="md-t">Parking Spot<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-hl-parking'))"><i class="ti ti-x"></i></button></div>
   <input type="hidden" id="hl-parking-id">
   <div class="fr"><div class="fld"><label for="hl-parking-label">Spot label *</label><input id="hl-parking-label" placeholder="e.g. 14 or Chef"></div></div>
-  <div class="fr"><div class="fld"><label for="hl-parking-member">Assigned member</label><select id="hl-parking-member"><option value="">— None / see custom name below —</option></select></div></div>
+  <div class="fr"><div class="fld"><label for="hl-parking-member">Assigned member</label><select id="hl-parking-member"><option value="">None / see custom name below</option></select></div></div>
   <div class="fr"><div class="fld"><label for="hl-parking-customname">Custom name (if not a roster member)</label><input id="hl-parking-customname" placeholder="e.g. Guest, house cook's name"></div></div>
   <div class="fr c2"><div class="fld"><label for="hl-parking-carmodel">Car model</label><input id="hl-parking-carmodel" placeholder="e.g. Honda Civic"></div><div class="fld"><label for="hl-parking-plate">License plate</label><input id="hl-parking-plate"></div></div>
   <div class="fr"><div class="fld"><label for="hl-parking-notes">Notes</label><input id="hl-parking-notes"></div></div>
@@ -2990,7 +2990,7 @@
 <div class="mo" role="dialog" aria-modal="true" id="m-hl-scoreedit" onclick="closeM(event,this)"><div class="md" style="width:560px;max-height:85vh">
   <div class="md-t" id="hl-scoreedit-title">Preference Points<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-hl-scoreedit'))"><i class="ti ti-x"></i></button></div>
   <input type="hidden" id="hl-score-memberid">
-  <div class="fr"><div class="fld"><label for="hl-score-alltimebase">All-Time starting points <span style="font-weight:400;color:var(--ht)">(from before this system, or a manual correction — added on top of every semester below)</span></label><input id="hl-score-alltimebase" type="number" step="0.5" value="0" oninput="hlUpdateScoreTotal()"></div></div>
+  <div class="fr"><div class="fld"><label for="hl-score-alltimebase">All-Time starting points <span style="font-weight:400;color:var(--ht)">(from before this system, or a manual correction, added on top of every semester below)</span></label><input id="hl-score-alltimebase" type="number" step="0.5" value="0" oninput="hlUpdateScoreTotal()"></div></div>
   <div style="border-top:1px solid var(--bdr);margin:11px 0 9px;padding-top:9px">
     <div class="fr"><div class="fld"><label for="hl-score-semester">Semester</label><select id="hl-score-semester" onchange="hlScoreEditorSemesterChanged()"></select></div></div>
     <div style="max-height:44vh;overflow-y:auto;margin-bottom:11px;border:1px solid var(--bdr);border-radius:8px;padding:8px 11px" id="hl-score-checks"></div>
@@ -3006,7 +3006,7 @@
 <div class="mo" role="dialog" aria-modal="true" id="m-edittrans" onclick="closeM(event,this)"><div class="md"><div class="md-t">Edit Transition Doc<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-edittrans'))"><i class="ti ti-x"></i></button></div>
   <input type="hidden" id="etr-id">
   <div class="fr c2"><div class="fld"><label for="etr-r">Role *</label><input id="etr-r"></div><div class="fld"><label for="etr-o">Outgoing member</label><select id="etr-o"></select></div></div>
-  <div class="fr"><div class="fld"><label for="etr-i">Incoming member</label><select id="etr-i"><option value="">— TBD —</option></select></div></div>
+  <div class="fr"><div class="fld"><label for="etr-i">Incoming member</label><select id="etr-i"><option value="">TBD</option></select></div></div>
   <div class="fr"><div class="fld"><label for="etr-c">Transition notes</label><textarea id="etr-c" style="height:95px"></textarea></div></div>
   <div class="fr"><div class="fld"><label for="etr-s">Status</label><select id="etr-s"><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="review">In review</option><option value="complete">Complete</option></select></div></div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-edittrans'))">Cancel</button><button class="btn btn-p" onclick="saveTrans()">Save</button></div>

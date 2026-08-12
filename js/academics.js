@@ -55,7 +55,7 @@ function filterGpaModal(){
 
   function inp(id,field,label){
     const v=gpaVal(id,field);
-    return`<input type="number" id="gpa-${field}-${id}" step="0.01" min="0" max="4" value="${v}" placeholder="—"
+    return`<input type="number" id="gpa-${field}-${id}" step="0.01" min="0" max="4" value="${v}" placeholder="N/A"
       title="${label}"
       style="width:68px;height:28px;padding:0 6px;border:1px solid var(--bdr);border-radius:6px;font-size:11.5px;font-family:inherit;text-align:center;outline:none;transition:border .1s"
       onfocus="this.style.borderColor='var(--navy)'" onblur="this.style.borderColor='var(--bdr)'">`;
@@ -185,7 +185,7 @@ function renderAcademics(){
 
   // KPIs
   document.getElementById('ac-kpi').innerHTML=
-    statStrip('Chapter GPA',chapterGpaDisplay||'—',latestHist?'Prior semester · '+latestHist.semester+(latestHist.semester&&latestHist.semester.toLowerCase().startsWith('spring')?' · Excludes Spring graduates':''):'No history yet — save GPAs to record','neutral')+
+    statStrip('Chapter GPA',chapterGpaDisplay||'N/A',latestHist?'Prior semester · '+latestHist.semester+(latestHist.semester&&latestHist.semester.toLowerCase().startsWith('spring')?' · Excludes Spring graduates':''):'No history yet, save GPAs to record','neutral')+
     statStrip("Dean's List",deansList,'3.50 and above (cumulative)',deansList>0?'up':'neutral')+
     statStrip('Good Standing',goodStand,'3.00 – 3.49 (cumulative)','neutral')+
     statStrip('Academic Warnings',warnMembers.length,'Below 2.75',warnMembers.length>0?'down':'neutral');
@@ -210,14 +210,14 @@ function renderAcademics(){
   ].map(row=>{
     const statusGpa=row.cum??row.pri??null;
     return`<tr data-name="${row.m.name}" data-class="${row.m.classYear}">
-      <td style="color:var(--ht);font-size:11px">${row.rank||'—'}</td>
+      <td style="color:var(--ht);font-size:11px">${row.rank||'N/A'}</td>
       <td><div style="display:flex;align-items:center;gap:7px">
         <div class="sh-av" style="width:24px;height:24px;font-size:8.5px">${row.m.initials}</div>
         <span style="font-weight:500">${row.m.name}</span>
       </div></td>
       <td style="color:var(--mt)">${row.m.classYear}</td>
-      <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.cum)}">${row.cum!==null?row.cum.toFixed(2):'—'}</span></td>
-      <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.pri)}">${row.pri!==null?row.pri.toFixed(2):'—'}</span></td>
+      <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.cum)}">${row.cum!==null?row.cum.toFixed(2):'N/A'}</span></td>
+      <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.pri)}">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span></td>
       <td>${gpaTrend(statusGpa)}</td>
     </tr>`;
   }).join('')}</tbody>`;
@@ -235,9 +235,9 @@ function renderAcademics(){
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span class="gpa-badge ${gpaColor(row.cum)}" style="font-size:13px">${row.cum!==null?row.cum.toFixed(2):'—'}</span>
+        <span class="gpa-badge ${gpaColor(row.cum)}" style="font-size:13px">${row.cum!==null?row.cum.toFixed(2):'N/A'}</span>
         <span style="font-size:10px;color:var(--mt)">Cumulative</span>
-        <span class="gpa-badge ${gpaColor(row.pri)}" style="font-size:11px;margin-left:auto">${row.pri!==null?row.pri.toFixed(2):'—'}</span>
+        <span class="gpa-badge ${gpaColor(row.pri)}" style="font-size:11px;margin-left:auto">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span>
         <span style="font-size:10px;color:var(--mt)">Last Sem.</span>
       </div>
       <div>${gpaTrend(statusGpa)}</div>
@@ -322,10 +322,10 @@ function renderAcademics(){
         return`<tr>
           <td style="font-weight:500">${h.semester}</td>
           <td style="text-align:center"><span class="gpa-badge ${gpaColor(h.chapterGpa)}">${parseFloat(h.chapterGpa).toFixed(2)}</span></td>
-          <td style="text-align:center">${h.cumulativeChapterGpa?`<span class="gpa-badge ${gpaColor(h.cumulativeChapterGpa)}">${parseFloat(h.cumulativeChapterGpa).toFixed(2)}</span>`:'<span style="color:var(--ht)">—</span>'}</td>
+          <td style="text-align:center">${h.cumulativeChapterGpa?`<span class="gpa-badge ${gpaColor(h.cumulativeChapterGpa)}">${parseFloat(h.cumulativeChapterGpa).toFixed(2)}</span>`:'<span style="color:var(--ht)">N/A</span>'}</td>
           <td style="color:var(--mt)">${h.memberCount}</td>
           <td style="color:var(--ht)">${fds(h.date)}</td>
-          <td>${delta||'<span style="color:var(--ht)">—</span>'}</td>
+          <td>${delta||'<span style="color:var(--ht)">N/A</span>'}</td>
         </tr>`;
       }).join('')}</tbody>
     </table></div>`;
@@ -390,12 +390,12 @@ function renderGradeChecks(){
         <div style="display:flex;align-items:center;gap:7px">
           <div class="sh-av" style="width:22px;height:22px;font-size:8px">${m.initials}</div>
           <div><div style="font-weight:500;font-size:12px">${esc(displayName)}</div>
-          <div style="font-size:10px;color:var(--mt);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.reason||'')}">${esc(r.reason||'—')}</div></div>
+          <div style="font-size:10px;color:var(--mt);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.reason||'')}">${esc(r.reason||'N/A')}</div></div>
         </div>
       </td>
-      <td style="text-align:center">${lastGpa!==null?`<span class="gpa-badge ${gpaColor(lastGpa)}">${lastGpa.toFixed(2)}</span>`:'<span style="color:var(--ht)">—</span>'}</td>
+      <td style="text-align:center">${lastGpa!==null?`<span class="gpa-badge ${gpaColor(lastGpa)}">${lastGpa.toFixed(2)}</span>`:'<span style="color:var(--ht)">N/A</span>'}</td>
       <td style="text-align:center"><span style="font-size:11px;font-weight:600;color:var(--navy)">${target.toFixed(2)}</span></td>
-      <td style="text-align:center;font-size:12px;font-weight:600;color:${below?'var(--rd)':'var(--gn)'}">${lastGpa!==null?(below?'↓ Below':'✓ Met'):'—'}</td>
+      <td style="text-align:center;font-size:12px;font-weight:600;color:${below?'var(--rd)':'var(--gn)'}">${lastGpa!==null?(below?'↓ Below':'✓ Met'):'N/A'}</td>
       <td style="font-size:11px"><div style="color:var(--mt)">${last?fds(last.date):'Never'}</div>${days!==null?`<div style="font-size:10px;color:${days>14?'var(--rd)':'var(--ht)'}">${days}d ago</div>`:''}</td>
       <td style="font-size:10.5px;color:var(--mt)">${r.freq||'Weekly'}</td>
       <td style="white-space:nowrap">
@@ -428,7 +428,7 @@ function renderGradeChecks(){
 function openAddGradeCheck(id){
   if(!D.academics.gradeChecks)D.academics.gradeChecks=[];
   const sel=document.getElementById('gc-member');
-  sel.innerHTML=sortedMembers().map(m=>`<option value="${m.id}">${esc(m.name)} — ${m.classYear}</option>`).join('');
+  sel.innerHTML=sortedMembers().map(m=>`<option value="${m.id}">${esc(m.name)}, ${m.classYear}</option>`).join('');
   const today=localDateStr();
   const titleEl=document.getElementById('m-addgradecheck').querySelector('.md-t');
   if(id){

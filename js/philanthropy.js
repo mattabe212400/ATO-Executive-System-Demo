@@ -138,7 +138,7 @@ function phRenderEvents(){
   }
   const sorted=[...events].sort((a,b)=>b.date.localeCompare(a.date));
   el.innerHTML=`<thead><tr><th>Event</th><th>Date</th><th>Org</th><th>Fund Goal</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    sorted.map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td>${fds(e.date)}</td><td style="color:var(--mt)">${esc(e.org)||'—'}</td><td>${e.fundGoal?'$'+e.fundGoal.toLocaleString():'—'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="deletePhEvent('${e.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    sorted.map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td>${fds(e.date)}</td><td style="color:var(--mt)">${esc(e.org)||'N/A'}</td><td>${e.fundGoal?'$'+e.fundGoal.toLocaleString():'N/A'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="deletePhEvent('${e.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
   if(mobEl)mobEl.innerHTML=sorted.map(e=>`<div class="mob-card card">
     <div style="font-weight:600;font-size:13px;margin-bottom:4px">${esc(e.title)}</div>
@@ -175,7 +175,7 @@ function phRenderOrgs(){
   if(!el)return;
   if(!orgs.length){ el.innerHTML=`<tbody><tr><td>${es('ti-building-community','slate','No organizations yet','Add the causes/organizations this chapter supports.','')}</td></tr></tbody>`; return; }
   el.innerHTML=`<thead><tr><th>Organization</th><th>Contact</th><th>Notes</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    orgs.map(o=>`<tr><td style="font-weight:500">${esc(o.name)}</td><td style="color:var(--mt)">${esc(o.contact)||'—'}</td><td style="color:var(--mt)">${esc(o.notes)||'—'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="phDeleteOrg('${o.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    orgs.map(o=>`<tr><td style="font-weight:500">${esc(o.name)}</td><td style="color:var(--mt)">${esc(o.contact)||'N/A'}</td><td style="color:var(--mt)">${esc(o.notes)||'N/A'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="phDeleteOrg('${o.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 
@@ -207,7 +207,7 @@ function phOpenLogFunds(){
   if(!canEditPhilanthropy()){toast('Only officers with Philanthropy access can log funds.','error');return;}
   if(!isCurrentSemester(phSem())){toast('This semester is read-only.','error');return;}
   const memberSel=document.getElementById('pf-member');
-  memberSel.innerHTML='<option value="">— Chapter / External —</option>'+mOpts();
+  memberSel.innerHTML='<option value="">Chapter / External</option>'+mOpts();
   const eventSel=document.getElementById('pf-event');
   eventSel.innerHTML='<option value="">-- General --</option>'+phVisibleEvents().map(e=>`<option value="${e.id}">${esc(e.title)}</option>`).join('');
   document.getElementById('pf-amount').value='';
@@ -269,7 +269,7 @@ function phRenderVendors(){
   if(!el)return;
   if(!vendors.length){ el.innerHTML=`<tbody><tr><td>${es('ti-truck-delivery','slate','No vendors or donors yet','Track who is donating or providing what for your events.','')}</td></tr></tbody>`; return; }
   el.innerHTML=`<thead><tr><th>Name</th><th>Contact</th><th>Contribution</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    vendors.map(v=>`<tr><td style="font-weight:500">${esc(v.name)}</td><td style="color:var(--mt)">${esc(v.contact)||'—'}</td><td style="color:var(--mt)">${esc(v.contribution)||'—'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="phDeleteVendor('${v.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    vendors.map(v=>`<tr><td style="font-weight:500">${esc(v.name)}</td><td style="color:var(--mt)">${esc(v.contact)||'N/A'}</td><td style="color:var(--mt)">${esc(v.contribution)||'N/A'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="phDeleteVendor('${v.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 function phOpenAddVendor(){

@@ -86,7 +86,7 @@ function renderJudicialContent(){
   const jbc=document.getElementById('j-jb-count');if(jbc){jbc.textContent=String(jbCases.length);jbc.style.display=jbCases.length?'':'none';}
   const mrc=document.getElementById('j-mr-count');if(mrc){mrc.textContent=String(mrCases.length);mrc.style.display=mrCases.length?'':'none';}
 
-  document.getElementById('j-res').innerHTML=`<thead><tr><th>Case #</th><th>Type</th><th>Member</th><th>Resolution</th><th>Outcome</th><th>Docs</th><th></th></tr></thead><tbody>${res.length?res.map(c=>`<tr><td class="cn">${esc(c.caseNum)}</td><td>${tl[c.type]||esc(c.type)}</td><td style="font-weight:500">${esc(c.memberName||mB(c.member).name)}</td><td style="color:var(--mt);max-width:220px;white-space:normal;line-height:1.4">${esc(c.resolution)||'—'}</td><td><span class="badge ${sc[c.status]||'bm2'}">${sl[c.status]||esc(c.status)}</span></td><td>${jbDocsCompact(c)}</td><td>${isCurrentSemester(sem)?`<button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteCase('${c.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;color:var(--mt);padding:18px">No resolved cases ${isCurrentSemester(sem)?'this semester':'in '+esc(sem)}</td></tr>`}</tbody>`;
+  document.getElementById('j-res').innerHTML=`<thead><tr><th>Case #</th><th>Type</th><th>Member</th><th>Resolution</th><th>Outcome</th><th>Docs</th><th></th></tr></thead><tbody>${res.length?res.map(c=>`<tr><td class="cn">${esc(c.caseNum)}</td><td>${tl[c.type]||esc(c.type)}</td><td style="font-weight:500">${esc(c.memberName||mB(c.member).name)}</td><td style="color:var(--mt);max-width:220px;white-space:normal;line-height:1.4">${esc(c.resolution)||'N/A'}</td><td><span class="badge ${sc[c.status]||'bm2'}">${sl[c.status]||esc(c.status)}</span></td><td>${jbDocsCompact(c)}</td><td>${isCurrentSemester(sem)?`<button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteCase('${c.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;color:var(--mt);padding:18px">No resolved cases ${isCurrentSemester(sem)?'this semester':'in '+esc(sem)}</td></tr>`}</tbody>`;
   const resMobEl=document.getElementById('j-res-mobile-cards');
   if(resMobEl)resMobEl.innerHTML=res.length?res.map(c=>`<div class="mob-card card">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
@@ -95,7 +95,7 @@ function renderJudicialContent(){
     </div>
     <div style="font-weight:600;font-size:13px;margin-bottom:2px">${esc(c.memberName||mB(c.member).name)}</div>
     <div style="font-size:11px;color:var(--mt);margin-bottom:6px">${tl[c.type]||esc(c.type)}</div>
-    <div style="font-size:11.5px;color:var(--mt);line-height:1.4;margin-bottom:8px">${esc(c.resolution)||'—'}</div>
+    <div style="font-size:11.5px;color:var(--mt);line-height:1.4;margin-bottom:8px">${esc(c.resolution)||'N/A'}</div>
     ${jbDocsCompact(c)}
     ${isCurrentSemester(sem)?`<button class="btn btn-d" style="height:24px;font-size:10.5px;width:100%;margin-top:8px" onclick="deleteCase('${c.id}')" aria-label="Delete case ${esc(c.caseNum)}"><i class="ti ti-trash"></i>Delete</button>`:''}
   </div>`).join(''):`<div style="grid-column:1/-1;text-align:center;color:var(--mt);padding:18px;font-size:12px">No resolved cases ${isCurrentSemester(sem)?'this semester':'in '+esc(sem)}</div>`;
@@ -131,7 +131,7 @@ function jbDocsHtml(c){
 // controls (those stay on the open-case card via jbDocsHtml above).
 function jbDocsCompact(c){
   const docs=c.docs||[];
-  if(!docs.length)return`<span style="color:var(--ht);font-size:11.5px">—</span>`;
+  if(!docs.length)return`<span style="color:var(--ht);font-size:11.5px">N/A</span>`;
   return docs.map(d=>
     `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap;margin-bottom:2px">`+
     `<i class="ti ti-paperclip" style="font-size:10px;color:var(--mt)"></i>`+
@@ -169,7 +169,7 @@ function jbOpenAttach(caseId){
 function jbHandleAttach(inp){
   const file=inp.files[0];
   if(!file)return;
-  if(file.size>FI_MAX_BYTES){toast('File too large — max 600 KB','error');return;}
+  if(file.size>FI_MAX_BYTES){toast('File too large: max 600 KB','error');return;}
   const c=D.cases.find(x=>x.id===_jbAttachCase);
   if(!c)return;
   if(!c.docs)c.docs=[];
@@ -185,11 +185,11 @@ function jbHandleAttach(inp){
         await setDoc(doc(_db,...jcContentPath(),id),{b:b64,t:mt});
       }catch(err){
         console.warn('Case attachment save failed:',err.message);
-        toast('Attachment saved for this session only — sync failed.','warning',5000);
+        toast('Attachment saved for this session only (sync failed).','warning',5000);
       }
     }
     c.docs.push({id,name:file.name,size:file.size,mimeType:mt,uploadedAt:new Date().toISOString()});
-    try{ await saveJudicialCase(c); }catch(err){ toast('Attachment recorded locally — failed to sync. Please try again.','error'); }
+    try{ await saveJudicialCase(c); }catch(err){ toast('Attachment recorded locally (failed to sync). Please try again.','error'); }
     renderJudicialContent();
     toast('Document attached','success');
   };
@@ -236,7 +236,7 @@ async function jbDownloadDoc(caseId,docId){
       }
     }catch(err){ console.warn('Case attachment fetch failed:',err.message); }
   }
-  if(!mem){ toast('Document not available — it may need to be re-attached.','error'); return; }
+  if(!mem){ toast('Document not available. It may need to be re-attached.','error'); return; }
   const a=document.createElement('a');
   a.href=`data:${mem.mediaType};base64,${mem.base64}`;
   a.download=docMeta.name;
@@ -251,14 +251,14 @@ function jbEditStatus(id){
 // ── BYLAWS DEFAULT CONTENT ──
 function _jbDefaultArts(){
   return [
-    {t:'Article I — Authority',b:'<p><strong>Sec. 1</strong> Bylaws established under authority of ATO Governance Documents. Nothing conflicting with Governance Documents shall exist in this chapter.</p><p><strong>Sec. 4</strong> Adopted or amended by 2/3 vote of active quorum. Proposed changes must be posted/emailed at least 13 days before vote.</p><p><strong>Sec. 6</strong> Power of interpretation rests with the Judicial Board.</p><p><strong>Sec. 8</strong> Bylaws may be suspended for a defined period by 3/4 vote of active quorum in a meeting called by the Worthy Master.</p>'},
-    {t:'Article II — Definitions & Procedures',b:'<p><strong>Sec. 1 — Bad Financial Risk</strong> — Determined by Worthy Keeper of the Exchequer; presented to Executive Board for vote based on ability to pay and past history.</p><p><strong>Sec. 2 — Expulsion</strong> — Banishment from association with the house and all functions.</p><p><strong>Sec. 3 — Suspension</strong> — Loses privileges for a defined period. No voting privileges while suspended.</p><p><strong>Sec. 4 — Quorums:</strong></p><ul><li><strong>A. Active Quorum</strong> — Simple majority of actives with voting rights.</li><li><strong>B. Executive Board Quorum</strong> — 3/4 of exec board.</li><li><strong>C. Judicial Board Quorum</strong> — 2/3 of JB members.</li></ul>'},
-    {t:'Article III — The Judicial Board',b:'<p><strong>A.</strong> Executive Board has delegated judicial responsibilities to the Judicial Board.</p><p><strong>B.</strong> Headed by Worthy Marshal; members appointed by Worthy Marshal and approved by Executive Board.</p><p><strong>C.</strong> Each member serves a single semester term.</p><p><strong>D. Duties:</strong> Hear appeals · Issue fines · Discipline members · Impose sanctions for bylaw violations.</p><p><strong>E.</strong> All members have the right to face their accuser directly.</p><p><strong>F.</strong> Accused must receive notice at least 3 business days prior to hearing.</p>'},
-    {t:'Article VIII — Fines',b:'<p><strong>A.</strong> Fines levied may be placed on the house bill.</p><p><strong>B.</strong> Amount and type of fine depends on outcome of JB hearing.</p><p><strong>C.</strong> Fines collected by Worthy Marshal, payable to the Fraternity.</p><p><strong>D.</strong> No members are exempt from monetary fines.</p>'},
-    {t:'Article IX — GPA Requirements',b:'<p><strong>A.</strong> Active members must maintain a semester GPA of at least 2.75 for good academic standing.</p><p><strong>B.</strong> 2 or more consecutive semesters below 2.75 GPA → subject to Membership Review.</p><p><strong>C.</strong> Semester GPA of 2.0 or lower for any single semester → subject to Membership Review.</p>'},
-    {t:'Article XI — Hazing',b:'<p><strong>Sec. 1</strong> Physical hazing punishable by minimum 3-day suspension, at JB\'s discretion.</p><p><strong>Sec. 2</strong> Repeat offense brought before JB; if sufficient evidence found, subject to expulsion.</p>'},
-    {t:'Article XII — Conduct',b:'<p><strong>Sec. 1</strong> Any act detrimental to the Fraternity or its host university → subject to JB discipline.</p><p><strong>Sec. 2 — Illegal Substances</strong> — No illegal substances on Chapter property or at any Chapter function. First offense: suspension. Second offense: expulsion.</p>'},
-    {t:'Article XIV — Discipline',b:'<p><strong>Sec. 1</strong> All disciplinary action directed to the Judicial Board. JB hears appeals, determines guilt, and administers appropriate action.</p><p><strong>Sec. 2</strong> Disciplinary action may consist of: reprimand, fine, sanction, suspension, or expulsion.</p>'},
+    {t:'Article I: Authority',b:'<p><strong>Sec. 1</strong> Bylaws established under authority of ATO Governance Documents. Nothing conflicting with Governance Documents shall exist in this chapter.</p><p><strong>Sec. 4</strong> Adopted or amended by 2/3 vote of active quorum. Proposed changes must be posted/emailed at least 13 days before vote.</p><p><strong>Sec. 6</strong> Power of interpretation rests with the Judicial Board.</p><p><strong>Sec. 8</strong> Bylaws may be suspended for a defined period by 3/4 vote of active quorum in a meeting called by the Worthy Master.</p>'},
+    {t:'Article II: Definitions & Procedures',b:'<p><strong>Sec. 1: Bad Financial Risk</strong>: Determined by Worthy Keeper of the Exchequer; presented to Executive Board for vote based on ability to pay and past history.</p><p><strong>Sec. 2: Expulsion</strong>: Banishment from association with the house and all functions.</p><p><strong>Sec. 3: Suspension</strong>: Loses privileges for a defined period. No voting privileges while suspended.</p><p><strong>Sec. 4: Quorums:</strong></p><ul><li><strong>A. Active Quorum</strong>: Simple majority of actives with voting rights.</li><li><strong>B. Executive Board Quorum</strong>: 3/4 of exec board.</li><li><strong>C. Judicial Board Quorum</strong>: 2/3 of JB members.</li></ul>'},
+    {t:'Article III: The Judicial Board',b:'<p><strong>A.</strong> Executive Board has delegated judicial responsibilities to the Judicial Board.</p><p><strong>B.</strong> Headed by Worthy Marshal; members appointed by Worthy Marshal and approved by Executive Board.</p><p><strong>C.</strong> Each member serves a single semester term.</p><p><strong>D. Duties:</strong> Hear appeals · Issue fines · Discipline members · Impose sanctions for bylaw violations.</p><p><strong>E.</strong> All members have the right to face their accuser directly.</p><p><strong>F.</strong> Accused must receive notice at least 3 business days prior to hearing.</p>'},
+    {t:'Article VIII: Fines',b:'<p><strong>A.</strong> Fines levied may be placed on the house bill.</p><p><strong>B.</strong> Amount and type of fine depends on outcome of JB hearing.</p><p><strong>C.</strong> Fines collected by Worthy Marshal, payable to the Fraternity.</p><p><strong>D.</strong> No members are exempt from monetary fines.</p>'},
+    {t:'Article IX: GPA Requirements',b:'<p><strong>A.</strong> Active members must maintain a semester GPA of at least 2.75 for good academic standing.</p><p><strong>B.</strong> 2 or more consecutive semesters below 2.75 GPA → subject to Membership Review.</p><p><strong>C.</strong> Semester GPA of 2.0 or lower for any single semester → subject to Membership Review.</p>'},
+    {t:'Article XI: Hazing',b:'<p><strong>Sec. 1</strong> Physical hazing punishable by minimum 3-day suspension, at JB\'s discretion.</p><p><strong>Sec. 2</strong> Repeat offense brought before JB; if sufficient evidence found, subject to expulsion.</p>'},
+    {t:'Article XII: Conduct',b:'<p><strong>Sec. 1</strong> Any act detrimental to the Fraternity or its host university → subject to JB discipline.</p><p><strong>Sec. 2: Illegal Substances</strong>: No illegal substances on Chapter property or at any Chapter function. First offense: suspension. Second offense: expulsion.</p>'},
+    {t:'Article XIV: Discipline',b:'<p><strong>Sec. 1</strong> All disciplinary action directed to the Judicial Board. JB hears appeals, determines guilt, and administers appropriate action.</p><p><strong>Sec. 2</strong> Disciplinary action may consist of: reprimand, fine, sanction, suspension, or expulsion.</p>'},
   ];
 }
 
@@ -325,9 +325,9 @@ function renderMembers(){
       <td style="color:var(--mt);font-size:11.5px">${esc(m.classYear)}</td>
       <td style="color:var(--mt);font-size:11.5px">${m.year}</td>
       <td><div style="display:flex;align-items:center;gap:7px"><span style="font-weight:600;font-size:12px;color:${tierColor};min-width:30px">${r}%</span><div style="width:50px;height:5px;background:var(--surf2);border-radius:99px;overflow:hidden;flex-shrink:0"><div style="height:100%;width:${r}%;background:${tierColor};border-radius:99px"></div></div></div></td>
-      <td style="color:var(--mt);font-size:11.5px">${m.liveIn?'Yes':'—'}</td>
-      <td style="color:var(--mt);font-size:11.5px">${esc(m.major||'—')}</td>
-      <td style="color:var(--mt);font-size:11.5px">${esc(m.hometown||'—')}</td>
+      <td style="color:var(--mt);font-size:11.5px">${m.liveIn?'Yes':'N/A'}</td>
+      <td style="color:var(--mt);font-size:11.5px">${esc(m.major||'N/A')}</td>
+      <td style="color:var(--mt);font-size:11.5px">${esc(m.hometown||'N/A')}</td>
       ${editCell}
     </tr>`;
   }).join('')||emptyRow}</tbody>`;
@@ -351,7 +351,7 @@ function renderMembers(){
           <span class="badge ${m.role!=='Member'?'bb2':'bm2'}" style="font-size:9.5px;white-space:nowrap">${esc(m.role)}</span>
           ${status==='New Member'?`<span class="badge bb2" style="font-size:9.5px;white-space:nowrap">New Member</span>`:''}
         </div>
-        <div style="font-size:11.5px;color:var(--mt);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.major||'—')}</div>
+        <div style="font-size:11.5px;color:var(--mt);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.major||'N/A')}</div>
         <div style="display:flex;align-items:center;gap:7px">
           <div style="flex:1;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden"><div style="height:100%;width:100%;transform-origin:left;transform:scaleX(${r/100});background:${rc};border-radius:2px;transition:transform .3s"></div></div>
           <span style="font-size:11px;font-weight:600;color:${rc};min-width:32px;text-align:right">${r}%</span>

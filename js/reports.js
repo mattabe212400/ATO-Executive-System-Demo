@@ -90,7 +90,7 @@ function rpWeekly(sem){
   const lowAtt=D.members.filter(m=>aR(m.id)<75);
   const unassignedShifts=sbFlatSlots().filter(s=>isUp(s.date)&&!s.memberId).length;
 
-  return rpHeader('Weekly Executive Summary','Officer briefing — key metrics, action items, and upcoming events (always current, regardless of the semester selector)',sem)+
+  return rpHeader('Weekly Executive Summary','Officer briefing: key metrics, action items, and upcoming events (always current, regardless of the semester selector)',sem)+
   rpSection('ti-chart-bar','Chapter Pulse',rpKpis([
     {label:'Attendance Avg',val:avg+'%',color:avg>=85?'var(--gn)':avg<75?'var(--rd)':'var(--am)'},
     {label:'Open Tasks',val:openT,color:ovT>0?'var(--rd)':'var(--tx)'},
@@ -100,17 +100,17 @@ function rpWeekly(sem){
   rpSection('ti-alert-triangle','Action Items Required',
     (()=>{
       const items=[];
-      if(ovT>0)items.push({icon:'ti-clock',text:`${ovT} overdue task${ovT>1?'s':''} — assign ownership and set new deadlines`,color:'var(--rd-bg)',ic:'var(--rd-tx)'});
+      if(ovT>0)items.push({icon:'ti-clock',text:`${ovT} overdue task${ovT>1?'s':''}: assign ownership and set new deadlines`,color:'var(--rd-bg)',ic:'var(--rd-tx)'});
       if(lowAtt.length)items.push({icon:'ti-user-x',text:`${lowAtt.length} member${lowAtt.length>1?'s':''} below 75% attendance: ${esc(lowAtt.slice(0,3).map(m=>m.name.split(' ')[0]).join(', '))}${lowAtt.length>3?` +${lowAtt.length-3} more`:''}`,color:'var(--am-bg)',ic:'var(--am-tx)'});
-      if(unassignedShifts>0)items.push({icon:'ti-shield-exclamation',text:`${unassignedShifts} social monitor shift${unassignedShifts>1?'s':''} unassigned — needs coverage before next event`,color:'var(--bl-bg)',ic:'var(--bl-tx)'});
-      if(openCases>0)items.push({icon:'ti-scale',text:`${openCases} open Judicial Board case${openCases>1?'s':''} — schedule hearings and follow up`,color:'var(--rd-bg)',ic:'var(--rd-tx)'});
-      if(!items.length)return`<div style="color:var(--gn);font-size:12px;padding:10px 0"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>No urgent action items — chapter is in good standing.</div>`;
+      if(unassignedShifts>0)items.push({icon:'ti-shield-exclamation',text:`${unassignedShifts} social monitor shift${unassignedShifts>1?'s':''} unassigned, needs coverage before next event`,color:'var(--bl-bg)',ic:'var(--bl-tx)'});
+      if(openCases>0)items.push({icon:'ti-scale',text:`${openCases} open Judicial Board case${openCases>1?'s':''}: schedule hearings and follow up`,color:'var(--rd-bg)',ic:'var(--rd-tx)'});
+      if(!items.length)return`<div style="color:var(--gn);font-size:12px;padding:10px 0"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>No urgent action items, chapter is in good standing.</div>`;
       return items.map(i=>`<div class="rp-alert-row"><i class="ti ${i.icon}" style="color:${i.ic};font-size:13px;flex-shrink:0;margin-top:1px"></i><span>${i.text}</span></div>`).join('');
     })()
   )+
   rpSection('ti-calendar-event','Upcoming Events',
     upEvents.length?rpTable(['Event','Date','Type','Location','Required'],upEvents.map(e=>[
-      `<strong>${esc(e.title)}</strong>`,fd(e.date),esc(e.type)||'—',esc(e.location)||'—',e.mandatory?'<span style="color:var(--rd);font-weight:600">Yes</span>':'No'
+      `<strong>${esc(e.title)}</strong>`,fd(e.date),esc(e.type)||'N/A',esc(e.location)||'N/A',e.mandatory?'<span style="color:var(--rd);font-weight:600">Yes</span>':'No'
     ])):(`<div style="color:var(--mt);font-size:12px">No upcoming events scheduled.</div>`)
   )+
   rpSection('ti-checkbox','Overdue Tasks',
@@ -118,7 +118,7 @@ function rpWeekly(sem){
       const daysOv=Math.round((new Date()-new Date(t.dueDate+'T12:00:00'))/(1000*86400));
       const pc={urgent:'var(--rd)',high:'var(--rd)',medium:'var(--am)',low:'var(--mt)'};
       return[`<strong>${esc(t.title)}</strong>`,esc(t.positionTitle||'Unassigned'),`<span style="color:${pc[t.priority]||'var(--mt)'};">${esc(t.priority)}</span>`,`<span style="color:var(--rd)">${daysOv}d</span>`];
-    })):(`<div style="color:var(--gn);font-size:12px">No overdue tasks — all on track.</div>`)
+    })):(`<div style="color:var(--gn);font-size:12px">No overdue tasks, all on track.</div>`)
   )+
   rpSection('ti-users','Officer Accountability',
     (()=>{
@@ -158,7 +158,7 @@ function rpAttendance(sem){
   rpSection('ti-alert-triangle','Members Requiring Attention',
     (()=>{
       const atRisk=sorted.filter(m=>rate(m)<80);
-      if(!atRisk.length)return`<div style="color:var(--gn);font-size:12px"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>All members above 80% — no attendance concerns.</div>`;
+      if(!atRisk.length)return`<div style="color:var(--gn);font-size:12px"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>All members above 80%, no attendance concerns.</div>`;
       return rpTable(['Member','Class','Rate','Status'],atRisk.map(m=>{
         const r=rate(m);
         const s=r<65?['Warning','var(--rd)']:r<75?['At Risk','var(--rd)']:['Watch','var(--am)'];
@@ -214,7 +214,7 @@ function rpRecruitment(sem){
       if(stale.length)items.push(`${stale.length} rushee${stale.length>1?'s':''} not contacted in 5+ days: ${stale.slice(0,4).map(r=>r.name).join(', ')}${stale.length>4?' ...':''}`);
       const newNoContact=rushees.filter(r=>r.stage==='New Lead'&&!r.lastContact);
       if(newNoContact.length)items.push(`${newNoContact.length} new lead${newNoContact.length>1?'s':''} never contacted: ${newNoContact.slice(0,3).map(r=>r.name).join(', ')}`);
-      if(!items.length)return`<div style="color:var(--gn);font-size:12px"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>All rushees recently contacted — recruitment on track.</div>`;
+      if(!items.length)return`<div style="color:var(--gn);font-size:12px"><i class="ti ti-circle-check" style="font-size:11px;margin-right:4px"></i>All rushees recently contacted, recruitment on track.</div>`;
       return items.map(i=>`<div class="rp-alert-row"><i class="ti ti-clock" style="color:var(--am-tx);font-size:13px;flex-shrink:0"></i><span>${i}</span></div>`).join('');
     })()
   )+
@@ -222,7 +222,7 @@ function rpRecruitment(sem){
     rushees.length?rpTable(['Name','Stage','Bid Score','Recruiter','Last Contact'],
       [...rushees].sort((a,b)=>(b.bidScore||0)-(a.bidScore||0)).map(r=>{
         const sc=r.bidScore>=85?'var(--gn)':r.bidScore>=70?'var(--bl)':r.bidScore>=50?'var(--am)':'var(--rd)';
-        return[`<strong>${esc(r.name)}</strong>`,esc(r.stage),`<span style="font-weight:700;color:${sc}">${r.bidScore||0}</span>`,esc(mB(r.recruiter).name)||'—',r.lastContact?fds(r.lastContact):'<span style="color:var(--rd)">Never</span>'];
+        return[`<strong>${esc(r.name)}</strong>`,esc(r.stage),`<span style="font-weight:700;color:${sc}">${r.bidScore||0}</span>`,esc(mB(r.recruiter).name)||'N/A',r.lastContact?fds(r.lastContact):'<span style="color:var(--rd)">Never</span>'];
       })):`<div style="color:var(--mt);font-size:12px">No rushees in the pipeline yet.</div>`
   );
 }
@@ -262,7 +262,7 @@ function rpFinance(sem){
   rpSection('ti-receipt','Recent Expenses',
     expenses.length?rpTable(['Description','Category','Amount','Date'],
       [...expenses].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(e=>[
-        esc(e.desc||e.description)||'—',esc(e.category)||'—',`$${(e.amount||0).toLocaleString()}`,e.date?fds(e.date):'—'
+        esc(e.desc||e.description)||'N/A',esc(e.category)||'N/A',`$${(e.amount||0).toLocaleString()}`,e.date?fds(e.date):'N/A'
       ])):(`<div style="color:var(--mt);font-size:12px">No expenses logged yet.</div>`)
   );
 }
@@ -284,14 +284,14 @@ function rpAcademics(sem){
     return rpHeader('Academic Standing Report',`Chapter GPA and individual member academic status · ${sem}`,sem)+
     rpSection('ti-chart-bar','Academic Summary (Historical)',rpKpis([
       {label:'Chapter GPA',val:parseFloat(hist.chapterGpa).toFixed(2),color:'var(--navy)'},
-      {label:'Cumulative Chapter GPA',val:hist.cumulativeChapterGpa?parseFloat(hist.cumulativeChapterGpa).toFixed(2):'—',color:'var(--bl)'},
+      {label:'Cumulative Chapter GPA',val:hist.cumulativeChapterGpa?parseFloat(hist.cumulativeChapterGpa).toFixed(2):'N/A',color:'var(--bl)'},
       {label:'Members Tracked',val:hist.memberCount,color:'var(--bl)'},
     ]))+
-    rpSection('ti-alert-circle','Note',`<div style="color:var(--mt);font-size:12px">Per-member GPA rankings are only available for the current semester — ${esc(sem)} only has a chapter-wide snapshot on record (saved ${fds(hist.date)}).</div>`);
+    rpSection('ti-alert-circle','Note',`<div style="color:var(--mt);font-size:12px">Per-member GPA rankings are only available for the current semester. ${esc(sem)} only has a chapter-wide snapshot on record (saved ${fds(hist.date)}).</div>`);
   }
   const withGpa=D.members.map(m=>{const g=D.academics.gpas[m.id]||{};const cum=g.cumulativeGpa?parseFloat(g.cumulativeGpa):null;const pri=g.priorGpa?parseFloat(g.priorGpa):null;return{m,cum,pri};}).filter(x=>x.cum!==null||x.pri!==null);
   const gpas=withGpa.map(x=>x.cum??x.pri??0);
-  const avgGpa=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'—';
+  const avgGpa=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'N/A';
   const deans=withGpa.filter(x=>(x.cum??0)>=3.5).length;
   const warn=withGpa.filter(x=>(x.cum??x.pri??4)<2.75).length;
 
@@ -305,8 +305,8 @@ function rpAcademics(sem){
   (warn>0?rpSection('ti-alert-triangle','Academic Warnings',
     rpTable(['Member','Class','Cumulative GPA','Last Semester','Status'],withGpa.filter(x=>(x.cum??x.pri??4)<2.75).sort((a,b)=>(a.cum??a.pri??4)-(b.cum??b.pri??4)).map(({m,cum,pri})=>[
       `<strong>${esc(m.name)}</strong>`,esc(m.classYear),
-      cum!==null?`<span style="color:var(--rd);font-weight:700">${cum.toFixed(2)}</span>`:'—',
-      pri!==null?pri.toFixed(2):'—',
+      cum!==null?`<span style="color:var(--rd);font-weight:700">${cum.toFixed(2)}</span>`:'N/A',
+      pri!==null?pri.toFixed(2):'N/A',
       '<span style="color:var(--rd)">Warning</span>'
     ]))
   ):'')+
@@ -316,7 +316,7 @@ function rpAcademics(sem){
         const g=cum??pri??0;
         const status=g>=3.5?"Dean's List":g>=3.0?'Good Standing':g>=2.75?'Watch':'Warning';
         const sc=g>=3.5?'var(--gn)':g>=3.0?'var(--bl)':g>=2.75?'var(--am)':'var(--rd)';
-        return[i+1,esc(m.name),esc(m.classYear),cum!==null?`<span style="font-weight:700;color:${sc}">${cum.toFixed(2)}</span>`:'—',pri!==null?pri.toFixed(2):'—',`<span style="color:${sc}">${status}</span>`];
+        return[i+1,esc(m.name),esc(m.classYear),cum!==null?`<span style="font-weight:700;color:${sc}">${cum.toFixed(2)}</span>`:'N/A',pri!==null?pri.toFixed(2):'N/A',`<span style="color:${sc}">${status}</span>`];
       })):`<div style="color:var(--mt);font-size:12px">No GPA data entered yet. Add GPAs in the Academics page.</div>`
   );
 }
@@ -324,12 +324,12 @@ function rpAcademics(sem){
 // ── FULL CHAPTER REPORT ──
 function rpFull(sem){
   sem=sem||getSemester();
-  return rpHeader('Full Chapter Report','Comprehensive semester overview — all operational areas',sem)+
-  `<div class="rp-section"><div class="rp-section-title"><i class="ti ti-layout-dashboard"></i>Section 1 — Operations Overview</div>${rpWeekly(sem).replace(/<div class="rp-doc-header">[\s\S]*?<\/div>\s*/,'')}</div>`+
+  return rpHeader('Full Chapter Report','Comprehensive semester overview: all operational areas',sem)+
+  `<div class="rp-section"><div class="rp-section-title"><i class="ti ti-layout-dashboard"></i>Section 1: Operations Overview</div>${rpWeekly(sem).replace(/<div class="rp-doc-header">[\s\S]*?<\/div>\s*/,'')}</div>`+
   `<div class="rp-divider"></div>`+
-  `<div style="margin-top:14px;font-size:11px;color:var(--mt);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Section 2 — Attendance</div>${rpAttendance(sem).replace(/<div class="rp-doc-header">[\s\S]*?<\/div>\s*/,'')}`+
+  `<div style="margin-top:14px;font-size:11px;color:var(--mt);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Section 2: Attendance</div>${rpAttendance(sem).replace(/<div class="rp-doc-header">[\s\S]*?<\/div>\s*/,'')}`+
   `<div class="rp-divider"></div>`+
-  `<div style="margin-top:14px;font-size:11px;color:var(--mt);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Section 3 — Recruitment</div>${rpRecruitment(sem).replace(/<div class="rp-doc-header">[\s\S]*?<\/div>\s*/,'')}`;
+  `<div style="margin-top:14px;font-size:11px;color:var(--mt);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Section 3: Recruitment</div>${rpRecruitment(sem).replace(/<div class="rp-doc-header">[\s\S]*?<\/div>\s*/,'')}`;
 }
 
 // ── PRINT ──
@@ -337,7 +337,7 @@ function rpPrint(){
   const content=document.getElementById('rp-preview')?.innerHTML||'';
   const title=document.getElementById('rp-preview-title')?.textContent||'Chapter Report';
   const w=window.open('','_blank','width=900,height=700');
-  w.document.write(`<!DOCTYPE html><html><head><title>${title} — ATO ${D.settings?.chapterName||CURRENT_USER?.chapterName||''}</title>
+  w.document.write(`<!DOCTYPE html><html><head><title>${title} - ATO ${D.settings?.chapterName||CURRENT_USER?.chapterName||''}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}

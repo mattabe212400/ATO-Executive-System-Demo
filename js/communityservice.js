@@ -152,7 +152,7 @@ function csRenderEvents(){
   if(!el)return;
   if(!events.length){ el.innerHTML=`<tbody><tr><td>${es('ti-calendar','green','No service events','Add an event to get started.',canEdit?`<button class="btn btn-p" onclick="csOpenAddEvent()">Add Event</button>`:'')}</td></tr></tbody>`; return; }
   el.innerHTML=`<thead><tr><th>Event</th><th>Date</th><th>Org</th><th>Hour Goal</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    [...events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td>${fds(e.date)}</td><td style="color:var(--mt)">${esc(e.org)||'—'}</td><td>${e.hourGoal||'—'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="csDeleteEvent('${e.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    [...events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td>${fds(e.date)}</td><td style="color:var(--mt)">${esc(e.org)||'N/A'}</td><td>${e.hourGoal||'N/A'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="csDeleteEvent('${e.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 
@@ -217,7 +217,7 @@ function csRenderLocations(){
   if(!el)return;
   if(!locations.length){ el.innerHTML=`<tbody><tr><td>${es('ti-map-pin','green','No service locations yet','Track where the chapter volunteers and who to contact.','')}</td></tr></tbody>`; return; }
   el.innerHTML=`<thead><tr><th>Location</th><th>Address</th><th>Contact</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    locations.map(l=>`<tr><td style="font-weight:500">${esc(l.name)}</td><td style="color:var(--mt)">${esc(l.address)||'—'}</td><td style="color:var(--mt)">${esc([l.contactName,l.contactInfo].filter(Boolean).join(' · '))||'—'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="csDeleteLocation('${l.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    locations.map(l=>`<tr><td style="font-weight:500">${esc(l.name)}</td><td style="color:var(--mt)">${esc(l.address)||'N/A'}</td><td style="color:var(--mt)">${esc([l.contactName,l.contactInfo].filter(Boolean).join(' · '))||'N/A'}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="csDeleteLocation('${l.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 
@@ -286,7 +286,7 @@ function csOpenLogHours(){
   // semester) are otherwise indistinguishable by title alone — the date suffix disambiguates them,
   // and picking one auto-fills the Date field below so the two can't end up mismatched.
   const sortedEvents=[...csEvents()].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  eventSel.innerHTML='<option value="">-- General / Other --</option>'+sortedEvents.map(e=>`<option value="${e.id}" data-date="${esc(e.date||'')}">${esc(e.title)} — ${fd(e.date)}</option>`).join('');
+  eventSel.innerHTML='<option value="">-- General / Other --</option>'+sortedEvents.map(e=>`<option value="${e.id}" data-date="${esc(e.date||'')}">${esc(e.title)}, ${fd(e.date)}</option>`).join('');
   document.getElementById('cs-log-hours').value='';
   document.getElementById('cs-log-date').value=localDateStr();
   document.getElementById('cs-log-notes').value='';

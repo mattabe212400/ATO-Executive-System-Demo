@@ -111,7 +111,7 @@ function openEditComm(id){
   document.getElementById('eco-n').value=c.name;
   document.getElementById('eco-d').value=c.desc||'';
   const iconSel=document.getElementById('eco-icon');if(iconSel)iconSel.innerHTML=coIconOptions(c.icon);
-  const csel=document.getElementById('eco-c');csel.innerHTML='<option value="">— Unassigned —</option>'+mOpts();csel.value=c.chair||'';
+  const csel=document.getElementById('eco-c');csel.innerHTML='<option value="">Unassigned</option>'+mOpts();csel.value=c.chair||'';
   const progCb=document.getElementById('eco-program-enabled');if(progCb)progCb.checked=c.programEnabled!==false;
   el.classList.add('open');
 }
@@ -468,7 +468,7 @@ function coRenderProgramTable(c){
     return;
   }
   el.innerHTML=`<thead><tr><th style="width:60px">Week</th><th>Topic</th><th>Notes</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    program.map(p=>`<tr><td style="font-weight:600">${p.week}</td><td style="font-weight:500">${esc(p.topic)}</td><td style="color:var(--mt)">${esc(p.notes||'—')}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="coDeleteProgramWeek('${p.id}')" aria-label="Delete Week ${p.week}"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    program.map(p=>`<tr><td style="font-weight:600">${p.week}</td><td style="font-weight:500">${esc(p.topic)}</td><td style="color:var(--mt)">${esc(p.notes||'N/A')}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="coDeleteProgramWeek('${p.id}')" aria-label="Delete Week ${p.week}"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 function coOpenImportProgram(){
@@ -502,7 +502,7 @@ function coRenderMembersPane(c){
     const status=m.memberStatus||'Active';
     const posCell=canEdit?`<select onchange="coSetMemberPosition('${r.memberId}',this.value)" style="height:26px;font-size:11px">${posOpts(r.position)}</select>`:esc(r.position);
     const removeCell=canEdit?`<td><button class="ib" style="width:24px;height:24px;color:var(--rd)" onclick="coRemoveRosterMember('${r.memberId}')" aria-label="Remove ${esc(m.name)}"><i class="ti ti-x"></i></button></td>`:'';
-    return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px">${esc(m.initials||'??')}</div><span style="font-weight:500">${esc(m.name)}</span></div></td><td>${posCell}</td><td style="color:var(--mt)">${esc(m.classYear||'—')}</td><td><span class="badge ${status==='New Member'?'bb2':'bm2'}">${esc(status)}</span></td>${removeCell}</tr>`;
+    return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px">${esc(m.initials||'??')}</div><span style="font-weight:500">${esc(m.name)}</span></div></td><td>${posCell}</td><td style="color:var(--mt)">${esc(m.classYear||'N/A')}</td><td><span class="badge ${status==='New Member'?'bb2':'bm2'}">${esc(status)}</span></td>${removeCell}</tr>`;
   }).join('')||`<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:18px;font-size:12px">No members on this committee yet.</td></tr>`;
   const tbl=document.getElementById('co-mem-table');
   if(tbl)tbl.innerHTML=`<thead><tr><th>Member</th><th>Position</th><th>Class Year</th><th>Status</th>${editCol}</tr></thead><tbody>${rows}</tbody>`;
@@ -551,7 +551,7 @@ function coRenderEventsPane(c){
   const past=events.filter(e=>e.date<today).reverse();
   const rowHtml=(e,isPast)=>{
     const attCount=isPast?Object.values(D.attendance[e.id]||{}).filter(v=>v==='present').length:null;
-    return`<div class="ev-row"><div class="ev-dt"><div class="ev-day">${dom(e.date)}</div><div class="ev-mo">${mos(e.date)}</div></div><div style="flex:1"><div style="font-size:12.5px;font-weight:500">${esc(e.title)}</div><div style="font-size:10.5px;color:var(--mt)">${to12h(e.start)||'TBD'} · ${esc(e.location)||'—'}${isPast&&attCount!==null?' · '+attCount+' attended':''}</div></div>${e.mandatory?'<span class="badge br2">Req</span>':''}${canEdit?`<div style="display:flex;gap:3px;margin-left:6px"><button class="btn" style="height:22px;font-size:10px;padding:0 6px" onclick="openEditEvent('${e.id}')" aria-label="Edit ${esc(e.title)}"><i class="ti ti-pencil"></i></button><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="deleteEvent('${e.id}')" aria-label="Delete ${esc(e.title)}"><i class="ti ti-trash"></i></button></div>`:''}</div>`;
+    return`<div class="ev-row"><div class="ev-dt"><div class="ev-day">${dom(e.date)}</div><div class="ev-mo">${mos(e.date)}</div></div><div style="flex:1"><div style="font-size:12.5px;font-weight:500">${esc(e.title)}</div><div style="font-size:10.5px;color:var(--mt)">${to12h(e.start)||'TBD'} · ${esc(e.location)||'N/A'}${isPast&&attCount!==null?' · '+attCount+' attended':''}</div></div>${e.mandatory?'<span class="badge br2">Req</span>':''}${canEdit?`<div style="display:flex;gap:3px;margin-left:6px"><button class="btn" style="height:22px;font-size:10px;padding:0 6px" onclick="openEditEvent('${e.id}')" aria-label="Edit ${esc(e.title)}"><i class="ti ti-pencil"></i></button><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="deleteEvent('${e.id}')" aria-label="Delete ${esc(e.title)}"><i class="ti ti-trash"></i></button></div>`:''}</div>`;
   };
   const upEl=document.getElementById('co-events-upcoming');
   if(upEl)upEl.innerHTML=upcoming.map(e=>rowHtml(e,false)).join('')||`<div style="font-size:11.5px;color:var(--ht);padding:10px 0">No upcoming events.</div>`;

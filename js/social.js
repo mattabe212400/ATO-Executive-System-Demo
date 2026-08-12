@@ -199,7 +199,7 @@ function socRenderEventList(){
         <td style="font-weight:500">${esc(e.title)}</td>
         <td style="color:var(--mt)">${socCatLabel(plan.eventCategory)}</td>
         <td>${fds(e.date)}</td>
-        <td style="color:var(--mt)">${esc(e.location)||'—'}</td>
+        <td style="color:var(--mt)">${esc(e.location)||'N/A'}</td>
         <td><span class="badge ${socStatusClass(plan.status)}">${socStatusLabel(plan.status)}</span></td>
         <td style="color:var(--mt)">$${Math.round(tot.actual).toLocaleString()} / $${Math.round(tot.est).toLocaleString()}</td>
         <td><div style="display:flex;align-items:center;gap:6px"><div class="pb" style="width:50px;height:5px"><div class="pf" style="width:${r.score}%;background:${pgc(r.score)}"></div></div><span style="font-size:10.5px;color:var(--mt)">${r.score}%</span></div></td>
@@ -374,7 +374,7 @@ function socRenderChecklist(){
   const el=document.getElementById('soc-checklist-list'); if(!el) return;
   const addRow = canEdit?`<div class="fr c3" style="margin-bottom:11px">
       <div class="fld"><label>New item</label><input id="soc-cl-label" placeholder="e.g. Venue contract signed"></div>
-      <div class="fld"><label>Assigned to</label><select id="soc-cl-assignee"><option value="">— Unassigned —</option>${mOpts()}</select></div>
+      <div class="fld"><label>Assigned to</label><select id="soc-cl-assignee"><option value="">Unassigned</option>${mOpts()}</select></div>
       <div class="fld"><label>Due date</label><input id="soc-cl-due" type="date"></div>
     </div>
     <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mt)"><input type="checkbox" id="soc-cl-linktask"> Also create a linked task</label><button class="btn btn-p" style="margin-left:auto" onclick="socAddChecklistItem()"><i class="ti ti-plus"></i>Add Item</button></div>`:'';
@@ -519,7 +519,7 @@ function socRenderVendorsTable(){
   const vendors=D.social?.vendors||[];
   if(!vendors.length){ el.innerHTML=`<tbody><tr><td colspan="4">${es('ti-truck-delivery','blue','No vendors yet','Track venues, transportation providers, caterers, and other vendors here.',canEdit?`<button class="btn btn-p" onclick="socOpenAddVendor()"><i class="ti ti-plus"></i>Add Vendor</button>`:'')}</td></tr></tbody>`; return; }
   el.innerHTML=`<thead><tr><th>Name</th><th>Type</th><th>Contact</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    vendors.map(v=>`<tr><td style="font-weight:500">${esc(v.name)}</td><td style="color:var(--mt)">${esc((SOC_EVENT_CATEGORIES.find(c=>c.v===v.type)||{}).l||v.type)}</td><td style="color:var(--mt)">${esc(v.contactName)||'—'}${v.phone?' · '+esc(v.phone):''}</td>${canEdit?`<td><button class="ib" style="width:22px;height:22px;font-size:11px;color:var(--rd)" onclick="socDeleteVendor('${v.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
+    vendors.map(v=>`<tr><td style="font-weight:500">${esc(v.name)}</td><td style="color:var(--mt)">${esc((SOC_EVENT_CATEGORIES.find(c=>c.v===v.type)||{}).l||v.type)}</td><td style="color:var(--mt)">${esc(v.contactName)||'N/A'}${v.phone?' · '+esc(v.phone):''}</td>${canEdit?`<td><button class="ib" style="width:22px;height:22px;font-size:11px;color:var(--rd)" onclick="socDeleteVendor('${v.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`).join('')
   }</tbody>`;
 }
 function socOpenAddVendor(){

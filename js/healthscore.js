@@ -38,7 +38,7 @@ function computeHealthDims(){
     if(relevant.length){
       const scores=relevant.map(e=>socReadiness(socPlan(e.id)).score);
       socialScore=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-      socialDesc=relevant.length+' event'+(relevant.length!==1?'s':'')+' — avg readiness';
+      socialDesc=relevant.length+' event'+(relevant.length!==1?'s':'')+', avg readiness';
     }
   }
 
@@ -94,7 +94,7 @@ function renderHealthScore(){
     const gradeLabel={A:'A · Excellent',B:'B · Good',C:'C · Developing',F:'F · At Risk'}[grade];
     gd.className='badge '+gradeCls;gd.textContent=gradeLabel;
   }
-  const sm=document.getElementById('hs-summary');if(sm)sm.textContent=score>=80?'Chapter is in strong health across all dimensions.':score>=65?'Good standing — a few areas need attention.':score>=50?'Several dimensions below target. Exec focus needed.':'Chapter is at risk. Immediate action required.';
+  const sm=document.getElementById('hs-summary');if(sm)sm.textContent=score>=80?'Chapter is in strong health across all dimensions.':score>=65?'Good standing, a few areas need attention.':score>=50?'Several dimensions below target. Exec focus needed.':'Chapter is at risk. Immediate action required.';
   document.getElementById('hs-updated').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
 
   // Trend vs. the closest snapshot from ~7 days ago — same calc as the Dashboard widget
@@ -136,7 +136,7 @@ function renderHealthScore(){
       return`<div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div style="display:flex;align-items:center;gap:6px"><i class="ti ${d.icon}" style="font-size:12px;color:var(--ht)"></i><span style="font-size:12px;font-weight:500;color:var(--ht)">${d.k}</span><span style="font-size:9.5px;color:var(--ht)">${d.desc}</span></div>
-          <span style="font-size:10.5px;color:var(--ht)">No data yet — excluded from score</span>
+          <span style="font-size:10.5px;color:var(--ht)">No data yet, excluded from score</span>
         </div>
         <div style="height:6px;background:var(--surf2);border-radius:99px"></div>
       </div>`;
@@ -158,14 +158,14 @@ function renderHealthScore(){
   const scored=dims.filter(d=>!d.excluded);
   const strong=scored.filter(d=>d.v>=d.target).sort((a,b)=>b.v-a.v);
   const weak=scored.filter(d=>d.v<d.target).sort((a,b)=>a.v-b.v);
-  document.getElementById('hs-strengths').innerHTML=strong.length?strong.map(d=>`<div class="al-row"><div class="al-ic" style="background:var(--gn-bg);color:var(--gn-tx)"><i class="ti ${d.icon}"></i></div><div><div style="font-size:12px;font-weight:500">${d.k}</div><div style="font-size:10.5px;color:var(--mt)">${d.v}% — ${d.v-d.target}pts above target</div></div></div>`).join(''):es('ti-mood-happy','green','All areas at target!','Keep it up.','');
-  document.getElementById('hs-improvements').innerHTML=weak.length?weak.map(d=>`<div class="al-row"><div class="al-ic" style="background:var(--rd-bg);color:var(--rd-tx)"><i class="ti ${d.icon}"></i></div><div><div style="font-size:12px;font-weight:500">${d.k}</div><div style="font-size:10.5px;color:var(--mt)">${d.v}% — needs ${d.target-d.v}pts to hit target</div></div></div>`).join(''):es('ti-circle-check','green','All dimensions on target!','','');
+  document.getElementById('hs-strengths').innerHTML=strong.length?strong.map(d=>`<div class="al-row"><div class="al-ic" style="background:var(--gn-bg);color:var(--gn-tx)"><i class="ti ${d.icon}"></i></div><div><div style="font-size:12px;font-weight:500">${d.k}</div><div style="font-size:10.5px;color:var(--mt)">${d.v}%, ${d.v-d.target}pts above target</div></div></div>`).join(''):es('ti-mood-happy','green','All areas at target!','Keep it up.','');
+  document.getElementById('hs-improvements').innerHTML=weak.length?weak.map(d=>`<div class="al-row"><div class="al-ic" style="background:var(--rd-bg);color:var(--rd-tx)"><i class="ti ${d.icon}"></i></div><div><div style="font-size:12px;font-weight:500">${d.k}</div><div style="font-size:10.5px;color:var(--mt)">${d.v}%, needs ${d.target-d.v}pts to hit target</div></div></div>`).join(''):es('ti-circle-check','green','All dimensions on target!','','');
   const actions=[];
   if(avg<85)actions.push({icon:'ti-users',txt:'Mark attendance for recent mandatory events to improve tracking accuracy.'});
   if(taskPct<75)actions.push({icon:'ti-checkbox',txt:'Review overdue tasks with officers. Consider reassigning stalled items.'});
   if(openCases>2)actions.push({icon:'ti-scale',txt:'Schedule J-Board hearings for the '+openCases+' open cases.'});
   if(finScore<70)actions.push({icon:'ti-cash',txt:'Send dues reminder to '+((D.members.length)-paidCount)+' members with outstanding balances.'});
-  if(csHrs<200)actions.push({icon:'ti-heart',txt:'Schedule a service event — chapter is behind on service hour goals.'});
+  if(csHrs<200)actions.push({icon:'ti-heart',txt:'Schedule a service event. Chapter is behind on service hour goals.'});
   if(alumCount<10)actions.push({icon:'ti-users-group',txt:'Reach out to known alumni and add them to the directory.'});
   if(!actions.length)actions.push({icon:'ti-sparkles',txt:'Chapter is in strong shape! Focus on maintaining momentum into finals.'});
   document.getElementById('hs-actions').innerHTML=actions.map(a=>`<div class="al-row"><div class="al-ic" style="background:var(--bl-bg);color:var(--bl-tx)"><i class="ti ${a.icon}"></i></div><div style="font-size:11.5px;line-height:1.5">${a.txt}</div></div>`).join('');
@@ -191,7 +191,7 @@ function hsRecordSnapshot(score,dims){
 function hsRenderHistory(){
   const history=(D.healthHistory||[]).slice(-30);
   if(history.length<2){
-    document.getElementById('hs-history-chart').innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--ht)">Tracking started ${(D.healthHistory||[]).length?fds(D.healthHistory[0].date):'today'} — check back as this page is viewed over time to see a real trend build up.</div>`;
+    document.getElementById('hs-history-chart').innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--ht)">Tracking started ${(D.healthHistory||[]).length?fds(D.healthHistory[0].date):'today'}. Check back as this page is viewed over time to see a real trend build up.</div>`;
     document.getElementById('hs-history-labels').innerHTML='';
     return;
   }

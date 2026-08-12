@@ -224,14 +224,14 @@ function _buildExportHtml(notes,withCover){
       ${secHtml('Old Business',n.oldBusiness)}
       ${secHtml('New Business',n.newBusiness)}
       ${honors.length?`<div class="sec-t">Weekly Honors</div><div class="hr">${honors.map(h=>`<div class="hc"><div class="he">${h.icon}</div><div class="hl">${h.label}</div><div class="hv">${eh(h.val)}</div></div>`).join('')}</div>`:''}
-      <div class="ft"><span>Alpha Tau Omega — ${eh(D.settings?.chapterName||CURRENT_USER?.chapterName||'')} Chapter</span><span>Exported ${today}</span></div>
+      <div class="ft"><span>Alpha Tau Omega, ${eh(D.settings?.chapterName||CURRENT_USER?.chapterName||'')} Chapter</span><span>Exported ${today}</span></div>
     </div>`;
   }
 
   const chName=D.settings?.chapterName||CURRENT_USER?.chapterName||'';
   const cover=withCover?`<div class="cv"><div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(21,16,8,.6);margin-bottom:14px">Alpha Tau Omega · ${eh(chName)} Chapter</div><div style="font-size:30px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px">Meeting Notes</div><div style="width:48px;height:3px;background:#151008;margin:18px 0;opacity:.3"></div><div style="font-size:13px;color:rgba(21,16,8,.75)">Exported ${today} &nbsp;·&nbsp; ${notes.length} meeting${notes.length!==1?'s':''}</div></div>`:'';
 
-  return`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${withCover?'All Meeting Notes':eh(notes[0]&&notes[0].title||'Meeting Note')} — ATO ${eh(chName)}</title>
+  return`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${withCover?'All Meeting Notes':eh(notes[0]&&notes[0].title||'Meeting Note')} - ATO ${eh(chName)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}

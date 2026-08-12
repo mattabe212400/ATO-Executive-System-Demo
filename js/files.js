@@ -62,7 +62,7 @@ function fiProcessFiles(files,folder,committeeId){
       const sz=f.size>1048576?(f.size/1048576).toFixed(1)+' MB':(f.size/1024).toFixed(0)+' KB';
       return`"${f.name}" (${sz})`;
     }).join(', ');
-    toast(`${rejected.length} file${rejected.length>1?'s':''} exceed the 600 KB limit — ${detail}. Compress or use a link instead.`,'error',9000);
+    toast(`${rejected.length} file${rejected.length>1?'s':''} exceed the 600 KB limit: ${detail}. Compress or use a link instead.`,'error',9000);
   }
 
   accepted.forEach(file=>{
@@ -83,7 +83,7 @@ function fiProcessFiles(files,folder,committeeId){
           await setDoc(doc(_db,...fiContentPath(),id),{b:b64,t:mt});
         }catch(err){
           console.warn('File content save failed:',err.message);
-          toast('File saved for this session only — sync failed.','warning',5000);
+          toast('File saved for this session only (sync failed).','warning',5000);
         }
       }
       D.files.unshift({id,name:file.name,folder:targetFolder,size:sizeStr,date:localDateStr(),uploadedBy,committeeId});
@@ -112,7 +112,7 @@ async function fiOpenDoc(id){
   if(mem){
     window.open(`data:${mem.mediaType};base64,${mem.base64}`,'_blank');
   }else{
-    toast('File not available — re-upload to view.','info');
+    toast('File not available, re-upload to view.','info');
   }
 }
 
@@ -335,7 +335,7 @@ function fiCollectDescendantFolders(folderName){
 }
 async function fiDeleteFolder(folderName){
   if(!isLeadUser()){toast('Only a chapter lead can delete folders.','error');return;}
-  if(folderName==='General'){toast('The General folder can\'t be deleted — it\'s the fallback home for orphaned files.','error');return;}
+  if(folderName==='General'){toast('The General folder can\'t be deleted. It\'s the fallback home for orphaned files.','error');return;}
   const allNames=fiCollectDescendantFolders(folderName);
   const subCount=allNames.length-1;
   const count=D.files.filter(f=>allNames.includes(f.folder)).length;
@@ -359,7 +359,7 @@ function renderNotifications(){
   const forMe=n=>!n.audienceMemberIds || n.audienceMemberIds.includes(CURRENT_USER?.mid);
   const visNotifs=D.notifs.filter(n=>n.type!=='judicial'&&forMe(n));
   const unr=visNotifs.filter(n=>!n.read).length;
-  document.getElementById('no-cnt').textContent='Notifications'+(unr?' — '+unr+' new':'');
+  document.getElementById('no-cnt').textContent='Notifications'+(unr?': '+unr+' new':'');
   const ic={attendance:'ti-alert-circle',task:'ti-clock',warning:'ti-alert-triangle',judicial:'ti-scale',sober:'ti-shield-check',general:'ti-bell',deadline:'ti-clock',finance:'ti-cash',info:'ti-info-circle'};
   const co={attendance:'background:var(--rd-bg);color:var(--rd-tx)',task:'background:var(--am-bg);color:var(--am-tx)',warning:'background:var(--am-bg);color:var(--am-tx)',judicial:'background:var(--bl-bg);color:var(--bl-tx)',sober:'background:var(--gn-bg);color:var(--gn-tx)',finance:'background:var(--gn-bg);color:var(--gn-tx)',info:'background:var(--bl-bg);color:var(--bl-tx)'};
   const visibleNotifs=D.notifs.filter(n=>n.type!=='judicial'&&forMe(n));
@@ -392,11 +392,11 @@ const EXEC_POSITIONS=[
   {role:'Treasurer',          icon:'cash', color:'var(--gn-tx)', bg:'var(--gn-bg)',
    responsibilities:['Manage all chapter finances and bank accounts','Collect and track semester dues','Approve all chapter expenditures','Maintain semester budget and financial reports','File all required financial reports with IFC and nationals'],
    recurringTasks:['Weekly dues reminder to unpaid members','Monthly budget vs. actuals report to exec','IFC financial reporting (semester deadlines)','Annual audit with chapter advisor','Semester budget planning before each semester'],
-   wishIKnew:'Chase dues early and often. The first 3 weeks of the semester set the tone. Members who don\'t pay by Week 4 rarely pay voluntarily. Know exactly what IFC requires and when — late filings are a big deal.'},
+   wishIKnew:'Chase dues early and often. The first 3 weeks of the semester set the tone. Members who don\'t pay by Week 4 rarely pay voluntarily. Know exactly what IFC requires and when. Late filings are a big deal.'},
   {role:'Secretary',          icon:'clipboard-text', color:'var(--am-tx)', bg:'var(--am-bg)',
    responsibilities:['Record and publish all chapter meeting minutes','Maintain official chapter roster and member records','Handle chapter correspondence and official communications','Track and submit all required reports to nationals','Manage chapter calendar accuracy'],
    recurringTasks:['Minutes published within 24 hours of each meeting','Roster update at start of each semester','Monthly report to ATO national (online portal)','Attendance records kept current in platform','Email archive maintained for the semester'],
-   wishIKnew:'The national portal deadlines sneak up on you. Build calendar reminders for every reporting deadline on Day 1. Keep the chapter roster obsessively up to date — everything else in the platform depends on it.'},
+   wishIKnew:'The national portal deadlines sneak up on you. Build calendar reminders for every reporting deadline on Day 1. Keep the chapter roster obsessively up to date. Everything else in the platform depends on it.'},
   {role:'Recruitment Chair',  icon:'user-plus', color:'var(--gn-tx)', bg:'var(--gn-bg)',
    responsibilities:['Plan and execute all rush events each semester','Manage the recruitment CRM and rushee pipeline','Coordinate bid day and new member onboarding','Lead the recruitment committee','Track and report recruitment metrics'],
    recurringTasks:['Weekly CRM review and rushee follow-ups','Rush event debrief within 24 hours','Recruiter leaderboard and accountability tracking','IFC recruitment registration and compliance','Post-rush debrief report at end of each semester'],
@@ -408,46 +408,46 @@ const EXEC_POSITIONS=[
   {role:'Social Chair',       icon:'confetti', color:'var(--am-tx)', bg:'var(--am-bg)',
    responsibilities:['Plan and execute all chapter social events','Coordinate with co-host organizations','Manage event budgets in coordination with Treasurer','Ensure all socials are approved by Risk Manager','Build and maintain vendor relationships'],
    recurringTasks:['Submit event proposals to exec 2 weeks in advance','Confirm venue, catering, and transportation 1 week out','Brief brothers on event logistics 48 hours before','Post-event debrief and vendor rating update','Semester event calendar submitted Week 1'],
-   wishIKnew:'Book popular venues in the first week of the semester or they\'ll be gone. Always have a backup plan for venue and catering. Your vendor list in the platform is gold — update it after every event while details are fresh.'},
+   wishIKnew:'Book popular venues in the first week of the semester or they\'ll be gone. Always have a backup plan for venue and catering. Your vendor list in the platform is gold. Update it after every event while details are fresh.'},
   {role:'Philanthropy Chair', icon:'heart', color:'var(--rd-tx)', bg:'var(--rd-bg)',
    responsibilities:['Organize all chapter fundraising events','Track and report money raised toward the semester fundraising goal','Build and maintain relationships with the nonprofits/causes the chapter supports','Run the philanthropy committee','Coordinate with Community Service Chair on shared events'],
    recurringTasks:['Fundraising log updated within 24 hours of each event','Chapter fundraising goal tracked in platform','At least 1 fundraising event per semester','Thank-you notes sent to partner orgs within 48 hours','Organizations list kept current in platform'],
-   wishIKnew:'Fundraising and service hours are two different jobs now — you own the money raised, Community Service owns the hours logged. Coordinate closely since events often overlap. Brothers give more when you make the ask specific: a dollar goal, a deadline, and where the money goes.'},
+   wishIKnew:'Fundraising and service hours are two different jobs now. You own the money raised, Community Service owns the hours logged. Coordinate closely since events often overlap. Brothers give more when you make the ask specific: a dollar goal, a deadline, and where the money goes.'},
   {role:'Scholarship Chair',  icon:'books', color:'var(--sky-tx)', bg:'var(--sky-bg)',
    responsibilities:['Track and report all member GPAs each semester','Identify and support members on academic probation','Run the scholarship committee and study programs','Submit GPA reports to IFC and ATO national','Coordinate academic support resources with ISU'],
    recurringTasks:['GPA collection within first 3 weeks of semester','Academic probation check-ins (weekly)','Study hours tracking if chapter policy requires','IFC GPA report (end of semester deadline)','Chapter GPA award at end-of-semester recognition night'],
-   wishIKnew:'Collecting GPAs is harder than it sounds. Send a platform link and make it part of the first chapter meeting. Members on probation often hide it — check in with them privately, not in front of the chapter.'},
+   wishIKnew:'Collecting GPAs is harder than it sounds. Send a platform link and make it part of the first chapter meeting. Members on probation often hide it. Check in with them privately, not in front of the chapter.'},
   {role:'House Manager',      icon:'home', color:'var(--mt)', bg:'var(--surf2)',
    responsibilities:['Manage chapter house maintenance and repairs','Coordinate with house corporation on major repairs','Enforce house rules and cleanliness standards','Manage room assignments and live-in rosters','Handle vendor relationships for house services'],
    recurringTasks:['Weekly house walkthrough and maintenance log','Monthly report to house corporation','Room assignment updates at semester start','Utilities and vendor payments tracked with Treasurer','Move-in and move-out inspection checklists'],
-   wishIKnew:'Build a relationship with the house corporation contact in Week 1. Keep a running maintenance log — it protects you when something goes wrong. Never pay for a repair out of pocket without exec approval and documentation.'},
+   wishIKnew:'Build a relationship with the house corporation contact in Week 1. Keep a running maintenance log. It protects you when something goes wrong. Never pay for a repair out of pocket without exec approval and documentation.'},
   {role:'New Member Educator',icon:'school', color:'var(--sky-tx)', bg:'var(--sky-bg)',
    responsibilities:['Design and run the semester new member education program','Track new member progress through all milestones','Coordinate with Chaplain on ritual components','Ensure NME program is compliant with ATO standards','Manage big/little matching process'],
    recurringTasks:['Weekly NME session planning and facilitation','New member progress tracked in Ritual & Education section','Big/little matching completed by Week 4','Standards tests administered and graded','Initiation logistics coordinated with Chaplain and President'],
-   wishIKnew:'The new member experience sets the tone for how brothers engage with the chapter for their entire time here. Take it seriously. The ritual section in the platform helps track every milestone — use it every week, not just at initiation.'},
+   wishIKnew:'The new member experience sets the tone for how brothers engage with the chapter for their entire time here. Take it seriously. The ritual section in the platform helps track every milestone. Use it every week, not just at initiation.'},
   {role:'Chaplain',           icon:'book-2', color:'var(--mt)', bg:'var(--surf2)',
    responsibilities:['Lead chapter in ritual and spiritual life','Coordinate all formal ritual ceremonies','Maintain ritual materials and ensure their security','Run the brother of the week and chapter prayer traditions','Support members through personal challenges'],
-   recurringTasks:['Chapter opening and closing ritual at every meeting','Coordinate initiation ceremony logistics with NME','Brother of the Week nomination at every chapter meeting','Ritual equipment inventory at start of each semester','Support member wellness — connect struggling brothers to resources'],
-   wishIKnew:'The ritual materials are your most important responsibility. Know where they are at all times. Initiation coordination with the NME takes 3-4 weeks of planning — start early. Your informal role supporting brothers personally matters more than most execs realize.'},
+   recurringTasks:['Chapter opening and closing ritual at every meeting','Coordinate initiation ceremony logistics with NME','Brother of the Week nomination at every chapter meeting','Ritual equipment inventory at start of each semester','Support member wellness: connect struggling brothers to resources'],
+   wishIKnew:'The ritual materials are your most important responsibility. Know where they are at all times. Initiation coordination with the NME takes 3-4 weeks of planning. Start early. Your informal role supporting brothers personally matters more than most execs realize.'},
   {role:'Public Relations',   icon:'speakerphone', color:'var(--sky-tx)', bg:'var(--sky-bg)',
    responsibilities:['Manage chapter social media accounts and public image','Draft and send external communications and press releases','Coordinate photography and media coverage at events','Build relationships with campus media and ISU communications','Maintain chapter brand consistency across all platforms'],
    recurringTasks:['Weekly social media posts across chapter accounts','Event recap posts within 24 hours','Semester recap reel/slideshow at end of semester','Chapter newsletter (if applicable)','Monitor chapter mentions and respond appropriately'],
-   wishIKnew:'Consistency matters more than quality on social media. Post regularly even when there\'s nothing flashy happening — behind-the-scenes content performs well. Build a photo folder system from Day 1 so you\'re not scrambling for content at the end of the semester.'},
+   wishIKnew:'Consistency matters more than quality on social media. Post regularly even when there\'s nothing flashy happening. Behind-the-scenes content performs well. Build a photo folder system from Day 1 so you\'re not scrambling for content at the end of the semester.'},
   {role:'Community Service',  icon:'plant-2', color:'var(--gn-tx)', bg:'var(--gn-bg)',
    responsibilities:['Coordinate chapter community service initiatives','Track individual and chapter volunteer hours','Partner with local nonprofits and service organizations','Ensure chapter meets IFC service requirements','Run community service committee and recruit volunteers'],
    recurringTasks:['Service hour log updated after every event','IFC service hours submitted each semester','At least 1 community service event per month','Chapter service hour goal visible and tracked','Thank-you outreach to partner organizations'],
-   wishIKnew:'Logistics are the biggest barrier to participation — brothers want to help but won\'t figure out transportation on their own. Handle the van, the sign-up sheet, and the reminder texts and you\'ll get twice the turnout. Always log hours the same day as the event.'},
+   wishIKnew:'Logistics are the biggest barrier to participation. Brothers want to help but won\'t figure out transportation on their own. Handle the van, the sign-up sheet, and the reminder texts and you\'ll get twice the turnout. Always log hours the same day as the event.'},
   {role:'Alumni Relations',   icon:'building-bank', color:'var(--am-tx)', bg:'var(--am-bg)',
    responsibilities:['Maintain relationships with chapter alumni network','Coordinate alumni events and homecoming activities','Manage alumni communications and newsletter','Connect alumni mentors with active brothers','Track alumni contact information and engagement'],
    recurringTasks:['Monthly alumni newsletter or update email','Homecoming and alumni weekend planning (semester)','Alumni directory kept current in platform','Mentor matching for new members and seniors','Annual alumni giving campaign coordination'],
-   wishIKnew:'Alumni engagement compounds over time — the brothers you stay in touch with now become the ones who donate, mentor, and show up for homecoming years later. Make it personal: a direct email from you beats a mass blast every time. Keep the alumni contact list obsessively up to date.'},
+   wishIKnew:'Alumni engagement compounds over time. The brothers you stay in touch with now become the ones who donate, mentor, and show up for homecoming years later. Make it personal: a direct email from you beats a mass blast every time. Keep the alumni contact list obsessively up to date.'},
 ];
 
 // Role contacts stored in D.transitions per role — no hardcoded defaults
 
 const TR_ROLE_DEADLINES = [
   {id:'trd1',title:'Submit chapter roster to IFC',owner:'Secretary',when:'Week 1 of every semester',priority:'high',notes:'Late submission results in fines.'},
-  {id:'trd2',title:'IFC dues payment',owner:'Treasurer',when:'Week 2 of every semester',priority:'high',notes:'Amount varies — check IFC invoice.'},
+  {id:'trd2',title:'IFC dues payment',owner:'Treasurer',when:'Week 2 of every semester',priority:'high',notes:'Amount varies, check IFC invoice.'},
   {id:'trd3',title:'ATO national member report',owner:'Secretary',when:'Week 3 of every semester',priority:'high',notes:'Submit via myATO portal.'},
   {id:'trd4',title:'GPA collection from all members',owner:'Scholarship Chair',when:'Weeks 2-4 each semester',priority:'high',notes:'Needed for IFC and national reporting.'},
   {id:'trd5',title:'IFC GPA report submission',owner:'Scholarship Chair',when:'End of each semester',priority:'high',notes:'Submit to IFC by their posted deadline.'},
@@ -477,7 +477,7 @@ function renderTransition(){
   document.getElementById('tr-bar').style.background=pgc(pct);
   document.getElementById('tr-pct-label').textContent=pct+'%';
   document.getElementById('tr-pct-label').style.color=pgc(pct);
-  document.getElementById('tr-sub').textContent=comp+' of '+EXEC_POSITIONS.length+' roles marked complete — all outgoing officers should finish before end of semester.';
+  document.getElementById('tr-sub').textContent=comp+' of '+EXEC_POSITIONS.length+' roles marked complete. All outgoing officers should finish before end of semester.';
   trNavRoot();
 }
 
@@ -501,7 +501,7 @@ function trNavRoot(){
     const bg=pos?pos.bg:'var(--surf2)';
     const col=pos?pos.color:'var(--mt)';
     const status=tr?tr.status:'not_started';
-    const out=tr&&tr.outgoing?mB(tr.outgoing).name:'—';
+    const out=tr&&tr.outgoing?mB(tr.outgoing).name:'N/A';
     const inc=tr&&tr.incoming?mB(tr.incoming).name:'TBD';
     const fileCount=D.files.filter(f=>f.folder===role).length;
     return`<div class="folder-card" style="gap:9px" tabindex="0" role="button" aria-label="Open ${esc(role)} transition folder" onclick="trOpenFolder('${encodeURIComponent(role)}')">
@@ -537,7 +537,7 @@ function trRenderDeadlines(){
       <td style="color:var(--mt)">${esc(d.owner)}</td>
       <td style="color:var(--mt)">${esc(d.when)}</td>
       <td><span class="badge ${priColor[d.priority]||'bm2'}">${esc(d.priority)}</span></td>
-      <td style="color:var(--mt);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.notes||'—')}</td>
+      <td style="color:var(--mt);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.notes||'N/A')}</td>
       <td><div style="display:flex;gap:4px">
         <button class="btn" style="height:23px;font-size:10px" onclick="trEditDeadline('${d.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button>
         <button class="btn btn-d" style="height:23px;font-size:10px;padding:0 6px" onclick="trDeleteDeadline('${d.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>
@@ -556,10 +556,10 @@ function trRenderIssues(){
   el.innerHTML=`<div class="card" style="padding:0;overflow:hidden"><div class="tw"><table class="tbl"><thead><tr><th>Issue</th><th>Owner</th><th>Priority</th><th>Status</th><th>Notes</th><th></th></tr></thead><tbody>
     ${issues.map(iss=>`<tr>
       <td style="font-weight:500">${esc(iss.title)}</td>
-      <td style="color:var(--mt)">${esc(iss.owner||'—')}</td>
+      <td style="color:var(--mt)">${esc(iss.owner||'N/A')}</td>
       <td><span class="badge ${priColor[iss.priority]||'bm2'}">${esc(iss.priority)}</span></td>
       <td><span class="badge ${stColor[iss.status]||'bm2'}">${esc(stLabel[iss.status]||iss.status)}</span></td>
-      <td style="color:var(--mt);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(iss.notes||'—')}</td>
+      <td style="color:var(--mt);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(iss.notes||'N/A')}</td>
       <td><div style="display:flex;gap:4px">
         <button class="btn" style="height:23px;font-size:10px" onclick="trEditIssue('${iss.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button>
         <button class="btn btn-d" style="height:23px;font-size:10px;padding:0 6px" onclick="trDeleteIssue('${iss.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>
@@ -595,7 +595,7 @@ function trRenderArchive(){
     <div style="display:flex;gap:18px;font-size:11.5px;color:var(--mt);margin-top:5px;flex-wrap:wrap">
       <span><i class="ti ti-users" style="font-size:11px;margin-right:3px"></i>${a.memberCount} members</span>
       <span><i class="ti ti-checkbox" style="font-size:11px;margin-right:3px"></i>${a.completedRoles} roles complete</span>
-      <span><i class="ti ti-cash" style="font-size:11px;margin-right:3px"></i>${a.notes||'—'}</span>
+      <span><i class="ti ti-cash" style="font-size:11px;margin-right:3px"></i>${a.notes||'N/A'}</span>
     </div>
   </div>`).join('');
 }
@@ -903,9 +903,9 @@ function trPrintRole(){
     @media print{body{padding:16px}}
   </style></head><body>
   <div class="header">
-    <h1>${role} — Transition Document</h1>
+    <h1>${role}: Transition Document</h1>
     <div class="meta">
-      <span>Outgoing: ${tr&&tr.outgoing?mB(tr.outgoing).name:'—'}</span>
+      <span>Outgoing: ${tr&&tr.outgoing?mB(tr.outgoing).name:'N/A'}</span>
       <span>Incoming: ${tr&&tr.incoming?mB(tr.incoming).name:'TBD'}</span>
       <span>Semester: ${getSemester()}</span>
     </div>
@@ -922,7 +922,7 @@ function trPrintRole(){
 function openNewTransFor(encodedRole){
   const role=decodeURIComponent(encodedRole);
   document.getElementById('ntr-r').value=role;
-  const o=document.getElementById('ntr-o');o.innerHTML='<option value="">— Unassigned —</option>'+mOpts();
+  const o=document.getElementById('ntr-o');o.innerHTML='<option value="">Unassigned</option>'+mOpts();
   openM('m-addtrans');
 }
 function openEditTransCurrent(){

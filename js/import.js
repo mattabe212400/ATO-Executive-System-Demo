@@ -42,11 +42,11 @@ function openImportModal(type) {
     members: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Grad Year</em>, <em>Class Year</em>, <em>Role</em>, <em>Live In</em>, <em>Major</em>, <em>Email</em>, <em>Phone</em>, <em>Hometown</em><br><span style="color:var(--ht)">Toggle "Update existing members" below to overwrite info for names already in the roster.</span>`,
     grades:  `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Cumulative GPA</em>, <em>Semester GPA</em><br><span style="color:var(--ht)">Members must already exist in the roster. Unmatched names are skipped.</span>`,
     positionGoals: `Upload a CSV with these columns (header row required):<br><strong>Position</strong> (required, must match one of this chapter's officer titles), <strong>Title</strong> (required), <em>Target</em>, <em>Current</em>, <em>Unit</em><br><span style="color:var(--ht)">One row per semester goal. Rows with a Position that doesn't match a real officer title are skipped.</span>`,
-    bylaws:  `Upload a CSV with these columns (header row required):<br><strong>Article</strong> (required), <em>Section</em>, <strong>Content</strong> (required, HTML supported e.g. &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;)<br><span style="color:var(--ht)">One row per section — rows sharing the same Article are combined into one bylaw article, in the order they appear. This replaces your chapter's entire Bylaws section.</span>`,
-    committeeProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em><br><span style="color:var(--ht)">One row per week/session of this committee's program. This replaces this committee's entire program — other committees are unaffected.</span>`,
-    bibleStudyProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>Understanding</em>, <em>Discussion</em><br><span style="color:var(--ht)">One row per week of the Bible study curriculum. Understanding and Discussion are optional, longer-form fields shown in each week's click-through detail view — use &lt;br&gt; for line breaks instead of a literal line break inside the cell. This replaces the chapter's entire Bible Study Program.</span>`,
-    bibleStudyChapters: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>PassageToRead</em>, <em>LeaderSummary</em>, <em>GroupDiscussionFocus</em>, <em>LeaderPageRange</em>, <em>DiscussionPageRange</em>, <em>ExpectedPdfFilename</em>, <em>EstimatedPreparationMinutes</em>, <em>EstimatedSessionMinutes</em><br><span style="color:var(--ht)">One row per chapter. Only Week and Topic are required — this updates matching chapters in place by week number (PDFs, schedules, attendance, and notes on other chapters are never touched). The chapter PDF itself is uploaded separately via Manage Chapter PDFs, not through this CSV.</span>`,
-    alumni: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Number</em>, <em>Email</em>, <em>Initiation Date</em><br><span style="color:var(--ht)">Adds new alumni to the directory. Rows whose name already matches someone in the directory are skipped — industry, current location, and LinkedIn can be filled in afterward from the directory table.</span>`,
+    bylaws:  `Upload a CSV with these columns (header row required):<br><strong>Article</strong> (required), <em>Section</em>, <strong>Content</strong> (required, HTML supported e.g. &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;)<br><span style="color:var(--ht)">One row per section. Rows sharing the same Article are combined into one bylaw article, in the order they appear. This replaces your chapter's entire Bylaws section.</span>`,
+    committeeProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em><br><span style="color:var(--ht)">One row per week/session of this committee's program. This replaces this committee's entire program. Other committees are unaffected.</span>`,
+    bibleStudyProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>Understanding</em>, <em>Discussion</em><br><span style="color:var(--ht)">One row per week of the Bible study curriculum. Understanding and Discussion are optional, longer-form fields shown in each week's click-through detail view. Use &lt;br&gt; for line breaks instead of a literal line break inside the cell. This replaces the chapter's entire Bible Study Program.</span>`,
+    bibleStudyChapters: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>PassageToRead</em>, <em>LeaderSummary</em>, <em>GroupDiscussionFocus</em>, <em>LeaderPageRange</em>, <em>DiscussionPageRange</em>, <em>ExpectedPdfFilename</em>, <em>EstimatedPreparationMinutes</em>, <em>EstimatedSessionMinutes</em><br><span style="color:var(--ht)">One row per chapter. Only Week and Topic are required. This updates matching chapters in place by week number (PDFs, schedules, attendance, and notes on other chapters are never touched). The chapter PDF itself is uploaded separately via Manage Chapter PDFs, not through this CSV.</span>`,
+    alumni: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Number</em>, <em>Email</em>, <em>Initiation Date</em><br><span style="color:var(--ht)">Adds new alumni to the directory. Rows whose name already matches someone in the directory are skipped: industry, current location, and LinkedIn can be filled in afterward from the directory table.</span>`,
   };
   document.getElementById('imp-title').textContent = titles[type] || 'Import';
   document.getElementById('imp-instructions').innerHTML = instructions[type] || '';
@@ -185,7 +185,7 @@ function impBuildMemberRows(rows, previewEl) {
     const name = impCol(row, 'name', 'full name', 'member name');
     if (!name) { skipped.push('(blank name)'); return; }
     const existing = D.members.find(m => m.name.toLowerCase().trim() === name.toLowerCase().trim());
-    if (existing && !updateMode) { skipped.push(name + ' — already in roster'); return; }
+    if (existing && !updateMode) { skipped.push(name + ': already in roster'); return; }
     const gradYearRaw = impCol(row, 'grad year', 'graduation year', 'grad', 'graduation');
     const classYearRaw = impCol(row, 'class year', 'class', 'year in school', 'standing', 'academic year');
     const classYear = classYearRaw ? impNormClassYear(classYearRaw)
@@ -213,7 +213,7 @@ function impBuildMemberRows(rows, previewEl) {
     html += `<div style="max-height:150px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px;margin-bottom:10px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">${th}<tbody>`;
     toUpdate.forEach((m, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(m.name)}</td><td style="padding:5px 8px">${esc(m.major||'—')}</td><td style="padding:5px 8px;font-size:10.5px">${esc(m.email||'—')}</td><td style="padding:5px 8px">${esc(m.classYear)}</td><td style="padding:5px 8px">${esc(m.role)}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(m.name)}</td><td style="padding:5px 8px">${esc(m.major||'N/A')}</td><td style="padding:5px 8px;font-size:10.5px">${esc(m.email||'N/A')}</td><td style="padding:5px 8px">${esc(m.classYear)}</td><td style="padding:5px 8px">${esc(m.role)}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -222,7 +222,7 @@ function impBuildMemberRows(rows, previewEl) {
     html += `<div style="max-height:150px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">${th}<tbody>`;
     toAdd.forEach((m, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(m.name)}</td><td style="padding:5px 8px">${esc(m.major||'—')}</td><td style="padding:5px 8px;font-size:10.5px">${esc(m.email||'—')}</td><td style="padding:5px 8px">${esc(m.classYear)}</td><td style="padding:5px 8px">${esc(m.role)}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(m.name)}</td><td style="padding:5px 8px">${esc(m.major||'N/A')}</td><td style="padding:5px 8px;font-size:10.5px">${esc(m.email||'N/A')}</td><td style="padding:5px 8px">${esc(m.classYear)}</td><td style="padding:5px 8px">${esc(m.role)}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -242,12 +242,12 @@ function impBuildGradeRows(rows, previewEl) {
     const name = impCol(row, 'name', 'full name', 'member name', 'member');
     if (!name) { skipped.push('(blank name)'); return; }
     const member = membersByName[name.toLowerCase().trim()];
-    if (!member) { skipped.push(name + ' — not in roster'); return; }
+    if (!member) { skipped.push(name + ': not in roster'); return; }
     const cumRaw = impCol(row, 'cumulative gpa', 'cumulative', 'cum gpa', 'gpa', 'overall gpa', 'cgpa');
     const semRaw = impCol(row, 'semester gpa', 'semester', 'sem gpa', 'prior gpa', 'term gpa', 'last semester', 'sgpa');
     const cumGpa = cumRaw ? parseFloat(cumRaw) : NaN;
     const semGpa = semRaw ? parseFloat(semRaw) : NaN;
-    if (isNaN(cumGpa) && isNaN(semGpa)) { skipped.push(name + ' — no valid GPA values'); return; }
+    if (isNaN(cumGpa) && isNaN(semGpa)) { skipped.push(name + ': no valid GPA values'); return; }
     toUpdate.push({ member, cumGpa: isNaN(cumGpa) ? null : cumGpa, semGpa: isNaN(semGpa) ? null : semGpa });
   });
 
@@ -258,7 +258,7 @@ function impBuildGradeRows(rows, previewEl) {
     html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Name</th><th style="padding:5px 8px;text-align:left">Cumulative GPA</th><th style="padding:5px 8px;text-align:left">Semester GPA</th></tr></thead><tbody>`;
     toUpdate.forEach((u, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(u.member.name)}</td><td style="padding:5px 8px">${u.cumGpa !== null ? u.cumGpa.toFixed(2) : '—'}</td><td style="padding:5px 8px">${u.semGpa !== null ? u.semGpa.toFixed(2) : '—'}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(u.member.name)}</td><td style="padding:5px 8px">${u.cumGpa !== null ? u.cumGpa.toFixed(2) : 'N/A'}</td><td style="padding:5px 8px">${u.semGpa !== null ? u.semGpa.toFixed(2) : 'N/A'}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -282,10 +282,10 @@ function impBuildPositionGoalRows(rows, previewEl) {
     // column) — in this CSV shape it's the goal's own Title column, and the two must not collide.
     const positionRaw = impCol(row, 'position', 'officer', 'officer title', 'role');
     const position = positionRaw ? titlesByLower[positionRaw.toLowerCase().trim()] : null;
-    if (!positionRaw) { skipped.push('Row ' + (i + 2) + ' — blank position'); return; }
-    if (!position) { skipped.push('Row ' + (i + 2) + ' — "' + positionRaw + '" doesn\'t match a chapter position'); return; }
+    if (!positionRaw) { skipped.push('Row ' + (i + 2) + ': blank position'); return; }
+    if (!position) { skipped.push('Row ' + (i + 2) + ': "' + positionRaw + '" doesn\'t match a chapter position'); return; }
     const title = impCol(row, 'title', 'goal', 'goal title', 'task', 'name');
-    if (!title) { skipped.push('Row ' + (i + 2) + ' — blank goal title'); return; }
+    if (!title) { skipped.push('Row ' + (i + 2) + ': blank goal title'); return; }
     const target = parseFloat(impCol(row, 'target', 'goal target')) || 0;
     const current = parseFloat(impCol(row, 'current', 'progress')) || 0;
     const unit = impCol(row, 'unit', 'units') || '';
@@ -317,10 +317,10 @@ function impBuildBylawRows(rows, previewEl) {
   const order = [], byArticle = {}, skipped = [];
   rows.forEach((row, i) => {
     const article = impCol(row, 'article', 'article title', 'title');
-    if (!article) { skipped.push('Row ' + (i + 2) + ' — blank article'); return; }
+    if (!article) { skipped.push('Row ' + (i + 2) + ': blank article'); return; }
     const section = impCol(row, 'section', 'sec');
     const content = impCol(row, 'content', 'body', 'text');
-    if (!content) { skipped.push(article + (section ? ' ' + section : '') + ' — blank content'); return; }
+    if (!content) { skipped.push(article + (section ? ' ' + section : '') + ': blank content'); return; }
     if (!byArticle[article]) { byArticle[article] = []; order.push(article); }
     byArticle[article].push(section ? `<p><strong>${esc(section)}</strong> ${content}</p>` : `<p>${content}</p>`);
   });
@@ -356,7 +356,7 @@ function impBuildWeeklyProgramRows(rows, previewEl) {
   const toAdd = [], skipped = [];
   rows.forEach((row, i) => {
     const topic = impCol(row, 'topic', 'theme', 'title');
-    if (!topic) { skipped.push('Row ' + (i + 2) + ' — blank topic'); return; }
+    if (!topic) { skipped.push('Row ' + (i + 2) + ': blank topic'); return; }
     const weekRaw = impCol(row, 'week', 'week number', 'wk');
     const week = parseInt(weekRaw) || (toAdd.length + 1);
     const notes = impCol(row, 'notes', 'description');
@@ -374,7 +374,7 @@ function impBuildWeeklyProgramRows(rows, previewEl) {
     html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Week</th><th style="padding:5px 8px;text-align:left">Topic</th><th style="padding:5px 8px;text-align:left">Notes</th></tr></thead><tbody>`;
     toAdd.forEach((a, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:600">${a.week}</td><td style="padding:5px 8px;font-weight:500">${esc(a.topic)}</td><td style="padding:5px 8px;color:var(--mt)">${esc(a.notes||'—')}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:600">${a.week}</td><td style="padding:5px 8px;font-weight:500">${esc(a.topic)}</td><td style="padding:5px 8px;color:var(--mt)">${esc(a.notes||'N/A')}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -396,10 +396,10 @@ function impBuildBsChapterRows(rows, previewEl) {
   const toAdd = [], skipped = [];
   rows.forEach((row, i) => {
     const topic = impCol(row, 'topic', 'title');
-    if (!topic) { skipped.push('Row ' + (i + 2) + ' — blank topic'); return; }
+    if (!topic) { skipped.push('Row ' + (i + 2) + ': blank topic'); return; }
     const weekRaw = impCol(row, 'week', 'week number', 'wk');
     const week = parseInt(weekRaw);
-    if (!week) { skipped.push('Row ' + (i + 2) + ' — blank or invalid week'); return; }
+    if (!week) { skipped.push('Row ' + (i + 2) + ': blank or invalid week'); return; }
     const prepMinRaw = impCol(row, 'estimatedpreparationminutes', 'estimated preparation minutes', 'prep minutes');
     const sessMinRaw = impCol(row, 'estimatedsessionminutes', 'estimated session minutes', 'session minutes');
     toAdd.push({
@@ -419,12 +419,12 @@ function impBuildBsChapterRows(rows, previewEl) {
 
   let html = '';
   if (toAdd.length) {
-    html += `<div style="font-size:12px;font-weight:600;color:var(--rd);margin-bottom:6px">This will update ${toAdd.length} chapter${toAdd.length !== 1 ? 's' : ''} by week number — chapters not listed here, and every chapter's PDF/schedule/attendance/private notes, are left untouched:</div>`;
+    html += `<div style="font-size:12px;font-weight:600;color:var(--rd);margin-bottom:6px">This will update ${toAdd.length} chapter${toAdd.length !== 1 ? 's' : ''} by week number. Chapters not listed here, and every chapter's PDF/schedule/attendance/private notes, are left untouched:</div>`;
     html += `<div style="max-height:220px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">`;
     html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Week</th><th style="padding:5px 8px;text-align:left">Topic</th><th style="padding:5px 8px;text-align:left">Notes</th></tr></thead><tbody>`;
     toAdd.forEach((a, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:600">${a.week}</td><td style="padding:5px 8px;font-weight:500">${esc(a.topic)}</td><td style="padding:5px 8px;color:var(--mt)">${esc(a.notes || '—')}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:600">${a.week}</td><td style="padding:5px 8px;font-weight:500">${esc(a.topic)}</td><td style="padding:5px 8px;color:var(--mt)">${esc(a.notes || 'N/A')}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -445,8 +445,8 @@ function impBuildAlumniRows(rows, previewEl) {
   const existingNames = new Set(D.alumni.contacts.map(a => a.name.toLowerCase().trim()));
   rows.forEach((row, i) => {
     const name = impCol(row, 'name', 'full name', 'alumni name');
-    if (!name) { skipped.push('Row ' + (i + 2) + ' — blank name'); return; }
-    if (existingNames.has(name.toLowerCase().trim())) { skipped.push(name + ' — already in directory'); return; }
+    if (!name) { skipped.push('Row ' + (i + 2) + ': blank name'); return; }
+    if (existingNames.has(name.toLowerCase().trim())) { skipped.push(name + ': already in directory'); return; }
     const phone = impCol(row, 'number', 'phone', 'phone number', 'cell', 'mobile');
     const email = impCol(row, 'email', 'email address', 'e-mail');
     const initiationDate = impNormDate(impCol(row, 'initiation date', 'initiationdate', 'initiated', 'date initiated'));
@@ -461,7 +461,7 @@ function impBuildAlumniRows(rows, previewEl) {
     html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Name</th><th style="padding:5px 8px;text-align:left">Email</th><th style="padding:5px 8px;text-align:left">Phone</th><th style="padding:5px 8px;text-align:left">Initiation Date</th></tr></thead><tbody>`;
     toAdd.forEach((a, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:500">${esc(a.name)}</td><td style="padding:5px 8px;font-size:10.5px">${esc(a.email || '—')}</td><td style="padding:5px 8px">${esc(a.phone || '—')}</td><td style="padding:5px 8px">${esc(a.initiationDate || '—')}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:500">${esc(a.name)}</td><td style="padding:5px 8px;font-size:10.5px">${esc(a.email || 'N/A')}</td><td style="padding:5px 8px">${esc(a.phone || 'N/A')}</td><td style="padding:5px 8px">${esc(a.initiationDate || 'N/A')}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -549,7 +549,7 @@ async function doImport() {
       toast(`Bible Study Program: ${parts.join(', ')}`, 'success');
       const missingPdf = D.bibleStudyCurriculum.chapters.filter(c => !c.pdf && !c.archived).length;
       if (missingPdf) {
-        setTimeout(() => toast(`${missingPdf} chapter${missingPdf !== 1 ? 's' : ''} still need a PDF — open Manage Chapter PDFs to upload.`, 'warning', 7000), 400);
+        setTimeout(() => toast(`${missingPdf} chapter${missingPdf !== 1 ? 's' : ''} still need a PDF. Open Manage Chapter PDFs to upload.`, 'warning', 7000), 400);
       }
     } else if (_importType === 'alumni') {
       _importRows.forEach(a => D.alumni.contacts.push(a));
@@ -609,15 +609,15 @@ function impDownloadTemplate(type) {
     filename = 'committee_program_template.csv';
   } else if (type === 'bibleStudyProgram') {
     csv = 'Week,Topic,Notes,Understanding,Discussion\n'
-      + '1,Faith & Brotherhood,Proverbs 27:17 — how brothers sharpen each other,'
+      + '1,Faith & Brotherhood,Proverbs 27:17: how brothers sharpen each other,'
       + '"Iron sharpening iron is a picture of mutual growth, not one-sided correction -- brotherhood only sharpens when both sides show up honestly.",'
       + '"What does it look like for a brother to sharpen you, specifically? Where have you let a friendship go dull instead?"\n'
-      + '2,Forgiveness,Matthew 18:21-22 — dealing with conflict in the chapter,'
+      + '2,Forgiveness,Matthew 18:21-22: dealing with conflict in the chapter,'
       + '"Peter\'s question assumes a limit; Jesus answers with a number that removes the limit -- forgiveness in community is a posture, not a tally."'
       + ',"Is there someone in the chapter you\'re still keeping score with? What would it cost to let that go?"\n'
-      + '3,Servant Leadership,Mark 10:42-45 — leading by serving others,,\n'
-      + '4,Integrity,Proverbs 10:9 — walking with integrity on and off campus,,\n'
-      + '5,Gratitude,1 Thessalonians 5:16-18 — practicing gratitude under pressure,,';
+      + '3,Servant Leadership,Mark 10:42-45: leading by serving others,,\n'
+      + '4,Integrity,Proverbs 10:9: walking with integrity on and off campus,,\n'
+      + '5,Gratitude,1 Thessalonians 5:16-18: practicing gratitude under pressure,,';
     filename = 'bible_study_program_template.csv';
   } else if (type === 'bibleStudyChapters') {
     csv = 'Week,Topic,Notes,PassageToRead,LeaderSummary,GroupDiscussionFocus,LeaderPageRange,DiscussionPageRange,ExpectedPdfFilename,EstimatedPreparationMinutes,EstimatedSessionMinutes\n'

@@ -157,8 +157,8 @@ function chRenderDevotionals(){
   el.innerHTML=`<thead><tr><th>Date</th><th>Topic</th><th>Scripture</th><th>Status</th><th></th></tr></thead><tbody>${
     list.map(s=>`<tr>
       <td>${fds(s.date)}${s.start?' '+to12h(s.start):''}</td>
-      <td style="font-weight:500">${esc(s.topic||'—')}</td>
-      <td>${esc(s.scripture||'—')}</td>
+      <td style="font-weight:500">${esc(s.topic||'N/A')}</td>
+      <td>${esc(s.scripture||'N/A')}</td>
       <td><span class="badge ${chDvStatusClass(s.status)}">${chDvStatusLabel(s.status)}</span></td>
       <td style="white-space:nowrap">${canEdit?`<button class="btn" style="height:22px;font-size:10px;padding:0 6px" onclick="chOpenEditDevotional('${s.id}')" aria-label="Edit"><i class="ti ti-edit"></i></button> <button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="chDeleteDevotional('${s.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td>
     </tr>`).join('')
@@ -253,8 +253,8 @@ function chRenderEvents(){
       <td style="font-weight:500">${esc(e.title)}</td>
       <td>${esc(chEventTypeLabel(e.chEventType))}</td>
       <td>${fds(e.date)}</td>
-      <td>${esc(e.location||'—')}</td>
-      <td>${e.estCost!=null?'$'+Number(e.estCost).toLocaleString():'—'}</td>
+      <td>${esc(e.location||'N/A')}</td>
+      <td>${e.estCost!=null?'$'+Number(e.estCost).toLocaleString():'N/A'}</td>
       <td><span class="badge ${chStatusClass(e.planningStatus)}">${chStatusLabel(e.planningStatus)}</span></td>
       <td style="white-space:nowrap">${canEdit?`<button class="btn" style="height:22px;font-size:10px;padding:0 6px" onclick="chOpenEditEvent('${e.id}')" aria-label="Edit"><i class="ti ti-edit"></i></button> <button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="chDeleteEvent('${e.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td>
     </tr>`).join('')

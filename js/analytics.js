@@ -192,7 +192,7 @@ function attDrawDonut(){
   ].filter(s=>s.n>0);
 
   const tot=D.members.length||1;
-  if(pctEl)pctEl.textContent=good+onT>0?Math.round((good+onT)/tot*100)+'%':'—';
+  if(pctEl)pctEl.textContent=good+onT>0?Math.round((good+onT)/tot*100)+'%':'N/A';
 
   const R=42,CX=55,CY=55,CIRC=2*Math.PI*R,SW=16;
   let offset=0;
@@ -404,11 +404,11 @@ function ciRenderKpiRow(){
   const priorPay=(D.finance?.payments||[]).filter(p=>p.date>=d60&&p.date<d30).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
 
   document.getElementById('ci-kpi').innerHTML=
-    statStrip('Chapter Health Score',score+'/100',score>=80?'Strong standing':score>=65?'Stable — some gaps':'Needs attention',score>=80?'up':score>=50?'neutral':'down')+
+    statStrip('Chapter Health Score',score+'/100',score>=80?'Strong standing':score>=65?'Stable, some gaps':'Needs attention',score>=80?'up':score>=50?'neutral':'down')+
     statStrip('Attendance Rate',avgAtt+'%',attTrend===null?'No 30d comparison yet':(attTrend>=0?'+':'')+attTrend+'pts vs prior 30d',attTrend===null?'neutral':attTrend>=0?'up':'down')+
-    statStrip('Task Completion',taskPct===null?'—':taskPct+'%',taskPct===null?'No tasks yet':dn+' of '+D.tasks.length+' done','neutral')+
+    statStrip('Task Completion',taskPct===null?'N/A':taskPct+'%',taskPct===null?'No tasks yet':dn+' of '+D.tasks.length+' done','neutral')+
     statStrip('Financial Collection',fin.rate+'%',recentPay||priorPay?'$'+Math.round(recentPay).toLocaleString()+' collected last 30d ('+(recentPay>=priorPay?'+':'')+Math.round(recentPay-priorPay).toLocaleString()+' vs prior)':fin.paidCount+' / '+fin.total+' paid','neutral')+
-    statStrip('Recruitment Conversion',rec.total?rec.conversionRate+'%':'—',rec.total?rec.total+' rushees tracked':'No rushees yet','neutral')+
+    statStrip('Recruitment Conversion',rec.total?rec.conversionRate+'%':'N/A',rec.total?rec.total+' rushees tracked':'No rushees yet','neutral')+
     statStrip('Open Accountability Cases',openCases,openCases?'Requires attention':'All clear',openCases?'down':'up');
 }
 function ciRenderHealthLink(){
@@ -420,7 +420,7 @@ function ciRenderHealthLink(){
   el.innerHTML=`<div style="display:flex;align-items:center;gap:14px">
     <div style="font-size:26px;font-weight:700;color:${color}">${score}<span style="font-size:13px;color:var(--ht);font-weight:500">/100</span></div>
     <div style="flex:1">
-      <div style="font-size:12.5px;font-weight:600">Grade ${grade}${weak.length?' — needs attention on '+weak.map(d=>esc(d.k)).join(', '):' — no dimension currently below target'}</div>
+      <div style="font-size:12.5px;font-weight:600">Grade ${grade}${weak.length?': needs attention on '+weak.map(d=>esc(d.k)).join(', '):': no dimension currently below target'}</div>
       <div style="font-size:10.5px;color:var(--ht)">Full breakdown, trend, and action items on the Health Scorecard page →</div>
     </div>
     <i class="ti ti-arrow-right" style="color:var(--ht)"></i>
@@ -480,7 +480,7 @@ function ciRenderAcademicsTab(){
   const trendEl=document.getElementById('ci-ac-trend');
   if(trendEl){
     const hist=D.academics?.history||[];
-    trendEl.innerHTML = hist.length ? hist.map(h=>`<div class="pr"><span class="pl" style="width:110px">${esc(h.semester)}</span><div class="pb"><div class="pf" style="width:${Math.min(100,parseFloat(h.chapterGpa)/4*100)}%;background:var(--bl)"></div></div><span class="pv">${h.chapterGpa}</span></div>`).join('') : `<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No semester GPA snapshots yet — created when officers save GPAs in Academics.</div>`;
+    trendEl.innerHTML = hist.length ? hist.map(h=>`<div class="pr"><span class="pl" style="width:110px">${esc(h.semester)}</span><div class="pb"><div class="pf" style="width:${Math.min(100,parseFloat(h.chapterGpa)/4*100)}%;background:var(--bl)"></div></div><span class="pv">${h.chapterGpa}</span></div>`).join('') : `<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No semester GPA snapshots yet (created when officers save GPAs in Academics).</div>`;
   }
   const members=ciFilterMembers();
   const gpaOf=m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.cumulativeGpa||rec.priorGpa||'';return v?parseFloat(v):null;};
@@ -499,7 +499,7 @@ function ciRenderAcademicsTab(){
   if(tableEl){
     const withGpa=[...members].sort(mNameCompare).map(m=>({m,cum:D.academics?.gpas?.[m.id]?.cumulativeGpa||'',sem:D.academics?.gpas?.[m.id]?.semesterGpa||''}));
     tableEl.innerHTML = withGpa.length ? `<thead><tr><th>Member</th><th>Class</th><th>Cumulative GPA</th><th>Semester GPA</th></tr></thead><tbody>${
-      withGpa.map(({m,cum,sem})=>`<tr><td style="font-weight:500">${esc(m.name)}</td><td>${esc(m.classYear)}</td><td>${esc(cum)||'—'}</td><td>${esc(sem)||'—'}</td></tr>`).join('')
+      withGpa.map(({m,cum,sem})=>`<tr><td style="font-weight:500">${esc(m.name)}</td><td>${esc(m.classYear)}</td><td>${esc(cum)||'N/A'}</td><td>${esc(sem)||'N/A'}</td></tr>`).join('')
     }</tbody>` : `<tbody><tr><td colspan="4" style="text-align:center;color:var(--ht);padding:14px">No members in this filter.</td></tr></tbody>`;
   }
 }
@@ -548,7 +548,7 @@ function ciRenderRecruitmentTab(){
   if(kpiEl) kpiEl.innerHTML=
     statStrip('Total Rushees',f.total,'In pipeline','neutral')+
     statStrip('Conversion Rate',f.conversionRate+'%','Bid-ready or further','neutral')+
-    statStrip('Accepted',f.accepted,f.total?Math.round(f.acceptRate)+'% of pipeline':'—','up');
+    statStrip('Accepted',f.accepted,f.total?Math.round(f.acceptRate)+'% of pipeline':'N/A','up');
   const funnelEl=document.getElementById('ci-rec-funnel');
   if(funnelEl) funnelEl.innerHTML = f.total ? f.counts.map(c=>`<div class="pr" style="cursor:pointer" onclick="rbacNav('recruitment',null)"><span class="pl">${esc(c.stage)}</span><div class="pb"><div class="pf" style="width:${f.total?Math.round(c.count/f.total*100):0}%;background:${c.col}"></div></div><span class="pv">${c.count}</span></div>`).join('') : es('ti-user-plus','blue','No rushees tracked yet','','');
   const recEl=document.getElementById('ci-rec-recruiters');
@@ -560,7 +560,7 @@ function ciRenderRecruitmentTab(){
   if(tableEl){
     const rushees=D.recruitment?.rushees||[];
     tableEl.innerHTML = rushees.length ? `<thead><tr><th>Name</th><th>Stage</th><th>Recruiter</th><th>Bid Score</th></tr></thead><tbody>${
-      [...rushees].sort((a,b)=>(b.bidScore||0)-(a.bidScore||0)).map(r=>`<tr><td style="font-weight:500">${esc(r.name)}</td><td>${esc(r.stage)}</td><td>${r.recruiter?esc(mB(r.recruiter).name):'—'}</td><td>${r.bidScore??'—'}</td></tr>`).join('')
+      [...rushees].sort((a,b)=>(b.bidScore||0)-(a.bidScore||0)).map(r=>`<tr><td style="font-weight:500">${esc(r.name)}</td><td>${esc(r.stage)}</td><td>${r.recruiter?esc(mB(r.recruiter).name):'N/A'}</td><td>${r.bidScore??'N/A'}</td></tr>`).join('')
     }</tbody>` : `<tbody><tr><td colspan="4" style="text-align:center;color:var(--ht);padding:14px">No rushees tracked yet.</td></tr></tbody>`;
   }
 }
@@ -610,7 +610,7 @@ function ciRenderSocialTab(){
   if(kpiEl) kpiEl.innerHTML=
     statStrip('Upcoming Events',upcoming.length,'On the calendar','neutral')+
     statStrip('Budget vs Actual','$'+Math.round(totalActual).toLocaleString()+' / $'+Math.round(totalBudget).toLocaleString(),totalActual>totalBudget?'Over budget':'Within budget',totalActual>totalBudget?'down':'up')+
-    statStrip('Avg Readiness',avgReadiness===null?'—':avgReadiness+'%','Across active events','neutral');
+    statStrip('Avg Readiness',avgReadiness===null?'N/A':avgReadiness+'%','Across active events','neutral');
   const alertEl=document.getElementById('ci-soc-alerts');
   if(alertEl) alertEl.innerHTML = needsAction ? `<div style="cursor:pointer" onclick="rbacNav('social',null)">${kpi('Events Needing Attention',needsAction,'Click to review in Social Events','down')}</div>` : es('ti-circle-check','green','All upcoming events on track','','');
   const bycatEl=document.getElementById('ci-soc-bycat');
@@ -643,11 +643,11 @@ function ciRenderAccountabilityTab(){
   if(kpiEl) kpiEl.innerHTML=
     statStrip('Open Cases',open.length,open.length?'Requires attention':'All clear',open.length?'down':'up')+
     statStrip('Total Cases (All Time)',cases.length,'','neutral')+
-    statStrip('Most Common Type',Object.keys(byType).length?Object.entries(byType).sort((a,b)=>b[1]-a[1])[0][0]:'—','','neutral');
+    statStrip('Most Common Type',Object.keys(byType).length?Object.entries(byType).sort((a,b)=>b[1]-a[1])[0][0]:'N/A','','neutral');
   const tableEl=document.getElementById('ci-acc-table');
   if(tableEl){
     tableEl.innerHTML = cases.length ? `<thead><tr><th>Case #</th><th>Type</th><th>Status</th><th>Filed By</th></tr></thead><tbody>${
-      cases.map(c=>`<tr><td style="font-weight:500">${esc(c.caseNum||c.id)}</td><td>${esc(c.type)}</td><td><span class="badge ${c.status==='open'?'br2':c.status==='resolved'?'bg2':'bm2'}">${esc(c.status)}</span></td><td>${c.filedBy?esc(mB(c.filedBy).name):'—'}</td></tr>`).join('')
+      cases.map(c=>`<tr><td style="font-weight:500">${esc(c.caseNum||c.id)}</td><td>${esc(c.type)}</td><td><span class="badge ${c.status==='open'?'br2':c.status==='resolved'?'bg2':'bm2'}">${esc(c.status)}</span></td><td>${c.filedBy?esc(mB(c.filedBy).name):'N/A'}</td></tr>`).join('')
     }</tbody>` : `<tbody><tr><td colspan="4" style="text-align:center;color:var(--ht);padding:14px">No cases on record.</td></tr></tbody>`;
   }
 }
@@ -710,9 +710,9 @@ function ciRenderTasksTab(){
   const kpiEl=document.getElementById('ci-tk-kpi');
   if(kpiEl) kpiEl.innerHTML=
     statStrip('Total Assigned',tasks.length,'Matching current filters','neutral')+
-    statStrip('Completion Rate',tasks.length?Math.round(dn/tasks.length*100)+'%':'—',dn+' of '+tasks.length+' done','neutral')+
+    statStrip('Completion Rate',tasks.length?Math.round(dn/tasks.length*100)+'%':'N/A',dn+' of '+tasks.length+' done','neutral')+
     statStrip('Overdue',ov,ov?'Requires attention':'None',ov?'down':'up')+
-    statStrip('Goal Progress',goalPct===null?'—':goalPct+'%','Avg. across '+goals.length+' goal'+(goals.length!==1?'s':''),'neutral');
+    statStrip('Goal Progress',goalPct===null?'N/A':goalPct+'%','Avg. across '+goals.length+' goal'+(goals.length!==1?'s':''),'neutral');
 
   // ── Per-position breakdown — only positions with any task/goal activity get a row, same
   // "skip if empty" convention as the Tasks & Goals page's own per-position kanban sections.
@@ -728,7 +728,7 @@ function ciRenderTasksTab(){
   const posTableEl=document.getElementById('ci-tk-pos-table');
   if(posTableEl){
     posTableEl.innerHTML = posRows.length ? `<thead><tr><th>Position</th><th>Total Assigned</th><th>Completed</th><th>Completion %</th><th>Overdue</th><th>Goal Progress</th></tr></thead><tbody>${
-      posRows.map(r=>`<tr><td style="font-weight:500">${esc(r.p)}</td><td>${r.total}</td><td>${r.done}</td><td>${r.pct}%</td><td style="${r.overdue?'color:var(--rd)':''}">${r.overdue}</td><td>${r.goalPct===null?'—':r.goalPct+'%'}</td></tr>`).join('')
+      posRows.map(r=>`<tr><td style="font-weight:500">${esc(r.p)}</td><td>${r.total}</td><td>${r.done}</td><td>${r.pct}%</td><td style="${r.overdue?'color:var(--rd)':''}">${r.overdue}</td><td>${r.goalPct===null?'N/A':r.goalPct+'%'}</td></tr>`).join('')
     }</tbody>` : `<tbody><tr><td colspan="6" style="text-align:center;color:var(--ht);padding:14px">No task/goal activity for any position yet.</td></tr></tbody>`;
   }
 

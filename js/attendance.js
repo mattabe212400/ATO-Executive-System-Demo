@@ -43,7 +43,7 @@ function openMarkAttEv(evId){
   const ev=D.events.find(e=>e.id===evId);if(!ev)return;
   if(!isCurrentSemester(semesterLabelForDate(ev.date))){toast('This event is in a past semester and is read-only.','error');return;}
   document.getElementById('ma-evid').value=evId;
-  document.getElementById('ma-title').textContent='Mark Attendance — '+ev.title+' ('+fds(ev.date)+')';
+  document.getElementById('ma-title').textContent='Mark Attendance: '+ev.title+' ('+fds(ev.date)+')';
   _attTmp={...(D.attendance[evId]||{})};
   renderAttList();
   openM('m-markatt');
@@ -67,7 +67,7 @@ function renderAttList(){
     const st=_attTmp[m.id]||'';
     const cls=st==='present'?'att-check present':st==='absent'?'att-check absent':st==='excused'?'att-check excused':'att-check';
     const lbl=st==='present'?'✓':st==='absent'?'U':st==='excused'?'E':'';
-    return`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer" tabindex="0" role="button" aria-label="${esc(m.name)}: ${ATT_STATUS_LABEL[st]||'Unmarked'} — click to change" onclick="cycleAtt('${m.id}')">
+    return`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;cursor:pointer" tabindex="0" role="button" aria-label="${esc(m.name)}: ${ATT_STATUS_LABEL[st]||'Unmarked'}, click to change" onclick="cycleAtt('${m.id}')">
       <div class="${cls}" id="ac-${m.id}" title="${ATT_STATUS_LABEL[st]||'Unmarked'}">${lbl}</div>
       <span style="font-size:12px">${esc(m.name)}</span>
     </div>`;
@@ -83,7 +83,7 @@ function cycleAtt(mid){
     el.textContent=next==='present'?'✓':next==='absent'?'U':next==='excused'?'E':'';
     el.title=ATT_STATUS_LABEL[next]||'Unmarked';
     const row=el.closest('[role="button"]');
-    if(row){const m=D.members.find(x=>x.id===mid);if(m)row.setAttribute('aria-label',esc(m.name)+': '+(ATT_STATUS_LABEL[next]||'Unmarked')+' — click to change');}
+    if(row){const m=D.members.find(x=>x.id===mid);if(m)row.setAttribute('aria-label',esc(m.name)+': '+(ATT_STATUS_LABEL[next]||'Unmarked')+', click to change');}
   }
 }
 function saveAttendance(){
@@ -111,7 +111,7 @@ function _attCheckForFines(evId){
   if(!needsFine.length)return;
   _attFineEvId=evId;
   _attFineMembers=needsFine;
-  document.getElementById('af-title').textContent='Unexcused Miss Fines — '+(ev?ev.title:'Event');
+  document.getElementById('af-title').textContent='Unexcused Miss Fines: '+(ev?ev.title:'Event');
   document.getElementById('af-list').innerHTML=needsFine.map(m=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0">
     <span style="flex:1;font-size:12.5px">${esc(m.name)}</span>
     <input type="number" min="0" step="0.01" placeholder="Amount" id="af-amt-${m.id}" style="width:100px;height:30px;padding:0 8px;border:1px solid var(--bdr);border-radius:6px;font-size:12px">
@@ -129,12 +129,12 @@ async function attSaveFines(){
     if(isNaN(amount)||amount<=0){skipped++;continue;}
     if(finHasAttendanceFine(m.id,evId))continue; // defensive re-check
     try{ await finAddAttendanceFine(m.id,evId,eventTitle,amount); issued++; }
-    catch(e){ toast('Failed to fine '+m.name.split(' ')[0]+' — please try again from Finance.','error'); }
+    catch(e){ toast('Failed to fine '+m.name.split(' ')[0]+', please try again from Finance.','error'); }
   }
   closeM(null,document.getElementById('m-att-fines'));
   _attFineEvId=null; _attFineMembers=[];
   if(FIN_ACTIVE_TAB==='fin-fines')finRenderFines();
   if(issued)toast(issued+' fine'+(issued>1?'s':'')+' issued'+(skipped?', '+skipped+' skipped (no amount entered)':''),'success');
-  else if(skipped)toast('No fines issued — no amounts entered.','info');
+  else if(skipped)toast('No fines issued: no amounts entered.','info');
 }
 

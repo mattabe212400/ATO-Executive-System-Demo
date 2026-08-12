@@ -256,7 +256,7 @@ function hlOpenAddSpot(){
   document.getElementById('hl-parking-plate').value='';
   document.getElementById('hl-parking-notes').value='';
   const sel=document.getElementById('hl-parking-member');
-  if(sel)sel.innerHTML='<option value="">— None / see custom name below —</option>'+hlMemberOptionsHtml(hlEligibleMembers([]),[]);
+  if(sel)sel.innerHTML='<option value="">None / see custom name below</option>'+hlMemberOptionsHtml(hlEligibleMembers([]),[]);
   openM('m-hl-parking');
 }
 function hlOpenEditSpot(id){
@@ -270,7 +270,7 @@ function hlOpenEditSpot(id){
   document.getElementById('hl-parking-notes').value=s.notes||'';
   const sel=document.getElementById('hl-parking-member');
   const existing=s.assignedMemberId?[s.assignedMemberId]:[];
-  if(sel){sel.innerHTML='<option value="">— None / see custom name below —</option>'+hlMemberOptionsHtml(hlEligibleMembers(existing),existing);sel.value=s.assignedMemberId||'';}
+  if(sel){sel.innerHTML='<option value="">None / see custom name below</option>'+hlMemberOptionsHtml(hlEligibleMembers(existing),existing);sel.value=s.assignedMemberId||'';}
   openM('m-hl-parking');
 }
 async function hlSaveSpot(){

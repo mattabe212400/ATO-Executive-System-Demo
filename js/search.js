@@ -119,7 +119,7 @@ function gsSearch(q) {
     if (c.caseNum.toLowerCase().includes(lq) || memberName.toLowerCase().includes(lq) || (c.desc||'').toLowerCase().includes(lq) || (c.type||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'cases', id: c.id,
-        title: c.caseNum + ' — ' + memberName,
+        title: c.caseNum + ', ' + memberName,
         sub: c.type + ' · ' + c.status + (c.hearingDate?' · '+fds(c.hearingDate):''),
         action: () => { rbacNav('judicial', null); }
       });
@@ -132,7 +132,7 @@ function gsSearch(q) {
     if ((m.name||'').toLowerCase().includes(lq) || (f.reason||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'finance', id: f.id,
-        title: '$' + f.amount + ' fine — ' + m.name,
+        title: '$' + f.amount + ' fine, ' + m.name,
         sub: f.reason + ' · ' + f.status + (f.date ? ' · ' + fds(f.date) : ''),
         action: () => { rbacNav('finance', null); setTimeout(() => finTab(document.querySelector('[data-tab=fin-fines]'), 'fin-fines'), 150); }
       });
@@ -144,7 +144,7 @@ function gsSearch(q) {
     if ((e.description||'').toLowerCase().includes(lq) || (e.category||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'finance', id: e.id,
-        title: '$' + e.amount + ' — ' + (e.description||'Expense'),
+        title: '$' + e.amount + ', ' + (e.description||'Expense'),
         sub: (e.category||'') + (e.date ? ' · ' + fds(e.date) : ''),
         action: () => { rbacNav('finance', null); setTimeout(() => finTab(document.querySelector('[data-tab=fin-budget]'), 'fin-budget'), 150); }
       });
@@ -157,7 +157,7 @@ function gsSearch(q) {
       results.push({
         cat: 'alumni', id: a.id,
         title: a.name,
-        sub: (a.employer||'—') + ' · ' + (a.location||'—'),
+        sub: (a.employer||'N/A') + ' · ' + (a.location||'N/A'),
         action: () => { rbacNav('alumni', null); }
       });
     }
