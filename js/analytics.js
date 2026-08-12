@@ -703,16 +703,21 @@ function ciRenderTasksTab(){
     (f.semester==='all'||!t.semester||t.semester===f.semester)
   );
   const goals=(D.goals||[]).filter(g=>f.semester==='all'||!g.semester||g.semester===f.semester);
+  // Goals created since the Semester Goals redesign are a plain statement with no target/current
+  // tracking — they have no numeric progress to average, not 0% progress. Only legacy goals that
+  // still carry a real target contribute to this stat, same principle as the Tasks & Goals page
+  // itself no longer surfacing target/current for the same records.
+  const trackedGoals=goals.filter(g=>g.target);
 
   const dn=tasks.filter(t=>t.status==='done').length;
   const ov=tasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
-  const goalPct=goals.length?Math.round(goals.reduce((s,g)=>s+Math.min(pc(g.current,g.target),100),0)/goals.length):null;
+  const goalPct=trackedGoals.length?Math.round(trackedGoals.reduce((s,g)=>s+Math.min(pc(g.current,g.target),100),0)/trackedGoals.length):null;
   const kpiEl=document.getElementById('ci-tk-kpi');
   if(kpiEl) kpiEl.innerHTML=
     statStrip('Total Assigned',tasks.length,'Matching current filters','neutral')+
     statStrip('Completion Rate',tasks.length?Math.round(dn/tasks.length*100)+'%':'N/A',dn+' of '+tasks.length+' done','neutral')+
     statStrip('Overdue',ov,ov?'Requires attention':'None',ov?'down':'up')+
-    statStrip('Goal Progress',goalPct===null?'N/A':goalPct+'%','Avg. across '+goals.length+' goal'+(goals.length!==1?'s':''),'neutral');
+    statStrip('Goal Progress',goalPct===null?'N/A':goalPct+'%','Avg. across '+trackedGoals.length+' tracked goal'+(trackedGoals.length!==1?'s':''),'neutral');
 
   // ── Per-position breakdown — only positions with any task/goal activity get a row, same
   // "skip if empty" convention as the Tasks & Goals page's own per-position kanban sections.
@@ -721,7 +726,7 @@ function ciRenderTasksTab(){
     const pt=tasks.filter(t=>t.positionTitle===p);
     const pd=pt.filter(t=>t.status==='done').length;
     const po=pt.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
-    const pg=goals.filter(g=>g.positionTitle===p);
+    const pg=trackedGoals.filter(g=>g.positionTitle===p);
     const pgPct=pg.length?Math.round(pg.reduce((s,g)=>s+Math.min(pc(g.current,g.target),100),0)/pg.length):null;
     return {p,total:pt.length,done:pd,pct:pt.length?Math.round(pd/pt.length*100):0,overdue:po,goalPct:pgPct};
   }).filter(r=>r.total>0||r.goalPct!==null);

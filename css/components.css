@@ -110,6 +110,28 @@
 .sb2{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
 .sl{font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.05em}
 .gg{display:grid;grid-template-columns:1fr 1fr;gap:13px 22px}
+/* ── SEMESTER GOALS (Tasks & Goals page) ──
+   .sgp-grid: one card per position, President/VP chapter-wide view. 3 cols on wide desktop
+   (>1440px), 2 on standard desktop/laptop and tablet, 1 on mobile (mobile override lives in
+   responsive.css's existing 768px block, grouped with .g4/.g3/.gg). */
+.sgp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+@media(max-width:1440px){.sgp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sgp-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);padding:14px 16px;box-shadow:var(--shadow-card)}
+.sgp-card-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--bdr)}
+.sgp-pos{font-size:11px;font-weight:700;color:var(--tx);text-transform:uppercase;letter-spacing:.05em}
+.sgp-count{font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;flex-shrink:0}
+/* .sgp-standard: the single full-width card a non-lead officer sees, grouping their own
+   position(s) — same row/list styling as .sgp-card but not part of the 3-col grid. */
+.sgp-standard{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px 18px;box-shadow:var(--shadow-card)}
+.sgp-group+.sgp-group{margin-top:16px;padding-top:16px;border-top:1px solid var(--bdr)}
+.sgp-list{list-style:none;margin:0;padding:0}
+.sgp-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0}
+.sgp-row+.sgp-row{border-top:1px solid var(--bdr2)}
+.sgp-ico{font-size:13px;color:var(--gold-tx);flex-shrink:0;margin-top:2px}
+.sgp-text{flex:1;font-size:12.5px;line-height:1.5;color:var(--tx);overflow-wrap:anywhere}
+.sgp-del{flex-shrink:0;color:var(--ht)}
+.sgp-del:hover{background:var(--rd-bg);color:var(--rd-tx)}
+.sgp-empty-msg{font-size:12px;color:var(--mt);padding:6px 0}
 .ni-item{display:flex;align-items:flex-start;gap:9px;padding:9px 13px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .12s}
 .ni-item:hover{background:var(--surf-h)}
 .ni-item.unread{background:var(--sky-bg)}

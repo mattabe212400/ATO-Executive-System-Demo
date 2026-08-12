@@ -234,20 +234,29 @@ async function addTask(){
 }
 async function addGoal(){
   if(!canEditPage('tasks')){toast('You do not have permission to add goals.','error');return;}
+  const submitBtn=document.getElementById('ng-submit');
+  if(submitBtn&&submitBtn.disabled)return; // already mid-submit — guards a double-click double-add
   const title=document.getElementById('ng-t').value.trim();
-  if(!title){toast('Title is required','error');return;}
+  if(!title){toast('Semester goal is required.','error');return;}
   const positionTitle=document.getElementById('ng-position')?.value||null;
+  if(!positionTitle){toast('Position is required.','error');return;}
   if(!isLeadUser()&&!myPositionTitles().includes(positionTitle)){
     toast('You can only add goals under your own position.','error');return;
   }
-  const goal={id:uid(),title,positionTitle,target:+document.getElementById('ng-tg').value,current:+document.getElementById('ng-cu').value,unit:document.getElementById('ng-u').value,semester:getSemester()};
+  // No target/current/unit collected anymore — the goal statement itself carries the measurable
+  // outcome (e.g. "Sign at least 50 new members"). Legacy records may still have those fields;
+  // new ones simply don't, and every renderer treats g.title as the complete goal.
+  const goal={id:uid(),title,positionTitle,semester:getSemester()};
   D.goals.push(goal);
+  if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Adding…';}
   try{
     await saveD('goals');
     closeM(null,document.getElementById('m-addgoal'));document.getElementById('ng-t').value='';renderTasks();toast('Goal added','success');
   }catch(e){
     D.goals=D.goals.filter(g=>g.id!==goal.id);
     toast('Failed to add goal. Please try again.','error');
+  }finally{
+    if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Add Goal';}
   }
 }
 // Full control (edit details, delete) belongs to whoever created/delegated the task — the

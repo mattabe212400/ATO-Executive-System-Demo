@@ -65,7 +65,8 @@
      grid item can overflow its own track's box even once collapsed to one column, forcing the
      WHOLE .content area to scroll horizontally instead of the intended per-table .tw scroll.
      minmax(0,1fr) zeroes the track's automatic minimum, the same fix .cal-cell needed. */
-  .g4,.g3,.g2,.g21,.gg{grid-template-columns:minmax(0,1fr)!important}
+  .g4,.g3,.g2,.g21,.gg,.sgp-grid{grid-template-columns:minmax(0,1fr)!important}
+  .sgp-card,.sgp-standard{padding:12px 13px}
   #d-officer-row{grid-template-columns:minmax(0,1fr)!important}
   /* Explicit ids instead of a >div:last-child structural selector — that pattern silently
      stopped matching Chaplain Hub's grids once #ch-full-view/#ch-member-view were introduced,

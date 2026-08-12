@@ -5,6 +5,7 @@
 let _importType = null; // 'members' | 'grades' | 'positionGoals' | 'bylaws' | 'committeeProgram' | 'bibleStudyProgram' | 'bibleStudyChapters'
 let _importRows = [];   // parsed rows staged for commit
 let _lastCsvText = null; // cached for update-mode toggle re-parse
+let _importSkippedCount = 0; // set by impBuildPositionGoalRows so doImport's success toast can report it post-commit, since the preview (which lists skip reasons) disappears once the modal closes
 // Which committee a 'committeeProgram' import targets — set by coOpenImportProgram() (js/committees.js)
 // just before calling openImportModal('committeeProgram'). Unlike every other import type, this one
 // isn't chapter-singleton (there are many committees), so the modal needs to know which one.
@@ -37,11 +38,12 @@ function openImportModal(type) {
   if (!allowed) { toast('You do not have permission to import this data.', 'error'); return; }
   _importType = type;
   _importRows = [];
+  _importSkippedCount = 0;
   const titles = { members: 'Import Members', grades: 'Import Grades', positionGoals: 'Import Goal Sheet', bylaws: 'Import Bylaws', committeeProgram: 'Import Committee Program', bibleStudyProgram: 'Import Bible Study Program', bibleStudyChapters: 'Import Bible Study Program', alumni: 'Import Alumni Directory' };
   const instructions = {
     members: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Grad Year</em>, <em>Class Year</em>, <em>Role</em>, <em>Live In</em>, <em>Major</em>, <em>Email</em>, <em>Phone</em>, <em>Hometown</em><br><span style="color:var(--ht)">Toggle "Update existing members" below to overwrite info for names already in the roster.</span>`,
     grades:  `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Cumulative GPA</em>, <em>Semester GPA</em><br><span style="color:var(--ht)">Members must already exist in the roster. Unmatched names are skipped.</span>`,
-    positionGoals: `Upload a CSV with these columns (header row required):<br><strong>Position</strong> (required, must match one of this chapter's officer titles), <strong>Title</strong> (required), <em>Target</em>, <em>Current</em>, <em>Unit</em><br><span style="color:var(--ht)">One row per semester goal. Rows with a Position that doesn't match a real officer title are skipped.</span>`,
+    positionGoals: `Upload a CSV with these columns (header row required):<br><strong>Position</strong> (required, must match one of this chapter's officer titles), <strong>Goal</strong> (required — the full goal statement, e.g. "Raise at least $5,000 for the national philanthropy this semester")<br><span style="color:var(--ht)">One row per semester goal — the same position can appear on multiple rows to give it multiple goals. Rows with a Position that doesn't match a configured chapter position are skipped. Legacy 5-column files (<strong>Position, Title, Target, Current, Unit</strong>) are still accepted — Title is used as the goal statement and the progress columns are ignored.</span>`,
     bylaws:  `Upload a CSV with these columns (header row required):<br><strong>Article</strong> (required), <em>Section</em>, <strong>Content</strong> (required, HTML supported e.g. &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;)<br><span style="color:var(--ht)">One row per section. Rows sharing the same Article are combined into one bylaw article, in the order they appear. This replaces your chapter's entire Bylaws section.</span>`,
     committeeProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em><br><span style="color:var(--ht)">One row per week/session of this committee's program. This replaces this committee's entire program. Other committees are unaffected.</span>`,
     bibleStudyProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>Understanding</em>, <em>Discussion</em><br><span style="color:var(--ht)">One row per week of the Bible study curriculum. Understanding and Discussion are optional, longer-form fields shown in each week's click-through detail view. Use &lt;br&gt; for line breaks instead of a literal line break inside the cell. This replaces the chapter's entire Bible Study Program.</span>`,
@@ -147,13 +149,24 @@ function impClassYearFromGradYear(gradYear) {
 // ── PREVIEW ──
 
 function impPreview(text) {
-  const { rows } = impParseCSV(text);
+  const { headers, rows } = impParseCSV(text);
   const preview = document.getElementById('imp-preview');
   const commitBtn = document.getElementById('imp-commit');
 
   if (!rows.length) {
     preview.innerHTML = `<div style="color:var(--rd);font-size:12px;padding:8px 0">No data rows found. Make sure the file has a header row and at least one data row.</div>`;
     commitBtn.style.display = 'none';
+    return;
+  }
+
+  // Goal Sheet CSVs need a goal-statement column under one of its two valid names — Goal (current
+  // format) or Title (legacy format, both accepted per file, never mixed row-by-row). Neither
+  // present means this isn't a Goal Sheet CSV at all, so reject the whole file up front with one
+  // clear message instead of 1 confusing "blank goal" skip per row.
+  if (_importType === 'positionGoals' && !headers.includes('goal') && !headers.includes('title')) {
+    preview.innerHTML = `<div style="color:var(--rd);font-size:12px;padding:8px 0">This file needs a <strong>Goal</strong> column (or the legacy <strong>Title</strong> column) with the semester goal statement for each row.</div>`;
+    commitBtn.style.display = 'none';
+    _importRows = [];
     return;
   }
 
@@ -269,23 +282,58 @@ function impBuildGradeRows(rows, previewEl) {
   return toUpdate;
 }
 
+// Plain Levenshtein edit distance — used only to suggest a likely-intended position in a skip
+// message, never to auto-match. A row's Position still has to match a real configured title
+// exactly (case/whitespace-insensitively) to actually import; this never silently substitutes
+// a near-miss ("Risk Management" is NOT quietly treated as "Risk Manager").
+function impLevenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+    dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  }
+  return dp[m][n];
+}
+function impSuggestPosition(positionRaw, titles) {
+  const low = positionRaw.toLowerCase().trim();
+  let best = null, bestDist = Infinity, tie = false;
+  titles.forEach(t => {
+    const d = impLevenshtein(low, t.toLowerCase());
+    if (d < bestDist) { bestDist = d; best = t; tie = false; }
+    else if (d === bestDist) { tie = true; }
+  });
+  // Only surface a suggestion when there's one clear closest match, close enough to plausibly be
+  // the same position typo'd or reworded — otherwise stay silent rather than guess.
+  return (best && !tie && bestDist <= Math.max(3, Math.ceil(low.length * 0.3))) ? best : null;
+}
+
 function impBuildPositionGoalRows(rows, previewEl) {
   const toAdd = [], skipped = [];
   // Case-insensitive match against this chapter's real officer titles — a typo'd or made-up
   // Position isn't silently accepted, since the whole point of this import is one goal sheet
   // per position, and a goal nobody's position dropdown can find is worse than no goal at all.
+  const chapterTitles = chapterPositionTitles();
   const titlesByLower = {};
-  chapterPositionTitles().forEach(t => { titlesByLower[t.toLowerCase().trim()] = t; });
+  chapterTitles.forEach(t => { titlesByLower[t.toLowerCase().trim()] = t; });
 
   rows.forEach((row, i) => {
-    // 'title' is deliberately NOT a synonym for Position here (unlike the member-import position
-    // column) — in this CSV shape it's the goal's own Title column, and the two must not collide.
     const positionRaw = impCol(row, 'position', 'officer', 'officer title', 'role');
     const position = positionRaw ? titlesByLower[positionRaw.toLowerCase().trim()] : null;
-    if (!positionRaw) { skipped.push('Row ' + (i + 2) + ': blank position'); return; }
-    if (!position) { skipped.push('Row ' + (i + 2) + ': "' + positionRaw + '" doesn\'t match a chapter position'); return; }
-    const title = impCol(row, 'title', 'goal', 'goal title', 'task', 'name');
-    if (!title) { skipped.push('Row ' + (i + 2) + ': blank goal title'); return; }
+    if (!positionRaw) { skipped.push('Row ' + (i + 2) + ': blank Position'); return; }
+    if (!position) {
+      const suggestion = impSuggestPosition(positionRaw, chapterTitles);
+      skipped.push('Row ' + (i + 2) + ': "' + positionRaw + '" does not match a configured chapter position.' + (suggestion ? ' Did you mean "' + suggestion + '"?' : ''));
+      return;
+    }
+    // Goal (current format) takes precedence over Title (legacy format) when a file somehow has
+    // both — 'title' is never a synonym for the Position column here, unlike the member import.
+    const title = impCol(row, 'goal', 'title', 'goal title', 'task', 'name');
+    if (!title) { skipped.push('Row ' + (i + 2) + ': blank Goal'); return; }
+    // Target/Current/Unit are legacy-only columns, kept as internal safe defaults so old-format
+    // rows still round-trip through analytics that read them (e.g. Officer Accountability's Goal
+    // Progress stat) — never collected from new-format rows and never shown in the Goals UI.
     const target = parseFloat(impCol(row, 'target', 'goal target')) || 0;
     const current = parseFloat(impCol(row, 'current', 'progress')) || 0;
     const unit = impCol(row, 'unit', 'units') || '';
@@ -296,16 +344,17 @@ function impBuildPositionGoalRows(rows, previewEl) {
   if (toAdd.length) {
     html += `<div style="font-size:12px;font-weight:600;color:var(--gn);margin-bottom:6px">${toAdd.length} goal${toAdd.length !== 1 ? 's' : ''} to import:</div>`;
     html += `<div style="max-height:200px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">`;
-    html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Position</th><th style="padding:5px 8px;text-align:left">Goal</th><th style="padding:5px 8px;text-align:left">Target</th></tr></thead><tbody>`;
+    html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Position</th><th style="padding:5px 8px;text-align:left">Goal</th><th style="padding:5px 8px;text-align:left">Status</th></tr></thead><tbody>`;
     toAdd.forEach((g, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:500">${esc(g.positionTitle)}</td><td style="padding:5px 8px;color:var(--mt)">${esc(g.title)}</td><td style="padding:5px 8px;color:var(--mt)">${g.current}/${g.target} ${esc(g.unit)}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px;font-weight:500">${esc(g.positionTitle)}</td><td style="padding:5px 8px;color:var(--mt)">${esc(g.title)}</td><td style="padding:5px 8px;color:var(--gn-tx)">Valid</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
   if (skipped.length) {
     html += `<div style="font-size:11.5px;color:var(--ht);margin-top:8px"><strong>${skipped.length} skipped:</strong> ${skipped.map(s => esc(s)).join('; ')}</div>`;
   }
+  _importSkippedCount = skipped.length;
   previewEl.innerHTML = html;
   return toAdd;
 }
@@ -497,7 +546,7 @@ async function doImport() {
       _importRows.forEach(g => D.goals.push(g));
       await saveD('goals');
       renderTasks();
-      toast(`${_importRows.length} goal${_importRows.length !== 1 ? 's' : ''} imported`, 'success');
+      toast(`${_importRows.length} goal${_importRows.length !== 1 ? 's' : ''} imported` + (_importSkippedCount ? `, ${_importSkippedCount} row${_importSkippedCount !== 1 ? 's' : ''} skipped` : ''), 'success');
     } else if (_importType === 'bylaws') {
       if (!D.settings) D.settings = {};
       D.settings.bylaws = _importRows;
@@ -588,11 +637,11 @@ function impDownloadTemplate(type) {
     csv = 'Thursday Date,Thu Event,Thu Members,Fri Event,Fri Members,Sat Event,Sat Members\n2026-09-03,,John Smith;Jane Doe,,John Smith;Jane Doe,Bid Day,John Smith;Jane Doe;Alex Brown';
     filename = 'sober_schedule_template.csv';
   } else if (type === 'positionGoals') {
-    csv = 'Position,Title,Target,Current,Unit\n'
-      + 'President,Chapter GPA above 3.2,3.2,3.05,GPA\n'
-      + 'Treasurer,Collect dues on time,95,60,% paid\n'
-      + 'Philanthropy,Raise funds for national philanthropy,5000,1200,dollars raised\n'
-      + 'Social,Host social events this semester,6,2,events';
+    csv = 'Position,Goal\n'
+      + 'President,Maintain a chapter cumulative GPA above 3.2\n'
+      + 'Treasurer,Collect at least 95% of member dues by the semester deadline\n'
+      + 'Philanthropy,Raise at least $5000 for the national philanthropy this semester\n'
+      + 'Social,Host at least 6 chapter social events this semester';
     filename = 'goal_sheet_template.csv';
   } else if (type === 'bylaws') {
     // Blank on purpose — headers only, no pre-filled articles/content, since bylaws vary

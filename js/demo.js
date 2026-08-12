@@ -104,13 +104,31 @@ function loadDemoData(){
     {id:'t12',title:'Alumni newsletter draft',assignedTo:'President',positionTitle:'Alumni',priority:'low',status:'in_progress',dueDate:future(12),desc:'',committeeId:null,semester:sem},
   ];
 
-  // ── GOALS ──
+  // ── GOALS — Semester Goals are a defined statement, not a progress tracker: the measurable
+  // outcome lives inside the goal text itself (no separate target/current/unit). Spread across 9
+  // positions so the President/VP chapter-wide card grid has real density to demonstrate, with
+  // Treasurer intentionally left at exactly one goal and Membership Educator/Recruitment each at
+  // exactly three, per the redesign's demo-data spec. ──
   const goals = [
-    {id:'g01',title:'Chapter Attendance Rate',positionTitle:'President',current:82,target:90,unit:'%',semester:sem},
-    {id:'g02',title:'New Members This Semester',positionTitle:'Recruitment',current:14,target:20,unit:'members',semester:sem},
-    {id:'g03',title:'Dues Collection Rate',positionTitle:'Treasurer',current:87,target:95,unit:'%',semester:sem},
-    {id:'g04',title:'Service Hours',positionTitle:'Community Service',current:312,target:500,unit:'hours',semester:sem},
-    {id:'g05',title:'GPA Above Chapter Average',positionTitle:'Scholarship',current:11,target:18,unit:'members',semester:sem},
+    {id:'g01',title:'Increase formal chapter attendance to at least 75% this semester',positionTitle:'President',semester:sem},
+    {id:'g02',title:'Maintain a chapter cumulative GPA above 3.2',positionTitle:'President',semester:sem},
+    {id:'g03',title:'Complete the IFC risk-management compliance report on time',positionTitle:'Vice President',semester:sem},
+    {id:'g04',title:'Hold a monthly officer accountability review with every position',positionTitle:'Vice President',semester:sem},
+    {id:'g05',title:'Collect at least 95% of member dues by the semester deadline',positionTitle:'Treasurer',semester:sem},
+    {id:'g06',title:'Sign at least 50 new members through informal recruitment',positionTitle:'Recruitment',semester:sem},
+    {id:'g07',title:'Sign at least three new members through formal recruitment',positionTitle:'Recruitment',semester:sem},
+    {id:'g08',title:'Build a pipeline of at least 10 qualified leads for the next recruitment team',positionTitle:'Recruitment',semester:sem},
+    {id:'g09',title:'Achieve at least 90% new-member class retention',positionTitle:'Membership Educator',semester:sem},
+    {id:'g10',title:'Achieve a new-member class cumulative GPA of at least 3.2',positionTitle:'Membership Educator',semester:sem},
+    {id:'g11',title:'Complete at least 400 community-service hours as a new-member class',positionTitle:'Membership Educator',semester:sem},
+    {id:'g12',title:'Raise at least $5,000 for the national philanthropy this semester',positionTitle:'Philanthropy',semester:sem},
+    {id:'g13',title:'Host at least three philanthropy fundraising events this semester',positionTitle:'Philanthropy',semester:sem},
+    {id:'g14',title:'Host at least 6 chapter social events this semester',positionTitle:'Social',semester:sem},
+    {id:'g15',title:'Grow the chapter Instagram audience to at least 2,750 followers',positionTitle:'Social',semester:sem},
+    {id:'g16',title:'Increase participation in Green Dot bystander-intervention training to at least 75% of members',positionTitle:'Risk Manager',semester:sem},
+    {id:'g17',title:'Complete a risk-management walkthrough before every registered social event',positionTitle:'Risk Manager',semester:sem},
+    {id:'g18',title:'Send an alumni newsletter at least twice this semester',positionTitle:'Alumni',semester:sem},
+    {id:'g19',title:'Grow the verified alumni contact list to at least 400 alumni',positionTitle:'Alumni',semester:sem},
   ];
 
   // ── NOTES ──

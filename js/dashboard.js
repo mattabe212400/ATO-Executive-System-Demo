@@ -101,8 +101,15 @@
   const rv2=document.getElementById('ring-v2');if(rv2)rv2.textContent=avg+'%';
   const rs=document.getElementById('ring-s');if(rs)rs.textContent=Math.round(tot*avg/100)+' / '+tot+' members';
 
-  // ── GOALS ──
-  document.getElementById('d-goals').innerHTML=D.goals.map(g=>{const p=Math.min(pc(g.current,g.target),100);return`<div class="pr"><span class="pl">${esc(g.title)}</span><div class="pb"><div class="pf" style="width:${p}%;background:${pgc(p)}"></div></div><span class="pv">${p}%</span></div>`;}).join('')||'<div style="color:var(--ht);font-size:12px;padding:8px 0">No goals yet.</div>';
+  // ── GOALS ── same position-scoping as the Tasks & Goals page's own renderTasks() (leads see
+  // every position, everyone else only their own) — this preview card reads the same D.goals
+  // array, so it must never show a position's goal to someone unauthorized to see that position.
+  {
+    const dgLead=isLeadUser();
+    const dgVisible=(D.goals||[]).filter(g=>canSeePositionGroup(g.positionTitle));
+    document.getElementById('d-goals').innerHTML=dgVisible.length?dgVisible.slice(0,5).map(g=>`<div class="pr" style="align-items:flex-start"><i class="ti ti-target" style="font-size:11px;color:var(--gold-tx);margin-top:3px;flex-shrink:0"></i><span style="font-size:12px;line-height:1.4;flex:1">${dgLead?`<strong>${esc(g.positionTitle||'Unassigned')}:</strong> `:''}${esc(g.title)}</span></div>`).join('')
+      :'<div style="color:var(--ht);font-size:12px;padding:8px 0">No goals yet.</div>';
+  }
 
   // ── NOTES ──
   const notesEl=document.getElementById('d-notes');

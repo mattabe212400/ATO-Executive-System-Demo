@@ -179,21 +179,40 @@ function renderTasks(){
 
   const dn=visibleTasks.filter(t=>t.status==='done').length;const ov=visibleTasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
   const tot=visibleTasks.length;
-  const goalPct=visibleGoals.length?Math.round(visibleGoals.reduce((s,g)=>s+Math.min(pc(g.current,g.target),100),0)/visibleGoals.length):null;
-  document.getElementById('t-kpi').innerHTML=statStrip(lead?'Total tasks':'My tasks',tot,sem,'neutral')+statStrip('Complete',dn,(tot?Math.round(dn/tot*100):0)+'% rate'+(goalPct!==null?' · goals '+goalPct+'%':''),dn>0?'up':'neutral')+statStrip('In progress',visibleTasks.filter(t=>t.status==='in_progress').length,'Active','neutral')+statStrip('Overdue',ov,ov>0?'Action needed':'None',ov>0?'down':'neutral');
+  document.getElementById('t-kpi').innerHTML=statStrip(lead?'Total tasks':'My tasks',tot,sem,'neutral')+statStrip('Complete',dn,(tot?Math.round(dn/tot*100):0)+'% rate',dn>0?'up':'neutral')+statStrip('In progress',visibleTasks.filter(t=>t.status==='in_progress').length,'Active','neutral')+statStrip('Overdue',ov,ov>0?'Action needed':'None',ov>0?'down':'neutral');
 
-  // ── Semester Goals — grouped by the position responsible for each one. Goals created before
-  // this redesign (or with no position set) fall into an "Unassigned" group rather than vanishing.
+  // ── Semester Goals — defined outcomes, not progress trackers. Grouped by the position
+  // responsible for each one; goals created before this redesign (or with no position set) fall
+  // into an "Unassigned" group rather than vanishing. Legacy records may still carry
+  // target/current/unit from the old progress-tracker shape — deliberately never read again here;
+  // g.title alone is the full goal statement now, for both old and new records.
+  const goalHeading=document.getElementById('tasks-goals-heading');
+  if(goalHeading)goalHeading.textContent=lead?'Semester Goals':'My Semester Goals';
+  const goalSub=document.getElementById('t-goals-sub');
+  if(goalSub){
+    const myPos=myPositionTitles().filter(_positionStillExists);
+    if(!lead&&myPos.length){goalSub.style.display='';goalSub.textContent=myPos.join(' & ');}
+    else goalSub.style.display='none';
+  }
   const posSort=(a,b)=>a==='Unassigned'?1:b==='Unassigned'?-1:a.localeCompare(b);
   const goalGroups={};
   visibleGoals.forEach(g=>{const p=g.positionTitle||'Unassigned';(goalGroups[p]=goalGroups[p]||[]).push(g);});
   const goalPositions=Object.keys(goalGroups).sort(posSort);
-  document.getElementById('t-goals').innerHTML=goalPositions.length?goalPositions.map(pos=>`
-    <div style="margin-bottom:16px">
-      <div style="font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${esc(pos)}</div>
-      <div class="gg">${goalGroups[pos].map(g=>{const p=Math.min(pc(g.current,g.target),100);return`<div style="position:relative"><div style="display:flex;justify-content:space-between;margin-bottom:4px;padding-right:22px"><span style="font-size:12px;font-weight:500">${esc(g.title)}</span><span style="font-size:11px;color:var(--mt)">${g.current}/${g.target} ${esc(g.unit)}</span></div><div class="pb" style="height:5px"><div class="pf" style="width:${p}%;background:${pgc(p)}"></div></div>${canEdit&&ownsPositionRecord(g.positionTitle)?`<button class="ib" style="position:absolute;top:0;right:0;width:20px;height:20px;font-size:10px;color:var(--ht)" onclick="deleteGoal('${g.id}')" aria-label="Delete goal ${esc(g.title)}" title="Delete goal"><i class="ti ti-x"></i></button>`:''}</div>`;}).join('')}</div>
-    </div>`).join('')
-    :es('ti-target','amber','No goals yet','Set semester goals for each position to track your chapter\'s progress.',`<button class="btn" onclick="openM('m-addgoal')"><i class="ti ti-plus"></i>Add Goal</button>`);
+  const sgpRow=g=>`<li class="sgp-row"><i class="ti ti-target sgp-ico" aria-hidden="true"></i><span class="sgp-text">${esc(g.title)}</span>${canEdit&&ownsPositionRecord(g.positionTitle)?`<button class="ib sgp-del" onclick="deleteGoal('${g.id}')" aria-label="Delete goal ${esc(g.title)}" title="Delete goal"><i class="ti ti-x"></i></button>`:''}</li>`;
+  const tGoalsEl=document.getElementById('t-goals');
+  if(!goalPositions.length){
+    tGoalsEl.innerHTML=lead
+      ?es('ti-target','amber','No goals yet','Set semester goals for each position to track your chapter\'s priorities.',canEdit?`<button class="btn" onclick="openM('m-addgoal')"><i class="ti ti-plus"></i>Add Goal</button>`:'')
+      :`<div class="sgp-standard"><div class="sgp-empty-msg">No semester goals have been assigned to your position yet.</div></div>`;
+  }else if(lead){
+    // President/VP: one card per position, up to 3 per row on wide desktop (.sgp-grid).
+    tGoalsEl.innerHTML=`<div class="sgp-grid">${goalPositions.map(pos=>`<div class="sgp-card"><div class="sgp-card-hd"><h4 class="sgp-pos" style="margin:0">${esc(pos)}</h4><span class="sgp-count">${goalGroups[pos].length} Goal${goalGroups[pos].length!==1?'s':''}</span></div><ul class="sgp-list">${goalGroups[pos].map(sgpRow).join('')}</ul></div>`).join('')}</div>`;
+  }else{
+    // Standard officer: one full-width card, grouped by position only when they hold more than
+    // one (a single-position officer already sees their position named in #t-goals-sub above).
+    const showLabel=goalPositions.length>1;
+    tGoalsEl.innerHTML=`<div class="sgp-standard">${goalPositions.map(pos=>`<div class="sgp-group">${showLabel?`<h4 class="sgp-pos" style="margin:0 0 8px">${esc(pos)}</h4>`:''}<ul class="sgp-list">${goalGroups[pos].map(sgpRow).join('')}</ul></div>`).join('')}</div>`;
+  }
 
   // ── Task Board — one mini status-board per position, instead of one board mixing everyone's
   // tasks together. A position only gets a section once it has at least one task, so delegating
