@@ -294,7 +294,7 @@ function renderMembers(){
   if(impBtn) impBtn.style.display=canEdit?'':'none';
 
   const newMemberCount=D.members.filter(m=>(m.memberStatus||'Active')==='New Member').length;
-  document.getElementById('m-kpi').innerHTML=statStrip('Active members',D.members.length,getSemester(),'neutral')+statStrip('Live-in',D.members.filter(m=>m.liveIn).length,'Chapter house','neutral')+statStrip('New Members',newMemberCount,'This semester','neutral')+statStrip('Graduating',D.members.filter(m=>m.year===2027).length,'Class of 2027','neutral');
+  document.getElementById('m-kpi').innerHTML=statStrip('Total Members',D.members.length,getSemester(),'neutral')+statStrip('Live-in',D.members.filter(m=>m.liveIn).length,'Chapter house','neutral')+statStrip('New Members',newMemberCount,'This semester','neutral')+statStrip('Graduating',D.members.filter(m=>m.year===2027).length,'Class of 2027','neutral');
   const editCol=canEdit?'<th></th>':'';
   const colCount=9+(canEdit?1:0);
   const q=(document.getElementById('m-search')||{value:''}).value.toLowerCase();

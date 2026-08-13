@@ -17,7 +17,7 @@
   // ── KPI STAT STRIP ── (one bordered strip with internal dividers, not four identical cards)
   document.getElementById('d-kpi').innerHTML=
     statStrip('Chapter Attendance',avg+'%',avg>=85?'Above 85% target':'Below 85% target',avg>=85?'up':'down')+
-    statStrip('Active Members',tot,getSemester()+' roster','neutral')+
+    statStrip('Total Members',tot,getSemester()+' roster','neutral')+
     statStrip('Open Tasks',openT,ovT>0?ovT+' overdue':'All on track',ovT>0?'down':'neutral')+
     (isViewer?'':statStrip('Active Cases',cas,cas>0?'Requires attention':'No open cases',cas?'down':'neutral'));
 

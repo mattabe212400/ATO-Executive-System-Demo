@@ -1092,7 +1092,7 @@ function renderSettings(){
     ['Chapter',D.settings.chapterName||CURRENT_USER?.chapterName||'N/A'],
     ['University',D.settings.university||CURRENT_USER?.university||'N/A'],
     ['Semester',getSemester()],
-    ['Active members',D.members.length],
+    ['Total members',D.members.length],
     ['Your role',CURRENT_USER?CURRENT_USER.title:'N/A'],
     ['Last login',lastLoginDisplay]
   ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12.5px"><span style="color:var(--mt)">${esc(l)}</span><span style="font-weight:500">${esc(v)}</span></div>`).join('');
