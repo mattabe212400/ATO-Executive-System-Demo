@@ -42,6 +42,16 @@ function rpSelect(el, type){
 function rpGenerate(type){
   const el=document.getElementById('rp-preview');
   if(!el)return;
+  // Reports has no empty-state handling of its own (it's a pure read-only generator over other
+  // modules' data, never an es()-managed list) — a brand-new chapter with no roster yet would
+  // otherwise see every section render as zeros/blank tables, which reads as "this chapter has
+  // zero attendance/dues/recruitment" rather than "nothing tracked yet." Caught once, here, rather
+  // than in every individual rp* section builder. (Dead branch in this demo — the seeded roster is
+  // never empty — kept in sync with the real app's js/reports.js anyway.)
+  if(!D.members||!D.members.length){
+    el.innerHTML=es('ti-file-analytics','slate','Nothing to report yet','Reports are generated from your chapter\'s attendance, finance, recruitment, and academic records — add members and start tracking data to see real reports here.','');
+    return;
+  }
   const fns={weekly:rpWeekly,attendance:rpAttendance,recruitment:rpRecruitment,finance:rpFinance,academics:rpAcademics,full:rpFull};
   el.innerHTML=(fns[type]||rpWeekly)(rpSem());
 }

@@ -612,7 +612,8 @@ async function deleteCheckin(memberId, type, refId, checkinId){
 
 async function deleteGradeCheck(id){
   if(!acCanAccess()){toast('You do not have permission to do this.','error');return;}
-  const ok=await confirmDialog('Delete Referral','Remove this membership review referral and all its check-in history?');
+  const gc=D.academics.gradeChecks.find(x=>x.id===id);
+  const ok=await confirmDialog('Delete Referral',`Remove ${gc?gc.memberName:'this'}'s membership review referral and all its check-in history?`);
   if(!ok)return;
   const removed=D.academics.gradeChecks.find(x=>x.id===id);
   D.academics.gradeChecks=D.academics.gradeChecks.filter(x=>x.id!==id);

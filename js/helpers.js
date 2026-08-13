@@ -235,6 +235,8 @@ function nav(page,el){
     members:[{id:'m-kpi',html:skKpi(4)},{id:'m-table',html:skRows(8,5)}],
     finance:[{id:'fin-kpi',html:skKpi(4)}],
     recruitment:[{id:'rc-kpi',html:skKpi(4)}],
+    kcrew:[{id:'kc-kpi',html:skKpi(4)}],
+    alumni:[{id:'al-kpi',html:skKpi(4)}],
   };
   if(skMap[page]){
     skMap[page].forEach(({id,html})=>{const e=document.getElementById(id);if(e)e.innerHTML=html;});

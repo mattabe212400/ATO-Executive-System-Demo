@@ -423,11 +423,22 @@ async function deleteFinanceDuesDoc(memberId){
   await deleteDoc(doc(_db, FS_PATH, FS_ID, 'financeDues', memberId));
 }
 
+// judicialCases is one document per case, created and never merged/archived — unlike financeDues
+// (one doc per member, semesters nested inside it, so it's naturally bounded by roster size) this
+// collection genuinely grows without limit over a chapter's lifetime. 1000 is nowhere close to a
+// real chapter's actual case volume (a few dozen cases a year, if that) — this is a defensive
+// ceiling against an unbounded read blowing up load time someday, not a behavior change for any
+// chapter using the product today. Ordered by updatedAt (most-recently-touched first) so if this
+// ceiling were ever actually reached, what gets dropped is old/stale history, not this semester's
+// open cases. (Dead code in this demo — _db is never set — kept in sync with the real app's
+// js/data.js anyway.)
+const JUDICIAL_CASES_QUERY_LIMIT = 1000;
+
 async function loadJudicialCases(){
   if(!_db || !_fbFns || !FS_ID || !_judicialCanAccess()) return;
-  const { collection, getDocs } = _fbFns;
+  const { collection, getDocs, query, orderBy, limit } = _fbFns;
   try{
-    const snaps = await getDocs(collection(_db, FS_PATH, FS_ID, 'judicialCases'));
+    const snaps = await getDocs(query(collection(_db, FS_PATH, FS_ID, 'judicialCases'), orderBy('updatedAt', 'desc'), limit(JUDICIAL_CASES_QUERY_LIMIT)));
     D.cases = [];
     snaps.forEach(s => { if(s.data().value) D.cases.push({ ...s.data().value, id: s.id }); });
     saveDCache();
@@ -437,8 +448,8 @@ async function loadJudicialCases(){
 }
 function startJudicialRealtimeSync(){
   if(!_db || !_fbFns || !FS_ID || !_judicialCanAccess()) return;
-  const { collection, onSnapshot } = _fbFns;
-  _financeJudicialUnsubs.push(onSnapshot(collection(_db, FS_PATH, FS_ID, 'judicialCases'), snap => {
+  const { collection, onSnapshot, query, orderBy, limit } = _fbFns;
+  _financeJudicialUnsubs.push(onSnapshot(query(collection(_db, FS_PATH, FS_ID, 'judicialCases'), orderBy('updatedAt', 'desc'), limit(JUDICIAL_CASES_QUERY_LIMIT)), snap => {
     if(_saveInFlight) return;
     const cases = [];
     snap.forEach(s => { if(s.data().value) cases.push({ ...s.data().value, id: s.id }); });
