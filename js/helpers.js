@@ -302,6 +302,10 @@ function openM(id){
     const fb=document.getElementById('nc-filedby');
     if(fb&&CURRENT_USER?.mid&&D.members.some(m=>m.id===CURRENT_USER.mid))fb.value=CURRENT_USER.mid;
   }
+  if(id==='m-add-achievement'){
+    const d=document.getElementById('tma-date');if(d)d.value=localDateStr();
+    const cat=document.getElementById('tma-category');if(cat)cat.selectedIndex=0;
+  }
   el.classList.add('open');
 }
 function closeM(e,el){if(e&&e.target!==el)return;el.classList.remove('open');}

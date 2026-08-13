@@ -25,7 +25,7 @@ This repo is the actual production frontend, running against fictional seed data
 
 ---
 
-## 26 Operational Modules
+## 27 Operational Modules
 
 | Module | What it does |
 |---|---|
@@ -53,6 +53,7 @@ This repo is the actual production frontend, running against fictional seed data
 | **Reports** | Exportable summaries: semester report, officer report, financial report, attendance report |
 | **Files & Documents** | Position-based folder storage, chapter-wide document library, per-committee file spaces |
 | **Settings** | Chapter profile, positions & permissions (read-only display), enabled modules, officer account list |
+| **True Merit Report Assistant** | President/VP select an academic year and generate a privacy-safe, structured JSON export of the chapter's operational data (recruitment, attendance, goals, service, philanthropy, academics, alumni engagement, and more), plus a lightweight chapter-achievements log. Meant to be paired with Alpha Tau Omega's current True Merit template and an AI workflow outside this app — it doesn't write or submit a report itself |
 | **House Management** | Weekly Meal Duties schedule (lunch/dinner slot assignment), example chore checklist across house areas with day-specific recurrence |
 | **House Life** | Room assignments and a configurable priority-points rubric for room/parking selection |
 

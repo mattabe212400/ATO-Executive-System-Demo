@@ -430,7 +430,10 @@ function loadDemoData(){
   D = {
     members, events, attendance, tasks, goals, notes,
     cases, shifts, transitions, committeeLeaders,
-    academics: { gpas, history: [{semester:'Fall 2023',chapterGpa:'3.24'},{semester:'Spring 2023',chapterGpa:'3.31'}] },
+    academics: { gpas, history: [
+      {semester:'Spring 2026',chapterGpa:'3.22',cumulativeChapterGpa:'3.26',memberCount:17,date:past(210)},
+      {semester:'Fall 2026',chapterGpa:'3.28',cumulativeChapterGpa:'3.29',memberCount:18,date:past(20)},
+    ] },
     finance: {
       dues, fines, expenses, plans: [],
       payments: [
@@ -585,6 +588,13 @@ function loadDemoData(){
       {id:'ann03',title:'New member training session added',body:'New members: an extra education session has been added this semester. Check the New Member Education page for the date and location.',postedBy:'m16',postedByName:'Mason Evans',postedAt:past(9),pinned:false,expiresAt:null},
     ],
     settings,
+    // Chapter Achievements — feeds the True Merit Report Assistant's awards_and_achievements
+    // section. Fictional milestones only, dated within the demo's current academic year.
+    achievements: [
+      {id:'ach01',title:'Chapter of Excellence — Regional Award',category:'National Recognition',date:past(45),description:'Recognized by the regional ATO leadership council for chapter operations and accountability.',semester:sem},
+      {id:'ach02',title:'100% Formal Recruitment Quota Met',category:'Recruitment Milestone',date:past(60),description:'Chapter met its full new-member quota through formal recruitment for the first time in three years.',semester:sem},
+      {id:'ach03',title:'Top Philanthropy Fundraiser on Campus',category:'Philanthropy Milestone',date:past(30),description:'Ranked #1 among Greek organizations on campus for total dollars raised this semester.',semester:sem},
+    ],
   };
 
   // Backfills anything not seeded above (incl. auto-seeding D.bibleStudyCurriculum's full

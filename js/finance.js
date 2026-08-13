@@ -1106,6 +1106,9 @@ function renderSettings(){
   if(typeof seRenderPositions==='function')seRenderPositions();
   // Member approval (general members, viewer role) — shown inside Chapter Settings card
   if(typeof seRenderMemberApproval==='function')seRenderMemberApproval();
+  // Chapter Achievements — feeds the True Merit Report Assistant's awards_and_achievements
+  // section (js/truemerit.js).
+  if(typeof tmRenderAchievements==='function')tmRenderAchievements();
 }
 
 function saveChapterInfo(){

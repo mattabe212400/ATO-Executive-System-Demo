@@ -27,7 +27,7 @@ const FS_KEYS = [
   'academics', 'recruitment', 'philanthropy', 'communityService', 'agenda',
   'alumni', 'ritual', 'newMemberEducation', 'transitionHub', 'settings',
   'kcrew', 'chores', 'social', 'healthHistory', 'chaplainHub', 'bibleStudyCurriculum',
-  'houseLife'
+  'houseLife', 'achievements'
 ];
 
 // ── Default structure for empty collections ──
@@ -110,6 +110,9 @@ function dDefaults(){
   // just guarantees the key exists before that runs.
   if(!D.houseLife)D.houseLife={rooms:[],parking:[],prefCriteria:[],prefScores:{}};
   if(typeof hlEnsureDefaults==='function')hlEnsureDefaults();
+  // Chapter Achievements — a lightweight, chapter-entered record feeding the True Merit Report
+  // Assistant's awards_and_achievements section (js/truemerit.js). Flat list, no migration needed.
+  if(!D.achievements)D.achievements=[];
 }
 
 // ── LOCAL CACHE ──

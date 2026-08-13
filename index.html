@@ -2355,9 +2355,18 @@
           <div class="card"><div class="card-hd"><span class="card-t">System Info</span></div><div id="se-info"></div></div>
           <div class="card"><div class="card-hd"><span class="card-t">Data Management</span></div>
             <div style="display:flex;flex-direction:column;gap:7px">
+              <div style="padding:11px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--surf2)">
+                <div style="font-size:12.5px;font-weight:600;margin-bottom:3px">True Merit Report Assistant</div>
+                <div style="font-size:11px;color:var(--mt);line-height:1.5;margin-bottom:9px">Generate a structured academic-year chapter dataset for use with Alpha Tau Omega's True Merit reporting process.</div>
+                <button class="btn btn-p" onclick="tmOpenModal()"><i class="ti ti-file-text"></i>Generate Annual Data Export</button>
+              </div>
               <button class="btn" onclick="xport('all')"><i class="ti ti-download"></i>Export all data (JSON)</button>
               <button class="btn" onclick="lgLogout()"><i class="ti ti-logout"></i>Log Out</button>
             </div>
+          </div>
+          <div class="card"><div class="card-hd"><span class="card-t">Chapter Achievements</span><button class="card-a" onclick="openM('m-add-achievement')">+ Add</button></div>
+            <div style="font-size:11px;color:var(--mt);line-height:1.5;margin-bottom:8px">Recorded chapter wins, honors, and milestones — included in the True Merit annual export.</div>
+            <div id="tm-achievements-list"></div>
           </div>
         </div>
       </div>
@@ -2712,6 +2721,30 @@
   <div class="fr"><div class="fld"><label for="ng-position">Position *</label><select id="ng-position"></select></div></div>
   <div class="fr"><div class="fld"><label for="ng-t">Semester goal *</label><input id="ng-t" placeholder="Example: Host three alumni professional-development workshops this semester"></div></div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-addgoal'))">Cancel</button><button class="btn btn-p" id="ng-submit" onclick="addGoal()">Add Goal</button></div>
+</div></div>
+
+<!-- True Merit Report Assistant — Academic Year selection + generation. President/VP only
+     (tmOpenModal()'s own gate); Cancel/Generate per the feature's UX spec. -->
+<div class="mo" role="dialog" aria-modal="true" id="m-truemerit" onclick="closeM(event,this)"><div class="md"><div class="md-t">True Merit Report Assistant<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-truemerit'))"><i class="ti ti-x"></i></button></div>
+  <div class="fr"><div class="fld"><label for="tm-ay">Academic Year</label><select id="tm-ay" onchange="tmUpdatePreview()"></select></div></div>
+  <div style="background:var(--surf2);border-radius:var(--r);padding:12px;margin-bottom:12px;font-size:12px;line-height:1.5">
+    <div style="margin-bottom:9px"><div style="font-weight:600;margin-bottom:2px">Included Semesters</div><div id="tm-semesters" style="color:var(--mt)"></div></div>
+    <div style="margin-bottom:9px"><div style="font-weight:600;margin-bottom:2px">Export Format</div><div style="color:var(--mt)">Structured JSON</div></div>
+    <div><div style="font-weight:600;margin-bottom:2px">Purpose</div><div style="color:var(--mt)">Designed to be paired with the current National True Merit template for AI-assisted report preparation.</div></div>
+  </div>
+  <div style="font-size:10.5px;color:var(--ht);line-height:1.6;margin-bottom:14px;display:flex;gap:6px;align-items:flex-start"><i class="ti ti-shield-lock" style="font-size:13px;margin-top:1px;flex-shrink:0"></i><span>Sensitive individual financial, academic, and Judicial Board information is summarized or excluded where appropriate. The export is intended for organizational reporting, not individual case review.</span></div>
+  <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-truemerit'))">Cancel</button><button class="btn btn-p" id="tm-generate-btn" onclick="tmGenerateAndDownload()"><i class="ti ti-download"></i>Generate & Download JSON</button></div>
+</div></div>
+
+<!-- Add Chapter Achievement — feeds the True Merit export's awards_and_achievements section. -->
+<div class="mo" role="dialog" aria-modal="true" id="m-add-achievement" onclick="closeM(event,this)"><div class="md"><div class="md-t">Add Chapter Achievement<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-add-achievement'))"><i class="ti ti-x"></i></button></div>
+  <div class="fr"><div class="fld"><label for="tma-title">Title *</label><input id="tma-title" placeholder="e.g. National Chapter of Excellence Award"></div></div>
+  <div class="fr c2">
+    <div class="fld"><label for="tma-category">Category</label><select id="tma-category"><option>Chapter Achievement</option><option>Recruitment Milestone</option><option>Philanthropy Milestone</option><option>Academic Achievement</option><option>University Recognition</option><option>National Recognition</option></select></div>
+    <div class="fld"><label for="tma-date">Date</label><input id="tma-date" type="date"></div>
+  </div>
+  <div class="fr"><div class="fld"><label for="tma-desc">Description</label><textarea id="tma-desc" placeholder="Brief description..."></textarea></div></div>
+  <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-add-achievement'))">Cancel</button><button class="btn btn-p" onclick="tmAddAchievement()">Add Achievement</button></div>
 </div></div>
 
 <div class="mo" role="dialog" aria-modal="true" id="m-addnote" onclick="closeM(event,this)"><div class="md" style="width:620px;max-height:90vh">
@@ -3077,6 +3110,7 @@
 <script src="js/search.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/import.js"></script>
+<script src="js/truemerit.js"></script>
 <script src="js/auth.js"></script>
 
 <!-- Demo bootstrap — seeds fictional data, auto-signs in, and stands in for the real Firebase
