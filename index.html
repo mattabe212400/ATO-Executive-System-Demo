@@ -1009,7 +1009,7 @@
         <button class="fin-tab active" data-tab="fin-overview" onclick="finTab(this,'fin-overview')">Overview</button>
         <button class="fin-tab" data-tab="fin-dues" onclick="finTab(this,'fin-dues')">Member Dues</button>
         <button class="fin-tab" data-tab="fin-fines" onclick="finTab(this,'fin-fines')">Fines</button>
-        <select id="fin-manage-select" aria-label="More Finance sections" onchange="finTab(this.selectedOptions[0],this.value)" style="height:33px;padding:0 8px;border:none;background:transparent;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer">
+        <select id="fin-manage-select" aria-label="More Finance sections" onchange="finTab(this.selectedOptions[0],this.value)" style="height:33px;border:none;background:transparent;font-family:inherit;cursor:pointer">
           <option value="" disabled selected>Manage</option>
           <option class="fin-tab" data-tab="fin-national" value="fin-national">National Dues</option>
           <option class="fin-tab" data-tab="fin-budget" value="fin-budget">Budget</option>
@@ -1129,7 +1129,7 @@
         </div>
         <div class="g2" style="margin-bottom:13px">
           <!-- One card holding every category as compact rows, not one card per category -->
-          <div class="card"><div class="card-hd"><span class="card-t">By Category</span></div><div id="fin-budget-cards"></div></div>
+          <div class="card"><div class="card-hd"><span class="card-t">By Category</span></div><div id="fin-budget-cards"></div><div id="fin-budget-flex-totals" style="margin-top:11px"></div></div>
           <div>
             <div class="card" style="margin-bottom:13px">
               <div class="card-hd"><span class="card-t" style="display:flex;align-items:center;gap:5px"><i class="ti ti-chart-donut" style="font-size:12px;color:var(--bl)"></i>Budget Breakdown</span></div>

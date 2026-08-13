@@ -387,7 +387,13 @@
 .fin-tab{padding:7px 14px;font-size:12px;font-weight:500;border:none;background:none;cursor:pointer;font-family:inherit;transition:color .12s}
 .fin-tab.active{color:var(--sky-tx);border-bottom:2px solid var(--sky);margin-bottom:-2px}
 .fin-tab:not(.active){color:var(--mt)}
-#fin-manage-select{color:var(--mt);border-bottom:2px solid transparent;transition:color .12s,border-color .12s;margin-bottom:-2px}
+/* Padding/font-size intentionally match .fin-tab exactly (including the responsive.css mobile
+   override below) — this select sits inline with the tab buttons and needs to read as one of
+   them, not a visually distinct control. font-size needs !important here (an ID selector, so it
+   still wins on specificity) to beat responsive.css's global `input,select,textarea{font-size:
+   16px!important}` anti-iOS-zoom rule — correct for every real form field, but this select is
+   acting as a nav tab, not a field a user fills in, so it shouldn't be floored to 16px. */
+#fin-manage-select{padding:7px 8px;font-size:12px!important;font-weight:500;color:var(--mt);border-bottom:2px solid transparent;transition:color .12s,border-color .12s;margin-bottom:-2px}
 #fin-manage-select.active{color:var(--sky-tx);border-bottom-color:var(--sky)}
 .fin-pay-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr)}
 

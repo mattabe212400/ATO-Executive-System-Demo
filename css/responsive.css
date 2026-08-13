@@ -113,6 +113,11 @@
   #fin-tabs-bar::-webkit-scrollbar{display:none}
   #rc-tabs-bar::-webkit-scrollbar{display:none}
   .fin-tab{white-space:nowrap;flex-shrink:0;padding:7px 11px;font-size:11.5px}
+  /* Same mobile size as .fin-tab above — kept in sync explicitly since #fin-manage-select isn't
+     a .fin-tab itself and would otherwise silently drift out of step with its neighbors.
+     !important beats this same file's input/select/textarea anti-zoom rule above — see the
+     longer explanation on the base #fin-manage-select rule in pages.css. */
+  #fin-manage-select{flex-shrink:0;padding:7px 8px;font-size:11.5px!important}
   .fin-profile-grid{grid-template-columns:1fr!important}
 
   /* ── DASHBOARD ── */

@@ -6,24 +6,29 @@ const FIN_SEMESTER_DUES_DEFAULT = 0;    // No default — must be set by Treasur
 const BUDGET_ALERT_THRESHOLD    = 0.85; // Warn when spending exceeds 85% of budget
 
 // Default categories — used as fallback when chapter has not customized yet.
-// Stored in D.settings.budgetCategories as [{name, color, icon}] for full customization.
+// Stored in D.settings.budgetCategories as [{name, color, icon, flexible}] for full
+// customization. `flexible` distinguishes fixed/required costs (rent, utilities, national dues —
+// can't realistically be cut mid-semester) from discretionary spending (events, scholarship —
+// where the exec board actually has room to adjust). Missing/undefined on an older chapter's
+// already-saved categories reads as flexible (see getCatFlexible()) — a safe default that never
+// mislabels a legacy category as a hard commitment it was never marked as.
 // Example category set for demo purposes — not any specific chapter's real budget.
 const FIN_DEFAULT_CATS = [
-  {name:'Housing Rent',          color:'var(--navy)', icon:'ti-home'},
-  {name:'Housing Maintenance',   color:'var(--navy)', icon:'ti-home'},
-  {name:'Housing Miscellaneous', color:'var(--navy)', icon:'ti-home'},
-  {name:'Utilities Electric',    color:'var(--am)',   icon:'ti-bolt'},
-  {name:'Utilities Water & Trash',color:'var(--am)',  icon:'ti-recycle'},
-  {name:'Administrative IFC Dues',  color:'var(--mt)', icon:'ti-building'},
-  {name:'Administrative Insurance', color:'var(--mt)', icon:'ti-shield'},
-  {name:'Events Recruitment',    color:'var(--bl)',   icon:'ti-user-plus'},
-  {name:'Events Social',         color:'var(--bl)',   icon:'ti-confetti'},
-  {name:'Events Philanthropy',   color:'var(--rd)',   icon:'ti-heart'},
-  {name:'Events Brotherhood',    color:'var(--bl)',   icon:'ti-users'},
-  {name:'Events Alumni',         color:'var(--bl)',   icon:'ti-users-group'},
-  {name:'Scholarship',           color:'var(--gn)',   icon:'ti-school'},
-  {name:'Risk Management',       color:'var(--rd)',   icon:'ti-shield-check'},
-  {name:'Miscellaneous',         color:'var(--ht)',   icon:'ti-dots'},
+  {name:'Housing Rent',          color:'var(--navy)', icon:'ti-home',       flexible:false},
+  {name:'Housing Maintenance',   color:'var(--navy)', icon:'ti-home',       flexible:false},
+  {name:'Housing Miscellaneous', color:'var(--navy)', icon:'ti-home',       flexible:false},
+  {name:'Utilities Electric',    color:'var(--am)',   icon:'ti-bolt',       flexible:false},
+  {name:'Utilities Water & Trash',color:'var(--am)',  icon:'ti-recycle',    flexible:false},
+  {name:'Administrative IFC Dues',  color:'var(--mt)', icon:'ti-building', flexible:false},
+  {name:'Administrative Insurance', color:'var(--mt)', icon:'ti-shield',   flexible:false},
+  {name:'Events Recruitment',    color:'var(--bl)',   icon:'ti-user-plus', flexible:true},
+  {name:'Events Social',         color:'var(--bl)',   icon:'ti-confetti',  flexible:true},
+  {name:'Events Philanthropy',   color:'var(--rd)',   icon:'ti-heart',     flexible:true},
+  {name:'Events Brotherhood',    color:'var(--bl)',   icon:'ti-users',     flexible:true},
+  {name:'Events Alumni',         color:'var(--bl)',   icon:'ti-users-group',flexible:true},
+  {name:'Scholarship',           color:'var(--gn)',   icon:'ti-school',    flexible:true},
+  {name:'Risk Management',       color:'var(--rd)',   icon:'ti-shield-check',flexible:true},
+  {name:'Miscellaneous',         color:'var(--ht)',   icon:'ti-dots',      flexible:true},
 ];
 function getBudgetCats(){
   const custom=D?.settings?.budgetCategories;
@@ -32,6 +37,9 @@ function getBudgetCats(){
 function getCatNames(){ return getBudgetCats().map(c=>c.name); }
 function getCatColor(name){ return getBudgetCats().find(c=>c.name===name)?.color||'var(--navy)'; }
 function getCatIcon(name){  return getBudgetCats().find(c=>c.name===name)?.icon||'ti-cash'; }
+// A category with no `flexible` field at all (saved before this feature existed) defaults to
+// flexible — only an explicit false marks it Non-Flexible.
+function getCatFlexible(name){ return getBudgetCats().find(c=>c.name===name)?.flexible!==false; }
 let FIN_ACTIVE_TAB = 'fin-overview';
 let FIN_CAN_EDIT = false;
 let FIN_SELECTED_SEM=null;
@@ -481,8 +489,12 @@ function finRenderBudget(){
     const pct=bud?Math.min(100,Math.round(spent/bud*100)):0;
     const rem=bud-spent;
     const col=pct>=90?'var(--rd)':pct>=70?'var(--am)':getCatColor(cat);
+    const flexible=getCatFlexible(cat);
     return`<div class="pr" style="align-items:flex-start">
-      <span class="pl" style="width:130px;padding-top:2px" title="${esc(cat)}"><i class="ti ${getCatIcon(cat)}" style="font-size:11px;margin-right:4px"></i>${cat}</span>
+      <span class="pl" style="width:130px;padding-top:2px" title="${esc(cat)}">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${flexible?'var(--gn)':'var(--rd)'};margin-right:5px;flex-shrink:0" title="${flexible?'Flexible':'Non-Flexible'}"></span>
+        <i class="ti ${getCatIcon(cat)}" style="font-size:11px;margin-right:4px"></i>${cat}
+      </span>
       <div style="flex:1;min-width:0">
         <div class="pb" style="width:100%"><div class="pf" style="width:${pct}%;background:${col}"></div></div>
         <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px">
@@ -493,6 +505,26 @@ function finRenderBudget(){
       <span style="width:95px;text-align:right;font-size:10.5px;color:var(--mt);flex-shrink:0;padding-top:2px">$${spent.toLocaleString()} / $${bud.toLocaleString()}</span>
     </div>`;
   }).join('');
+
+  // Non-Flexible vs Flexible totals — same split the chapter's own budget spreadsheet uses
+  // (fixed/required costs vs. discretionary spending), computed off allocated budget $, not spend.
+  const flexTotalsEl=document.getElementById('fin-budget-flex-totals');
+  if(flexTotalsEl){
+    const nonFlexTotal=getCatNames().filter(c=>!getCatFlexible(c)).reduce((s,c)=>s+(budget[c]||0),0);
+    const flexTotal=getCatNames().filter(c=>getCatFlexible(c)).reduce((s,c)=>s+(budget[c]||0),0);
+    const grandTotal=nonFlexTotal+flexTotal;
+    flexTotalsEl.innerHTML=grandTotal?`
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:var(--rd-bg);border-radius:var(--r-xs);padding:8px 10px">
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--rd-tx)">Non-Flexible</div>
+          <div style="font-size:14px;font-weight:700;color:var(--rd-tx)">$${nonFlexTotal.toLocaleString()}</div>
+        </div>
+        <div style="flex:1;background:var(--gn-bg);border-radius:var(--r-xs);padding:8px 10px">
+          <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gn-tx)">Flexible</div>
+          <div style="font-size:14px;font-weight:700;color:var(--gn-tx)">$${flexTotal.toLocaleString()}</div>
+        </div>
+      </div>`:'';
+  }
 
   finDrawBudgetDonut(budget);
 
@@ -582,25 +614,32 @@ function finRenderSettings(){
     const sem=finSem();
     const budget=finBudgetForSemester(sem);
     const ro=isCurrentSemester(sem)?'':' readonly style="opacity:.6;cursor:not-allowed"';
-    budInputs.innerHTML=getCatNames().map(cat=>`
+    budInputs.innerHTML=getCatNames().map(cat=>{
+      const flexible=getCatFlexible(cat);
+      return`
       <div style="display:flex;align-items:center;gap:9px">
         <i class="ti ${getCatIcon(cat)}" style="font-size:13px;color:${getCatColor(cat)};width:16px;flex-shrink:0"></i>
         <label style="font-size:12px;font-weight:500;flex:1">${cat}</label>
+        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 6px;border-radius:99px;flex-shrink:0;${flexible?'background:var(--gn-bg);color:var(--gn-tx)':'background:var(--rd-bg);color:var(--rd-tx)'}">${flexible?'Flexible':'Non-Flexible'}</span>
         <div style="display:flex;align-items:center;gap:5px">
           <span style="font-size:12px;color:var(--mt)">$</span>
           <input type="number" id="fin-bud-${cat.replace(/\s+/g,'-')}" value="${budget[cat]||0}" min="0" step="50"
             style="width:90px;height:28px;padding:0 7px;border:1px solid var(--bdr);border-radius:var(--r);font-size:12px;font-family:inherit;color:var(--tx);outline:none;text-align:right"
             oninput="finUpdateBudgetTotal()" onfocus="this.style.borderColor='var(--sky)'" onblur="this.style.borderColor='var(--bdr)'"${ro}>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     finUpdateBudgetTotal();
   }
   finRenderCatManager();
 }
 function finUpdateBudgetTotal(){
   const totalEl=document.getElementById('fin-budget-total');if(!totalEl)return;
-  const total=getCatNames().reduce((s,cat)=>{const el=document.getElementById('fin-bud-'+cat.replace(/\s+/g,'-'));return s+(el?parseFloat(el.value)||0:0);},0);
-  totalEl.textContent='Total: $'+total.toLocaleString();
+  const valueOf=cat=>{const el=document.getElementById('fin-bud-'+cat.replace(/\s+/g,'-'));return el?parseFloat(el.value)||0:0;};
+  const total=getCatNames().reduce((s,cat)=>s+valueOf(cat),0);
+  const nonFlexTotal=getCatNames().filter(c=>!getCatFlexible(c)).reduce((s,c)=>s+valueOf(c),0);
+  const flexTotal=total-nonFlexTotal;
+  totalEl.innerHTML=`Total: $${total.toLocaleString()} <span style="color:var(--rd-tx)">· Non-Flexible: $${nonFlexTotal.toLocaleString()}</span> <span style="color:var(--gn-tx)">· Flexible: $${flexTotal.toLocaleString()}</span>`;
 }
 function finSaveDuesSettings(){
   if(!canWrite()||!finCheckPerms()){toast('Only Treasurer, President, or VP can change dues settings.','error');return;}
@@ -1156,17 +1195,35 @@ function finRenderCatManager(){
   el.querySelectorAll('.fin-cat-icon-sel').forEach(sel=>finCatPreviewIcon(sel));
 }
 
+// Flexible = discretionary spending the exec board can realistically adjust (events, scholarship);
+// Non-Flexible = fixed/required costs (rent, utilities, national dues). A button rather than a
+// select so the red/green coloring itself carries the meaning at a glance, same convention as the
+// budget's own spent-vs-allocated color coding elsewhere on this tab.
+function finFlexToggleHtml(flexible){
+  return `<button type="button" class="fin-cat-flex-toggle btn" data-flexible="${flexible?'true':'false'}" onclick="finToggleCatFlexible(this)"
+    style="height:28px;padding:0 9px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border:1px solid transparent;flex-shrink:0;white-space:nowrap;${flexible?'background:var(--gn-bg);color:var(--gn-tx)':'background:var(--rd-bg);color:var(--rd-tx)'}"
+    title="Click to toggle">${flexible?'Flexible':'Non-Flexible'}</button>`;
+}
+function finToggleCatFlexible(btn){
+  const flexible=btn.dataset.flexible!=='true';
+  btn.dataset.flexible=flexible?'true':'false';
+  btn.textContent=flexible?'Flexible':'Non-Flexible';
+  btn.style.background=flexible?'var(--gn-bg)':'var(--rd-bg)';
+  btn.style.color=flexible?'var(--gn-tx)':'var(--rd-tx)';
+}
+
 function finCatRow(c,i,colorOpts,iconOpts){
   if(!colorOpts)colorOpts=FIN_CAT_COLOR_OPTS.map(o=>`<option value="${o.val}">${o.label}</option>`).join('');
   if(!iconOpts)iconOpts=FIN_CAT_ICON_OPTS.map(x=>`<option value="${x}">${x.replace('ti-','')}</option>`).join('');
   const selColor=colorOpts.replace(`value="${c.color}"`,`value="${c.color}" selected`);
   const selIcon=iconOpts.replace(`value="${c.icon}"`,`value="${c.icon}" selected`);
   const inp=`style="height:28px;padding:0 7px;border:1px solid var(--bdr);border-radius:var(--r-xs);font-size:11.5px;font-family:inherit;color:var(--tx);background:var(--surf);outline:none"`;
-  return`<div class="fin-cat-row" style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--bdr)">
+  return`<div class="fin-cat-row" style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--bdr);flex-wrap:wrap">
     <i class="ti fin-cat-icon-preview" style="font-size:14px;color:var(--mt);width:18px;flex-shrink:0"></i>
     <select class="fin-cat-icon-sel" onchange="finCatPreviewIcon(this)" ${inp} style="height:28px;padding:0 5px;font-size:11px;width:110px;flex-shrink:0">${selIcon}</select>
     <select class="fin-cat-color-sel" ${inp} style="height:28px;padding:0 5px;font-size:11px;width:80px;flex-shrink:0">${selColor}</select>
     <input class="fin-cat-name-inp" value="${esc(c.name)}" placeholder="Category name" ${inp} style="flex:1;min-width:80px">
+    ${finFlexToggleHtml(c.flexible!==false)}
     <button onclick="finMoveCatRow(this,-1)" class="btn" style="padding:0 6px;height:26px;font-size:11px" title="Move up" aria-label="Move ${esc(c.name)} category up"><i class="ti ti-chevron-up"></i></button>
     <button onclick="finMoveCatRow(this,1)" class="btn" style="padding:0 6px;height:26px;font-size:11px" title="Move down" aria-label="Move ${esc(c.name)} category down"><i class="ti ti-chevron-down"></i></button>
     <button onclick="finDeleteCatRow(this)" class="btn btn-d" style="padding:0 6px;height:26px;font-size:11px" aria-label="Delete ${esc(c.name)} category"><i class="ti ti-trash"></i></button>
@@ -1183,7 +1240,7 @@ function finAddCatRow(){
   const rows=document.getElementById('fin-cat-rows');
   if(!rows)return;
   const div=document.createElement('div');
-  div.innerHTML=finCatRow({name:'',color:'var(--navy)',icon:'ti-cash'},0);
+  div.innerHTML=finCatRow({name:'',color:'var(--navy)',icon:'ti-cash',flexible:true},0);
   rows.appendChild(div.firstElementChild);
   rows.querySelector('.fin-cat-row:last-child .fin-cat-name-inp')?.focus();
 }
@@ -1212,7 +1269,8 @@ function finSaveCats(){
     const name=(row.querySelector('.fin-cat-name-inp')?.value||'').trim();
     const color=row.querySelector('.fin-cat-color-sel')?.value||'var(--navy)';
     const icon=row.querySelector('.fin-cat-icon-sel')?.value||'ti-cash';
-    if(name)cats.push({name,color,icon});
+    const flexible=(row.querySelector('.fin-cat-flex-toggle')?.dataset.flexible??'true')==='true';
+    if(name)cats.push({name,color,icon,flexible});
   });
   if(!cats.length){toast('Add at least one category','error');return;}
   if(!D.settings)D.settings={};
