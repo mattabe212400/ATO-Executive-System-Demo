@@ -576,7 +576,7 @@ function finDrawBudgetDonut(budget){
     legend.innerHTML=segs.map(s=>`<div style="display:flex;align-items:center;gap:6px">
       <div style="width:8px;height:8px;border-radius:50%;background:${s.col};flex-shrink:0"></div>
       <span style="font-size:10.5px;color:var(--mt);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.cat)}</span>
-      <span style="font-size:10.5px;font-weight:600;flex-shrink:0">${Math.round(s.amt/total*100)}%</span>
+      <span style="font-size:10.5px;font-weight:600;flex-shrink:0">${(s.amt/total*100).toFixed(1)}%</span>
     </div>`).join('');
   }
 }
