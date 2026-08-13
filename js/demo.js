@@ -747,4 +747,270 @@ function toggleDemoBanner(){
   btn.title = collapsed ? 'Dismiss' : 'Show demo info';
 }
 
+// ══════════════════════════════════════════════
+// DEMO TRUE MERIT EXPORT — overrides js/truemerit.js's tmGenerateAndDownload() (loaded above this
+// file, so this redefinition wins) so a demo download never reflects the seeded persona's actual
+// dataset. Building the real export from D would either look sparse (this demo's roster is
+// deliberately small — see loadDemoData()) or, if D were padded up just to make the export look
+// good, would make every other page in the demo report numbers nobody entered. A canned, fully-
+// shaped showcase report keeps every other page honest while still letting a prospect open a
+// full, realistic annual export and see exactly what the real feature produces — including the
+// same structural "partial"/"unavailable" data_completeness sections the real export always
+// reports (e.g. no beginning-of-year headcount, no PR module) rather than a rosier shape that
+// oversells what the live product can actually track.
+// ══════════════════════════════════════════════
+function tmBuildDemoShowcaseReport(academicYear) {
+  const range = tmAcademicYearRange(academicYear);
+  if (!range) throw new Error('Invalid academic year: ' + academicYear);
+  const [fallLabel, springLabel] = range.semesters;
+  const fy = fallLabel.split(' ')[1], sy = springLabel.split(' ')[1];
+  const chapterName = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER?.chapterName) || 'Epsilon Chapter';
+  const university = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER?.university) || 'Overlook State University';
+
+  const chapter_overview = {
+    chapter_name: chapterName, university, academic_year: academicYear, included_semesters: range.semesters,
+    active_member_count: 84, beginning_of_year_membership: null, ending_membership: 84,
+    new_members_count: 24, graduates_count: null,
+    officer_positions: ['Chaplain', 'Historian', 'New Member Educator', 'President', 'Recruitment Chair', 'Risk Manager', 'Secretary', 'Social Chair', 'Treasurer', 'Vice President'],
+    committees: [
+      { name: 'Recruitment Committee', chair_position: true, member_count: 9 },
+      { name: 'Philanthropy Committee', chair_position: true, member_count: 11 },
+      { name: 'Social Committee', chair_position: true, member_count: 7 },
+      { name: 'Risk Management Committee', chair_position: true, member_count: 6 },
+      { name: 'Alumni Relations Committee', chair_position: false, member_count: 5 },
+    ],
+  };
+
+  const membership = {
+    total_members: 84, live_in_count: 46,
+    by_class_year: { Freshman: 19, Sophomore: 21, Junior: 23, Senior: 21 },
+    by_status: { Active: 79, 'New Member': 5 },
+    new_members_count: 24,
+    new_members_by_semester: { [fallLabel]: 14, [springLabel]: 10 },
+  };
+
+  const leadership_and_goals = {
+    goals: [
+      { position: 'President', goal: 'Raise overall chapter GPA above the all-campus fraternity average', semester: fallLabel, metric: 'GPA', target: 3.2, actual: 3.31, completion_percentage: 100, status: 'completed' },
+      { position: 'Recruitment Chair', goal: 'Extend 30 bids across both semesters', semester: springLabel, metric: 'bids', target: 30, actual: 27, completion_percentage: 90, status: 'in_progress' },
+      { position: 'Philanthropy Chair', goal: 'Raise $15,000 for St. Jude', semester: springLabel, metric: 'dollars', target: 15000, actual: 16250, completion_percentage: 100, status: 'completed' },
+      { position: 'Treasurer', goal: 'Achieve a 95% dues collection rate', semester: fallLabel, metric: 'percent', target: 95, actual: 93.1, completion_percentage: 98, status: 'in_progress' },
+      { position: 'Risk Manager', goal: 'Zero risk management violations for the year', semester: fallLabel, metric: null, target: null, actual: null, completion_percentage: null, status: null },
+      { position: 'Vice President', goal: 'Maintain 90%+ chapter meeting attendance', semester: springLabel, metric: 'percent', target: 90, actual: 91.4, completion_percentage: 100, status: 'completed' },
+    ],
+    tasks_summary: { total: 132, completed: 118, overdue: 6, completion_rate: 89.4 },
+    tasks_by_position: [
+      { position: 'President', tasks_total: 22, tasks_completed: 20, tasks_overdue: 1, completion_rate: 90.9 },
+      { position: 'Treasurer', tasks_total: 18, tasks_completed: 17, tasks_overdue: 0, completion_rate: 94.4 },
+      { position: 'Recruitment Chair', tasks_total: 26, tasks_completed: 22, tasks_overdue: 2, completion_rate: 84.6 },
+      { position: 'Philanthropy Chair', tasks_total: 15, tasks_completed: 14, tasks_overdue: 0, completion_rate: 93.3 },
+      { position: 'Social Chair', tasks_total: 20, tasks_completed: 17, tasks_overdue: 1, completion_rate: 85 },
+      { position: 'New Member Educator', tasks_total: 16, tasks_completed: 15, tasks_overdue: 1, completion_rate: 93.8 },
+      { position: 'Risk Manager', tasks_total: 15, tasks_completed: 13, tasks_overdue: 1, completion_rate: 86.7 },
+    ],
+    committees: [
+      { name: 'Recruitment Committee', description: 'Plans and executes fall/spring recruitment', has_chair: true, member_count: 9, program_weeks: 6 },
+      { name: 'Philanthropy Committee', description: 'Coordinates fundraising events and partner charities', has_chair: true, member_count: 11, program_weeks: 4 },
+      { name: 'Social Committee', description: 'Plans brotherhood and social events', has_chair: true, member_count: 7, program_weeks: 0 },
+      { name: 'Risk Management Committee', description: 'Oversees event safety and compliance', has_chair: true, member_count: 6, program_weeks: 0 },
+      { name: 'Alumni Relations Committee', description: 'Maintains alumni contact and engagement', has_chair: false, member_count: 5, program_weeks: 0 },
+    ],
+  };
+
+  const attendance = {
+    chapter_attendance_rate: 91.4, total_tracked_events: 34, mandatory_event_count: 21,
+    by_semester: { [fallLabel]: { attendance_rate: 92.6, mandatory_events: 11 }, [springLabel]: { attendance_rate: 90.1, mandatory_events: 10 } },
+    event_summaries: [
+      { title: 'Fall Chapter Meeting — Week 1', date: `${fy}-09-04`, type: 'chapter', semester: fallLabel, present_count: 78, tracked_count: 84 },
+      { title: 'Founders Day Formal', date: `${fy}-11-08`, type: 'brotherhood', semester: fallLabel, present_count: 80, tracked_count: 84 },
+      { title: 'Spring Chapter Meeting — Week 1', date: `${sy}-01-14`, type: 'chapter', semester: springLabel, present_count: 76, tracked_count: 84 },
+      { title: 'Founders Day 5K', date: `${sy}-03-02`, type: 'philanthropy', semester: springLabel, present_count: 71, tracked_count: 84 },
+    ],
+  };
+
+  const recruitment = {
+    total_prospects: 40, pipeline_by_stage: { Interested: 6, 'Bid Extended': 3, Accepted: 27, 'Not Continuing': 4 },
+    bids_extended: 30, bids_accepted: 27, bids_declined: null, new_members_from_recruitment: 27,
+    bid_acceptance_rate: 90, conversion_rate: 67.5,
+    goals_by_semester: { [fallLabel]: { target: 14, label: 'Fall bid target', actual: 14, status: 'completed' }, [springLabel]: { target: 16, label: 'Spring bid target', actual: 13, status: 'in_progress' } },
+    recruitment_events: [
+      { title: 'Fall Rush Week Kickoff', date: `${fy}-09-02`, semester: null, location: 'Chapter House', mandatory: true },
+      { title: 'Bid Day', date: `${fy}-09-20`, semester: null, location: 'Chapter House', mandatory: true },
+      { title: 'Spring Open House', date: `${sy}-01-22`, semester: null, location: 'Chapter House', mandatory: false },
+    ],
+  };
+
+  const member_education = {
+    new_member_class_size: 24, requirements_total: 8,
+    requirement_completion: [
+      { title: 'National History Exam', due: `${fy}-10-15`, completion_rate: 100 },
+      { title: 'Risk Management Certification', due: `${fy}-10-01`, completion_rate: 100 },
+      { title: 'Big Brother Assignment', due: `${fy}-09-30`, completion_rate: 95.8 },
+      { title: 'Community Service (10 hrs)', due: `${sy}-04-01`, completion_rate: 87.5 },
+    ],
+    programming_events: [
+      { title: 'New Member Orientation', date: `${fy}-09-10`, location: 'Chapter House' },
+      { title: 'Ritual Education Session', date: `${fy}-10-22`, location: 'Chapter House' },
+    ],
+  };
+
+  const brotherhood_and_programming = {
+    events: [
+      { title: 'Fall Retreat', date: `${fy}-09-27`, type: 'brotherhood', location: 'Camp Wildwood', attendance_count: 71 },
+      { title: 'Big/Little Reveal', date: `${fy}-10-18`, type: 'brotherhood', location: 'Chapter House', attendance_count: 80 },
+      { title: 'Spring Brotherhood Retreat', date: `${sy}-03-14`, type: 'brotherhood', location: 'Lake Overlook', attendance_count: 68 },
+      { title: 'Weekly Bible Study', date: `${fy}-09-11`, type: 'faith', location: 'Chapter House', attendance_count: 15 },
+    ],
+    faith_programming_counts: { bible_studies: 13, devotionals: 26, chaplain_events: 4 },
+  };
+
+  const academics = {
+    by_semester: { [fallLabel]: { chapter_gpa: '3.29', cumulative_chapter_gpa: '3.31', members_reporting: 84 }, [springLabel]: { chapter_gpa: '3.34', cumulative_chapter_gpa: '3.32', members_reporting: 82 } },
+    gpa_trend: 0.05, semesters_with_data: [fallLabel, springLabel],
+  };
+
+  const philanthropy = {
+    total_raised: 16250, raised_by_semester: { [fallLabel]: 9400, [springLabel]: 6850 }, event_count: 3,
+    organizations: ["St. Jude Children's Research Hospital", 'ALS Association'],
+    goal: { target: 15000, label: 'Annual St. Jude fundraising goal' },
+    events: [
+      { title: 'Casino Night for St. Jude', date: `${fy}-11-01`, attendance_count: 60, amount_raised: 5200 },
+      { title: 'ATO 5K Fun Run', date: `${sy}-03-02`, attendance_count: 110, amount_raised: 4100 },
+      { title: 'Golf Tournament', date: `${sy}-04-12`, attendance_count: 75, amount_raised: 2750 },
+    ],
+  };
+
+  const community_service = {
+    total_hours: 612, hours_by_semester: { [fallLabel]: 340, [springLabel]: 272 }, event_count: 4,
+    participant_count: 58, avg_hours_per_participant: 10.55,
+    partner_organizations: ['Overlook Food Bank', 'Habitat for Humanity', 'Boys & Girls Club'],
+    events: [
+      { title: 'Habitat for Humanity Build Day', date: `${fy}-10-05`, hours_logged: 96 },
+      { title: 'Food Bank Sorting Shift', date: `${fy}-11-16`, hours_logged: 54 },
+      { title: 'Boys & Girls Club Tutoring', date: `${sy}-02-20`, hours_logged: 88 },
+      { title: 'Campus Cleanup Day', date: `${sy}-04-05`, hours_logged: 62 },
+    ],
+  };
+
+  const alumni_relations = {
+    total_alumni_engaged: 46,
+    events: [
+      { title: 'Homecoming Alumni Tailgate', date: `${fy}-10-11`, type: 'alumni', location: 'Chapter House' },
+      { title: 'Founders Day Alumni Dinner', date: `${fy}-11-08`, type: 'alumni', location: 'Overlook Country Club' },
+    ],
+    outreach_touches: 38, outreach_by_method: { Email: 18, LinkedIn: 11, Phone: 9 },
+  };
+
+  const public_relations = { tracked: false, note: 'ATO Executive System does not currently have a dedicated Public Relations/Communications module. This section cannot be populated automatically.' };
+
+  const finance = {
+    dues_collection_rate: 93.1, total_dues_billed: 92400, total_dues_collected: 86014, total_outstanding: 6386,
+    dues_status_breakdown: { Paid: 66, Partial: 12, Unpaid: 6 },
+    by_semester: { [fallLabel]: { total_due: 46200, total_paid: 43500, collection_rate: 94.2 }, [springLabel]: { total_due: 46200, total_paid: 42514, collection_rate: 92 } },
+    fines_total_count: 14, fines_total_amount: 1050,
+    expenses_by_category: { Philanthropy: 4200, Social: 8600, 'Chapter Operations': 11300, Recruitment: 3100, 'Risk Management': 1800 },
+    total_expenses: 29000, payment_plan_count: 5,
+    approved_budget: { [fallLabel]: 48000, [springLabel]: 46500 },
+  };
+
+  const judicial_and_accountability = {
+    cases_total: 5, cases_resolved: 4, cases_open: 1, resolution_rate: 80, average_resolution_days: null,
+    case_categories: { 'attendance-violation': 3, 'risk-management': 1, 'academic-probation': 1 },
+    semester_breakdown: { [fallLabel]: 3, [springLabel]: 2 },
+    sanction_categories: {}, accountability_programs: [],
+  };
+
+  const chapter_events = [
+    { id: 'demo-e1', title: 'Fall Chapter Meeting — Week 1', type: 'chapter', date: `${fy}-09-04`, semester: fallLabel, location: 'Chapter House', committee_id: null, mandatory: true, attendance_count: 78, amount_raised: null, service_hours: null },
+    { id: 'demo-e2', title: 'Casino Night for St. Jude', type: 'philanthropy', date: `${fy}-11-01`, semester: fallLabel, location: 'Chapter House', committee_id: null, mandatory: false, attendance_count: 60, amount_raised: 5200, service_hours: null },
+    { id: 'demo-e3', title: 'Habitat for Humanity Build Day', type: 'service', date: `${fy}-10-05`, semester: fallLabel, location: 'Habitat for Humanity Site', committee_id: null, mandatory: false, attendance_count: 24, amount_raised: null, service_hours: 96 },
+    { id: 'demo-e4', title: 'Spring Chapter Meeting — Week 1', type: 'chapter', date: `${sy}-01-14`, semester: springLabel, location: 'Chapter House', committee_id: null, mandatory: true, attendance_count: 76, amount_raised: null, service_hours: null },
+    { id: 'demo-e5', title: 'ATO 5K Fun Run', type: 'philanthropy', date: `${sy}-03-02`, semester: springLabel, location: 'Overlook State Quad', committee_id: null, mandatory: false, attendance_count: 110, amount_raised: 4100, service_hours: null },
+  ];
+
+  const awards_and_achievements = [
+    { title: 'ATO Nationals True Merit Award of Excellence', category: 'National Recognition', date: `${sy}-05-01`, semester: springLabel, description: 'Recognized for outstanding chapter operations, philanthropy, and academic performance.' },
+    { title: 'Top GPA Among Campus Fraternities', category: 'Academic', date: `${sy}-05-10`, semester: springLabel, description: 'Ranked #1 chapter GPA among all IFC fraternities at Overlook State.' },
+  ];
+
+  const strategic_initiatives = [
+    { title: 'Raise overall chapter GPA above the all-campus fraternity average', owner: 'President', semester: fallLabel, goal: 'Raise overall chapter GPA above the all-campus fraternity average', result: 'Completed', related_events: [] },
+    { title: 'Raise $15,000 for St. Jude', owner: 'Philanthropy Chair', semester: springLabel, goal: 'Raise $15,000 for St. Jude', result: 'Completed', related_events: [] },
+    { title: 'Fall Executive Retreat Planning', owner: null, semester: fallLabel, goal: null, result: null, related_events: [] },
+  ];
+
+  const executive_notes = [
+    { title: 'Fall Executive Retreat', type: 'retreat', date: `${fy}-08-20`, action_item_count: 6 },
+    { title: 'Spring Exec Check-in', type: 'exec', date: `${sy}-02-03`, action_item_count: 4 },
+  ];
+
+  // Mirrors js/truemerit.js's tmBuildDataCompleteness() exactly — including the same structural
+  // gaps the real export always reports (no beginning-of-year headcount, no PR module, no
+  // declined-prospect tracking, no case resolution date) — so the demo's "Data Completeness"
+  // section is not rosier than what a real chapter would ever actually see.
+  const data_completeness = {
+    overall_status: 'partial',
+    sections: {
+      chapter_overview: { status: 'partial', record_count: 1, missing: ['Beginning-of-year membership count (not tracked — no historical roster snapshot)', 'Graduate count (member status has no "Graduated"/"Alumni" state; departed members are removed from the roster)'] },
+      membership: { status: 'complete', record_count: 84, missing: [] },
+      leadership_and_goals: { status: 'complete', record_count: 138, missing: [] },
+      attendance: { status: 'complete', record_count: 34, missing: [] },
+      recruitment: { status: 'partial', record_count: 40, missing: ['Declined/not-interested prospects are not tracked as a distinct pipeline stage'] },
+      member_education: { status: 'complete', record_count: 24, missing: [] },
+      brotherhood_and_programming: { status: 'complete', record_count: 4, missing: [] },
+      academics: { status: 'complete', record_count: 2, missing: [] },
+      philanthropy: { status: 'complete', record_count: 3, missing: [] },
+      community_service: { status: 'complete', record_count: 4, missing: [] },
+      alumni_relations: { status: 'complete', record_count: 40, missing: [] },
+      public_relations: { status: 'unavailable', record_count: 0, missing: ['No Public Relations/Communications module exists in ATO Executive System yet'] },
+      finance: { status: 'complete', record_count: 2, missing: [] },
+      judicial_and_accountability: { status: 'partial', record_count: 5, missing: ['Average resolution time is not tracked (no resolution date stored on a case, only a hearing date)'] },
+      chapter_events: { status: 'complete', record_count: 5, missing: [] },
+      awards_and_achievements: { status: 'complete', record_count: 2, missing: [] },
+      strategic_initiatives: { status: 'complete', record_count: 3, missing: [] },
+    },
+  };
+
+  return {
+    schema_version: TM_SCHEMA_VERSION,
+    report_metadata: {
+      chapter_id: 'demo_epsilon_chapter', chapter_name: chapterName, university,
+      academic_year: academicYear, included_semesters: range.semesters,
+      generated_at: new Date().toISOString(),
+      generated_by_role: (typeof CURRENT_USER !== 'undefined' && CURRENT_USER?.title) || 'President',
+      system: 'ATO Executive System',
+    },
+    chapter_overview, membership, leadership_and_goals, attendance, recruitment, member_education,
+    brotherhood_and_programming, academics, philanthropy, community_service, alumni_relations,
+    public_relations, finance, judicial_and_accountability, chapter_events, awards_and_achievements,
+    strategic_initiatives, executive_notes, data_completeness,
+  };
+}
+
+// Redefines js/truemerit.js's tmGenerateAndDownload() — this declaration runs after that file's
+// (see script order in index.html), so it wins and every demo download uses the canned showcase
+// report above instead of building from the seeded persona's real (small) D object.
+async function tmGenerateAndDownload() {
+  if (!tmCanGenerateReport()) { toast('Only the President or Vice President can generate a True Merit data export.', 'error'); return; }
+  const sel = document.getElementById('tm-ay');
+  const academicYear = sel ? sel.value : tmCurrentAcademicYear();
+  const btn = document.getElementById('tm-generate-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+  try {
+    const report = tmBuildDemoShowcaseReport(academicYear);
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = tmFilename(report.report_metadata.chapter_name, academicYear); a.click();
+    URL.revokeObjectURL(url);
+    closeM(null, document.getElementById('m-truemerit'));
+    toast('Sample annual export generated — this demo always downloads a fully-populated showcase file rather than the seeded persona\'s own (deliberately small) data.', 'info', 7000);
+  } catch (e) {
+    console.error('Demo True Merit export failed:', e);
+    toast('Could not generate the sample export. Please try again.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate & Download JSON'; }
+  }
+}
+
 init();
