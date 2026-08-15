@@ -256,6 +256,19 @@ function nav(page,el){
 function chapterPositionTitles(){
   return Object.keys(CURRENT_CHAPTER?.positions||DEFAULT_POSITIONS).sort();
 }
+// Same as chapterPositionTitles(), but excludes positions with no access to the given page —
+// e.g. House Manager Assistant/Membership Educator Assistant have no 'tasks' grant at all
+// (_restrictedSeedPages in js/defaultPositions.js), so they'd never be able to see or act on a
+// task/goal assigned to them. Used for the Tasks & Goals "Assigned To" pickers so leads can't
+// hand work to a position that can't reach the page it'd show up on. permLevel:'lead' positions
+// (President/VP) bypass the page map entirely, same as isLeadUser()/canEditPage() do.
+function chapterPositionTitlesForPage(page){
+  const positions=CURRENT_CHAPTER?.positions||DEFAULT_POSITIONS;
+  return Object.keys(positions).filter(t=>{
+    const p=positions[t];
+    return p.permLevel==='lead'||!!(p.pages&&p.pages[page]);
+  }).sort();
+}
 function openM(id){
   const el=document.getElementById(id);
   el.querySelectorAll('select[id="nc-m"],select[id="nco-c"],select[id="ntr-o"],select[id="nc-filedby"]').forEach(s=>{
@@ -263,13 +276,15 @@ function openM(id){
     s.innerHTML=pre+mOpts();
   });
   // "Assigned To" (nt-position) — any exec can now delegate a task to any position, not just
-  // their own, so this always gets the full chapter position list regardless of lead status.
-  // Goals stay position-scoped for non-leads (goals have no "Assigned By" concept).
+  // their own, so this gets the full chapter position list regardless of lead status — except
+  // positions with no 'tasks' page access (e.g. the Assistant roles), which could never see or
+  // act on what they're assigned. Goals stay position-scoped for non-leads (goals have no
+  // "Assigned By" concept).
   el.querySelectorAll('select[id="nt-position"]').forEach(s=>{
-    s.innerHTML=chapterPositionTitles().map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    s.innerHTML=chapterPositionTitlesForPage('tasks').map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
   });
   el.querySelectorAll('select[id="ng-position"]').forEach(s=>{
-    const opts=isLeadUser()?chapterPositionTitles():myPositionTitles();
+    const opts=isLeadUser()?chapterPositionTitlesForPage('tasks'):myPositionTitles();
     s.innerHTML=opts.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
   });
   // "Assigned By" (nt-a) is no longer a choice for anyone, including leads — it's always
