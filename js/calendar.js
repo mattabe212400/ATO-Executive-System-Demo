@@ -220,7 +220,10 @@ function renderTasks(){
   // section — there's no wall of empty boards for positions nobody's assigned anything to yet.
   const pcl={urgent:'br2',high:'br2',medium:'ba2',low:'bm2'};const pln={urgent:'Urgent',high:'High',medium:'Med',low:'Low'};
   const cols=[{id:'todo',l:'To Do',k:'k1'},{id:'in_progress',l:'In Progress',k:'k2'},{id:'done',l:'Done',k:'k4'},{id:'cant_complete',l:"Couldn't Complete",k:'k3'}];
-  const cardHtml=t=>`<div class="tk-card" draggable="${canDragTask(t)}" tabindex="0" role="button" aria-label="Edit ${esc(t.title)}" ondragstart="taskDragStart('${t.id}')" ondragend="document.querySelectorAll('.kb2').forEach(c=>c.classList.remove('drag-over'))" onclick="openEditTask('${t.id}')"><div class="tk-ct">${esc(t.title)}</div><div class="tk-cm"><span class="badge ${pcl[t.priority]||'bm2'}">${pln[t.priority]||esc(t.priority)}</span>${t.dueDate?`<span style="font-size:9.5px;color:${isOv(t.dueDate)&&t.status!=='done'?'var(--rd)':'var(--ht)'}">${fds(t.dueDate)}</span>`:''}</div>${taskAssignedByLabel(t)?`<div style="margin-top:5px;font-size:10px;color:var(--ht)">${esc(taskAssignedByLabel(t))}</div>`:''}</div>`;
+  // No due date is a deliberate state (an open-ended task, due date addable later via Edit), not
+  // a missing field — labeled explicitly so it doesn't read as though the card just forgot to show
+  // a date.
+  const cardHtml=t=>`<div class="tk-card" draggable="${canDragTask(t)}" tabindex="0" role="button" aria-label="Edit ${esc(t.title)}" ondragstart="taskDragStart('${t.id}')" ondragend="document.querySelectorAll('.kb2').forEach(c=>c.classList.remove('drag-over'))" onclick="openEditTask('${t.id}')"><div class="tk-ct">${esc(t.title)}</div><div class="tk-cm"><span class="badge ${pcl[t.priority]||'bm2'}">${pln[t.priority]||esc(t.priority)}</span>${t.dueDate?`<span style="font-size:9.5px;color:${isOv(t.dueDate)&&t.status!=='done'?'var(--rd)':'var(--ht)'}">${fds(t.dueDate)}</span>`:'<span style="font-size:9.5px;color:var(--ht);font-style:italic">No due date</span>'}</div>${taskAssignedByLabel(t)?`<div style="margin-top:5px;font-size:10px;color:var(--ht)">${esc(taskAssignedByLabel(t))}</div>`:''}</div>`;
   const taskGroups={};
   visibleTasks.forEach(t=>{const p=t.positionTitle||'Unassigned';(taskGroups[p]=taskGroups[p]||[]).push(t);});
   const taskPositions=Object.keys(taskGroups).sort(posSort);
