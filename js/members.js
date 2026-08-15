@@ -8,12 +8,12 @@ async function addMem(){
   const name=document.getElementById('nm-n').value.trim();
   if(!name){toast('Name is required','error');return;}
   const ini=name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-  const member={id:uid(),name,year:+document.getElementById('nm-y').value,classYear:document.getElementById('nm-c').value,liveIn:document.getElementById('nm-l').value==='1',memberStatus:document.getElementById('nm-status').value,joinDate:document.getElementById('nm-join').value||'',role:document.getElementById('nm-r').value.trim()||'Member',major:document.getElementById('nm-maj').value.trim(),email:document.getElementById('nm-email').value.trim(),phone:document.getElementById('nm-phone').value.trim(),hometown:document.getElementById('nm-ht').value.trim(),dorm:document.getElementById('nm-dorm').value.trim(),initials:ini};
+  const member={id:uid(),name,year:+document.getElementById('nm-y').value,classYear:document.getElementById('nm-c').value,liveIn:document.getElementById('nm-l').value==='1',memberStatus:document.getElementById('nm-status').value,joinDate:document.getElementById('nm-join').value||'',role:document.getElementById('nm-r').value.trim()||'Member',major:document.getElementById('nm-maj').value.trim(),email:document.getElementById('nm-email').value.trim(),phone:document.getElementById('nm-phone').value.trim(),hometown:document.getElementById('nm-ht').value.trim(),initials:ini};
   D.members.push(member);
   try{
     await saveD('members');
     closeM(null,document.getElementById('m-addmember'));
-    ['nm-n','nm-r','nm-maj','nm-email','nm-phone','nm-ht','nm-dorm','nm-join'].forEach(id=>document.getElementById(id).value='');
+    ['nm-n','nm-r','nm-maj','nm-email','nm-phone','nm-ht','nm-join'].forEach(id=>document.getElementById(id).value='');
     renderMembers();toast('Member added','success');
   }catch(e){
     D.members=D.members.filter(m=>m.id!==member.id);
@@ -44,7 +44,6 @@ function openEditMember(id){
   document.getElementById('em-email').value=m.email||'';
   document.getElementById('em-phone').value=m.phone||'';
   document.getElementById('em-ht').value=m.hometown||'';
-  document.getElementById('em-dorm').value=m.dorm||'';
   el.classList.add('open');
 }
 async function saveMember(){
@@ -53,7 +52,7 @@ async function saveMember(){
   const m=D.members.find(m=>m.id===id);if(!m)return;
   const name=document.getElementById('em-n').value.trim();
   if(!name){toast('Name is required','error');return;}
-  const prev={name:m.name,year:m.year,classYear:m.classYear,liveIn:m.liveIn,memberStatus:m.memberStatus,joinDate:m.joinDate,role:m.role,initials:m.initials,major:m.major,email:m.email,phone:m.phone,hometown:m.hometown,dorm:m.dorm};
+  const prev={name:m.name,year:m.year,classYear:m.classYear,liveIn:m.liveIn,memberStatus:m.memberStatus,joinDate:m.joinDate,role:m.role,initials:m.initials,major:m.major,email:m.email,phone:m.phone,hometown:m.hometown};
   m.name=name;m.year=+document.getElementById('em-y').value;
   m.classYear=document.getElementById('em-c').value;m.liveIn=document.getElementById('em-l').value==='1';
   m.memberStatus=document.getElementById('em-status').value;
@@ -63,7 +62,6 @@ async function saveMember(){
   m.email=document.getElementById('em-email').value.trim();
   m.phone=document.getElementById('em-phone').value.trim();
   m.hometown=document.getElementById('em-ht').value.trim();
-  m.dorm=document.getElementById('em-dorm').value.trim();
   m.initials=name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   try{
     await saveD('members');
