@@ -210,12 +210,13 @@ function impBuildMemberRows(rows, previewEl) {
     const email = impCol(row, 'email', 'email address', 'e-mail') || (existing ? existing.email||'' : '');
     const phone = impCol(row, 'phone', 'phone number', 'cell', 'mobile', 'telephone') || (existing ? existing.phone||'' : '');
     const hometown = impCol(row, 'hometown', 'home town', 'home city', 'city', 'from') || (existing ? existing.hometown||'' : '');
+    const dorm = impCol(row, 'dorm', 'dormitory', 'residence hall', 'hall') || (existing ? existing.dorm||'' : '');
     const ini = name.split(' ').map(n => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase();
     const gradYear = gradYearRaw ? +gradYearRaw : (existing ? existing.year : new Date().getFullYear() + 2);
     if (existing) {
-      toUpdate.push({ _update: true, id: existing.id, name, year: gradYear, classYear, liveIn, role, initials: ini, major, email, phone, hometown });
+      toUpdate.push({ _update: true, id: existing.id, name, year: gradYear, classYear, liveIn, role, initials: ini, major, email, phone, hometown, dorm });
     } else {
-      toAdd.push({ id: uid(), name, year: gradYear, classYear, liveIn, role, initials: ini, major, email, phone, hometown });
+      toAdd.push({ id: uid(), name, year: gradYear, classYear, liveIn, role, initials: ini, major, email, phone, hometown, dorm });
     }
   });
 

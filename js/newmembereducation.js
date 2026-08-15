@@ -151,13 +151,14 @@ function nmeRenderProgress(){
   const el=document.getElementById('nme-progress-table');
   if(!el)return;
   if(!newMembers.length){ el.innerHTML=`<tbody><tr><td>${es('ti-school','blue','No new members','Members with Member Status set to "New Member" (on the Members page) appear here.','')}</td></tr></tbody>`; return; }
-  el.innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Progress</th><th>Requirements</th><th>Status</th></tr></thead><tbody>${
+  el.innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Dorm</th><th>Progress</th><th>Requirements</th><th>Status</th></tr></thead><tbody>${
     newMembers.map(m=>{
       const done=requirements.filter(r=>nmeReqDone(m.id,r.id)).length;
       const pct=nmeProgressPct(m.id);
       const status=pct>=100?['On Track','bg2']:pct>=50?['In Progress','ba2']:['At Risk','br2'];
       return `<tr style="${canEdit?'cursor:pointer':''}" ${canEdit?`onclick="nmeOpenProgress('${m.id}')"`:''}>
         <td style="font-weight:500">${esc(m.name)}</td><td style="color:var(--mt)">${esc(m.classYear)}</td>
+        <td style="color:var(--mt)">${esc(m.dorm||'N/A')}</td>
         <td><div class="pb" style="width:70px;display:inline-block;vertical-align:middle"><div class="pf" style="width:${pct}%;background:${pgc(pct)}"></div></div> <span style="font-size:11px">${pct}%</span></td>
         <td>${done}/${requirements.length}</td><td><span class="badge ${status[1]}">${status[0]}</span></td>
       </tr>`;
