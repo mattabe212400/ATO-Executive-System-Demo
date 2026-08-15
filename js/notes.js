@@ -40,7 +40,7 @@ const NOTE_OFFICER_ROLES=[
 ];
 
 // Exec/retreat meetings only involve a subset of officer roles.
-const NOTE_EXEC_ROLE_IDS=['president','vp','treasurer','chaplain','mem-ed','secretary','comm-svc','philanthropy','alumni','social','risk','pr','scholarship','house'];
+const NOTE_EXEC_ROLE_IDS=['president','vp','treasurer','chaplain','mem-ed','secretary','recruitment','comm-svc','philanthropy','alumni','social','risk','pr','scholarship','house'];
 const NOTE_GENERAL_ROLE={id:'general',label:'General'};
 
 function mnRolesForType(type){
