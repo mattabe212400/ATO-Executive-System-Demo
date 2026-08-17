@@ -144,6 +144,20 @@ function calShowDay(dateStr,e){
 
 
 let TASKS_SELECTED_SEM=null;
+
+// ── Per-position collapse state for the Tasks & Goals board — leads see every position at
+// once, so each section starts collapsed for them (default false) to avoid a long scroll through
+// boards for positions they didn't come to look at; everyone else only sees their own
+// position(s) and starts expanded (default true), matching the pre-accordion behavior. Keyed by
+// position title and kept in module state (not persisted) so it survives re-renders within the
+// session but resets on reload, same as CAL_FILTER.
+let TASK_POS_OPEN={};
+let GOAL_POS_OPEN={};
+function taskPosIsOpen(pos,lead){return Object.prototype.hasOwnProperty.call(TASK_POS_OPEN,pos)?TASK_POS_OPEN[pos]:!lead;}
+function toggleTaskPos(encPos){const pos=decodeURIComponent(encPos);TASK_POS_OPEN[pos]=!taskPosIsOpen(pos,isLeadUser());renderTasks();}
+function goalPosIsOpen(pos,lead){return Object.prototype.hasOwnProperty.call(GOAL_POS_OPEN,pos)?GOAL_POS_OPEN[pos]:!lead;}
+function toggleGoalPos(encPos){const pos=decodeURIComponent(encPos);GOAL_POS_OPEN[pos]=!goalPosIsOpen(pos,isLeadUser());renderTasks();}
+
 function tasksKnownSemesters(){
   return unionKnownSemesters([...D.tasks.map(t=>t.semester),...D.goals.map(g=>g.semester)].filter(Boolean));
 }
@@ -205,8 +219,21 @@ function renderTasks(){
       ?es('ti-target','amber','No goals yet','Set semester goals for each position to track your chapter\'s priorities.',canEdit?`<button class="btn" onclick="openM('m-addgoal')"><i class="ti ti-plus"></i>Add Goal</button>`:'')
       :`<div class="sgp-standard"><div class="sgp-empty-msg">No semester goals have been assigned to your position yet.</div></div>`;
   }else if(lead){
-    // President/VP: one card per position, up to 3 per row on wide desktop (.sgp-grid).
-    tGoalsEl.innerHTML=`<div class="sgp-grid">${goalPositions.map(pos=>`<div class="sgp-card"><div class="sgp-card-hd"><h4 class="sgp-pos" style="margin:0">${esc(pos)}</h4><span class="sgp-count">${goalGroups[pos].length} Goal${goalGroups[pos].length!==1?'s':''}</span></div><ul class="sgp-list">${goalGroups[pos].map(sgpRow).join('')}</ul></div>`).join('')}</div>`;
+    // President/VP: one card per position, up to 3 per row on wide desktop (.sgp-grid). Each
+    // card is a collapsible dropdown (collapsed by default) so finding one position's goals
+    // doesn't mean scrolling past every other position's — an expanded card spans the full row
+    // width so its goal list has room, and collapses back into the grid otherwise.
+    tGoalsEl.innerHTML=`<div class="sgp-grid">${goalPositions.map(pos=>{
+      const open=goalPosIsOpen(pos,true);
+      const enc=encodeURIComponent(pos);
+      return`<div class="sgp-card"${open?' style="grid-column:1/-1"':''}>
+        <div class="sgp-card-hd" style="cursor:pointer" onclick="toggleGoalPos('${enc}')" role="button" tabindex="0" aria-expanded="${open}" aria-label="${open?'Collapse':'Expand'} ${esc(pos)} goals" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleGoalPos('${enc}')}">
+          <h4 class="sgp-pos" style="margin:0;display:flex;align-items:center;gap:6px"><i class="ti ti-chevron-${open?'down':'right'}" style="font-size:11px;color:var(--mt)"></i>${esc(pos)}</h4>
+          <span class="sgp-count">${goalGroups[pos].length} Goal${goalGroups[pos].length!==1?'s':''}</span>
+        </div>
+        ${open?`<ul class="sgp-list">${goalGroups[pos].map(sgpRow).join('')}</ul>`:''}
+      </div>`;
+    }).join('')}</div>`;
   }else{
     // Standard officer: one full-width card, grouped by position only when they hold more than
     // one (a single-position officer already sees their position named in #t-goals-sub above).
@@ -227,12 +254,19 @@ function renderTasks(){
   const taskGroups={};
   visibleTasks.forEach(t=>{const p=t.positionTitle||'Unassigned';(taskGroups[p]=taskGroups[p]||[]).push(t);});
   const taskPositions=Object.keys(taskGroups).sort(posSort);
+  // Each position's board is a collapsible dropdown (collapsed by default for leads) so finding
+  // one position's tasks doesn't mean scrolling past every other position's full kanban board.
   document.getElementById('t-kb').innerHTML=taskPositions.length?taskPositions.map(pos=>{
     const posTasks=taskGroups[pos];
     const posDone=posTasks.filter(t=>t.status==='done').length;
+    const open=taskPosIsOpen(pos,lead);
+    const enc=encodeURIComponent(pos);
     return`<div class="card" style="margin-bottom:13px">
-      <div class="card-hd"><span class="card-t">${esc(pos)}</span><span style="font-size:10.5px;color:var(--mt)">${posDone} / ${posTasks.length} done</span></div>
-      <div class="kb">${cols.map(col=>{const items=posTasks.filter(t=>t.status===col.id);return`<div class="kc"><div class="kh ${col.k}"><span style="font-size:12px;font-weight:500">${col.l}</span><span class="badge bm2">${items.length}</span></div><div class="kb2" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="taskDrop(event,'${col.id}')">${items.map(cardHtml).join('')||'<div style="font-size:11px;color:var(--ht);text-align:center;padding:18px 0">Empty</div>'}</div></div>`;}).join('')}</div>
+      <div class="card-hd" style="cursor:pointer" onclick="toggleTaskPos('${enc}')" role="button" tabindex="0" aria-expanded="${open}" aria-label="${open?'Collapse':'Expand'} ${esc(pos)} tasks" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTaskPos('${enc}')}">
+        <span class="card-t" style="display:flex;align-items:center;gap:6px"><i class="ti ti-chevron-${open?'down':'right'}" style="font-size:11px;color:var(--mt)"></i>${esc(pos)}</span>
+        <span style="font-size:10.5px;color:var(--mt)">${posDone} / ${posTasks.length} done</span>
+      </div>
+      ${open?`<div class="kb">${cols.map(col=>{const items=posTasks.filter(t=>t.status===col.id);return`<div class="kc"><div class="kh ${col.k}"><span style="font-size:12px;font-weight:500">${col.l}</span><span class="badge bm2">${items.length}</span></div><div class="kb2" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="taskDrop(event,'${col.id}')">${items.map(cardHtml).join('')||'<div style="font-size:11px;color:var(--ht);text-align:center;padding:18px 0">Empty</div>'}</div></div>`;}).join('')}</div>`:''}
     </div>`;
   }).join(''):es('ti-checkbox','blue','No tasks yet','Create a task and assign it to a position to get started.',canEditPage('tasks')?`<button class="btn btn-p" onclick="openM('m-addtask')"><i class="ti ti-plus"></i>New Task</button>`:'');
 }
