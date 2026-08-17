@@ -125,7 +125,7 @@
     <!-- Sign In fields -->
     <div id="lg-signin-wrap">
       <div class="lg-fld"><label for="lg-user">Email</label><input id="lg-user" type="email" placeholder="you@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('lg-pass').focus()"></div>
-      <div class="lg-fld"><label for="lg-pass">Password</label><input id="lg-pass" type="password" placeholder="••••••••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')lgLogin()"></div>
+      <div class="lg-fld"><label for="lg-pass">Password</label><div class="lg-pw-wrap"><input id="lg-pass" type="password" placeholder="••••••••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')lgLogin()"><button type="button" class="lg-pw-eye" onclick="lgTogglePw('lg-pass',this)" aria-label="Show password"><i class="ti ti-eye"></i></button></div></div>
       <div style="text-align:right;margin:-4px 0 10px"><button type="button" onclick="lgShowReset()" style="background:none;border:none;padding:0;font-size:11px;color:var(--mt);text-decoration:underline;cursor:pointer">Forgot password?</button></div>
       <button class="lg-btn" id="lg-btn" onclick="lgLogin()">Sign In</button>
     </div>
@@ -144,8 +144,8 @@
     <div id="lg-register-wrap" style="display:none">
       <div class="lg-fld"><label for="rg-name">Full Name</label><input id="rg-name" type="text" placeholder="John Smith" autocomplete="name" maxlength="80"></div>
       <div class="lg-fld"><label for="rg-email">Email</label><input id="rg-email" type="email" placeholder="you@university.edu" autocomplete="email" maxlength="120"></div>
-      <div class="lg-fld"><label for="rg-pass">Password</label><input id="rg-pass" type="password" placeholder="At least 6 characters" autocomplete="new-password" maxlength="128"></div>
-      <div class="lg-fld"><label for="rg-pass2">Confirm Password</label><input id="rg-pass2" type="password" placeholder="Re-enter password" autocomplete="new-password" maxlength="128"></div>
+      <div class="lg-fld"><label for="rg-pass">Password</label><div class="lg-pw-wrap"><input id="rg-pass" type="password" placeholder="At least 6 characters" autocomplete="new-password" maxlength="128"><button type="button" class="lg-pw-eye" onclick="lgTogglePw('rg-pass',this)" aria-label="Show password"><i class="ti ti-eye"></i></button></div></div>
+      <div class="lg-fld"><label for="rg-pass2">Confirm Password</label><div class="lg-pw-wrap"><input id="rg-pass2" type="password" placeholder="Re-enter password" autocomplete="new-password" maxlength="128"><button type="button" class="lg-pw-eye" onclick="lgTogglePw('rg-pass2',this)" aria-label="Show password"><i class="ti ti-eye"></i></button></div></div>
       <div class="lg-fld">
         <label for="rg-chapter">Chapter</label>
         <select id="rg-chapter" class="lg-select" onchange="rgOnChapterChange()">
