@@ -441,35 +441,6 @@ function nRead(id){
   if(CURRENT_USER&&(CURRENT_USER.role==='admin'||CURRENT_USER.role==='exec'))saveD('notifs');
   renderNotifications();
 }
-function saveProf(){
-  const name      = document.getElementById('se-name').value.trim();
-  const year      = +document.getElementById('se-year').value;
-  const classYear = document.getElementById('se-class').value;
-  if(!name){toast('Name cannot be empty.','error');return;}
-
-  // Save to the user's member record in D.members
-  const myM = _myMemberRecord();
-  if(myM){
-    myM.name = name;
-    myM.year = year;
-    myM.classYear = classYear;
-    saveD('members');
-  } else {
-    // No linked member record — fall back to settings
-    D.settings.name = name;
-    D.settings.year = year;
-    D.settings.classYear = classYear;
-    saveD('settings');
-  }
-
-  // Update sidebar display
-  const ini = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('u-name').textContent = name;
-  document.getElementById('u-av').textContent   = ini;
-  document.getElementById('tb-av').textContent  = ini;
-  if(CURRENT_USER) CURRENT_USER.name = name;
-  toast('Profile saved','success');
-}
 function filterA(){const q=document.getElementById('a-search').value.toLowerCase();document.querySelectorAll('#a-table tbody tr').forEach(tr=>tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none');}
 function filterN(){const q=document.getElementById('n-search').value.toLowerCase();document.querySelectorAll('#notes-g>div').forEach(el=>el.style.display=el.textContent.toLowerCase().includes(q)?'':'none');}
 function filterM(){

@@ -1093,19 +1093,6 @@ function renderSettings(){
   if(!D.settings.chapterName)D.settings.chapterName=CURRENT_USER?.chapterName||'';
   if(!D.settings.university)D.settings.university=CURRENT_USER?.university||'';
 
-  // My Profile: read-only view pulled from the user's member record
-  const myM = _myMemberRecord();
-  const profName  = document.getElementById('se-name');
-  const profYear  = document.getElementById('se-year');
-  const profClass = document.getElementById('se-class');
-  const profSave  = document.querySelector('[onclick="saveProf()"]');
-  if(profName)  { profName.value  = myM?.name      || CURRENT_USER?.name || ''; profName.readOnly  = true; profName.style.cssText  += ';opacity:.7;cursor:default'; }
-  if(profYear)  { profYear.value  = myM?.year      || '';                        profYear.readOnly  = true; profYear.style.cssText  += ';opacity:.7;cursor:default'; }
-  if(profClass) { profClass.value = myM?.classYear || 'Senior';                  profClass.disabled = true; profClass.style.cssText += ';opacity:.7;cursor:default'; }
-  if(profSave)  profSave.style.display = 'none';
-  const profNote = document.getElementById('se-prof-note');
-  if(profNote) profNote.style.display = '';
-
   // Chapter info — editable by President/VP/admin only
   const chInfEl=document.getElementById('se-chapter-info');
   if(chInfEl){
