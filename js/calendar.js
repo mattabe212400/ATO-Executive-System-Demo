@@ -69,7 +69,9 @@ function renderCalendar(){
     return evDateRangeDays(e.date,e.endDate||e.date).some(d=>monthCellDates.has(d));
   }).filter(e=>CAL_FILTER==='all'||e.type===CAL_FILTER);
 
-  const tasksForMonth=D.tasks.filter(t=>{
+  // Same position-visibility rule as Tasks & Goals (visibleTasksFor, js/auth.js) — leads see
+  // every position's tasks on the grid, everyone else only sees tasks their own position owns.
+  const tasksForMonth=visibleTasksFor(D.tasks).filter(t=>{
     if(!t.dueDate||t.status==='done')return false;
     const d=new Date(t.dueDate+'T12:00:00');
     return d.getFullYear()===CAL_YEAR&&d.getMonth()===CAL_MONTH;
@@ -122,7 +124,8 @@ function calShowDay(dateStr,e){
   if(!dateStr)return;
   e.stopPropagation();
   const evs=D.events.filter(ev=>evSpansDate(ev,dateStr));
-  const tks=D.tasks.filter(t=>t.dueDate===dateStr&&t.status!=='done');
+  // Same position-visibility rule as Tasks & Goals and the month grid (visibleTasksFor, js/auth.js).
+  const tks=visibleTasksFor(D.tasks).filter(t=>t.dueDate===dateStr&&t.status!=='done');
   const detail=document.getElementById('cal-detail');
   const body=document.getElementById('cal-detail-body');
   const title=document.getElementById('cal-detail-title');
@@ -187,7 +190,7 @@ function renderTasks(){
   // canSeePositionGroup(). A further semester stage narrows to the selected semester — records
   // with no .semester (pre-migration legacy data) stay visible rather than vanishing.
   const posGoals=lead?D.goals:D.goals.filter(g=>canSeePositionGroup(g.positionTitle));
-  const posTasks=lead?D.tasks:D.tasks.filter(t=>canSeePositionGroup(t.positionTitle));
+  const posTasks=visibleTasksFor(D.tasks);
   const visibleGoals=posGoals.filter(g=>!g.semester||g.semester===sem);
   const visibleTasks=posTasks.filter(t=>!t.semester||t.semester===sem);
 

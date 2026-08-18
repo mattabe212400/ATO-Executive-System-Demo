@@ -63,8 +63,15 @@ function computeHealthDims(){
 }
 
 function renderHealthScore(){
-  const {score,dims,raw}=computeHealthDims();
+  const {score,dims:allDims,raw}=computeHealthDims();
   const {avg,doneT,taskPct,openCases,paidCount,finScore,csHrs,alumCount}=raw;
+  // Judicial data is lead-only under the real permission matrix (jbCanAccess()==isLeadUser()) —
+  // the Accountability dimension is case-count-derived, so it's dropped from the visible
+  // breakdown (and its own KPI stat) for anyone who isn't a lead, same as the Dashboard's mini
+  // widget. The composite score itself still factors it in — only the raw case-count detail
+  // is hidden.
+  const seesJudicial=typeof jbCanAccess==='function'&&jbCanAccess();
+  const dims=seesJudicial?allDims:allDims.filter(d=>d.k!=='Accountability');
   // Grade bands are now identical to the color bands (80/65/50) — previously the grade
   // thresholds (90/80/70/60) disagreed with the color thresholds, so e.g. a score of 65 was
   // graded "D" but shown in the neutral (not warning) color. Fixed by aligning both to one set.
@@ -75,7 +82,7 @@ function renderHealthScore(){
   document.getElementById('hs-kpi').innerHTML=
     statStrip('Health Score',score+' / 100',grade+' Grade',score>=80?'up':score>=65?'neutral':'down')+
     statStrip('Attendance',avg+'%',avg>=85?'On target':'Below 85% goal',avg>=85?'up':'down')+
-    statStrip('Open Cases',openCases,openCases?'Needs attention':'All clear',openCases?'down':'up')+
+    (seesJudicial?statStrip('Open Cases',openCases,openCases?'Needs attention':'All clear',openCases?'down':'up'):'')+
     statStrip('Tasks Done',taskPct+'%',doneT+' of '+D.tasks.length+' complete',taskPct>=75?'up':'neutral');
 
   // Ring — same r=28/C=2π×28 geometry as the Dashboard's .d2-health-ring widget (direct
@@ -171,8 +178,10 @@ function renderHealthScore(){
   document.getElementById('hs-actions').innerHTML=actions.map(a=>`<div class="al-row"><div class="al-ic" style="background:var(--bl-bg);color:var(--bl-tx)"><i class="ti ${a.icon}"></i></div><div style="font-size:11.5px;line-height:1.5">${a.txt}</div></div>`).join('');
 
   // Passively record today's snapshot (deduped — at most one per calendar day), then render
-  // the real trend from it. Starts sparse and genuinely grows; no history is invented.
-  hsRecordSnapshot(score,dims);
+  // the real trend from it. Starts sparse and genuinely grows; no history is invented. Records
+  // the full, unfiltered dimension set (allDims) regardless of which role happened to open this
+  // page today — the stored history must not vary depending on who triggered the snapshot.
+  hsRecordSnapshot(score,allDims);
   hsRenderHistory();
 }
 // Writes one {date,score,dims} snapshot per calendar day to D.healthHistory. This is the ONLY

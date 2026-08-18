@@ -199,24 +199,20 @@ function rpRecruitment(sem){
   sem=sem||getSemester();
   const rushees=(D.recruitment.rushees||[]).filter(r=>!r.semester||r.semester===sem);
   const RCG=(D.recruitment.goal||{})[sem]||{target:20};
-  const accepted=rushees.filter(r=>r.stage==='Accepted').length;
-  const bidReady=rushees.filter(r=>['Bid Ready','Bid Extended','Accepted'].includes(r.stage)).length;
-  const hot=rushees.filter(r=>r.bidScore>=70).length;
+  const goal=rcGoalProgress(rushees,RCG);
+  const lateStage=rcLateStageProspects(rushees).length;
+  const hot=rcHotProspects(rushees).length;
   const stale=rushees.filter(r=>{if(!r.lastContact)return true;return Math.round((new Date()-new Date(r.lastContact+'T12:00:00'))/(86400000))>5&&!['Accepted','Bid Extended'].includes(r.stage);});
 
   return rpHeader('Recruitment Report',`${rushees.length} rushees in pipeline · ${sem}`,sem)+
   rpSection('ti-chart-bar','Pipeline Summary',rpKpis([
     {label:'Total Rushees',val:rushees.length,color:'var(--navy)'},
-    {label:'Bid Ready / Accepted',val:bidReady,color:'var(--gn)'},
+    {label:'Bid Ready or Later',val:lateStage,color:'var(--gn)'},
     {label:'Hot Prospects (70+)',val:hot,color:'var(--am-tx)'},
-    {label:'Goal Progress',val:Math.round(rushees.length/(RCG.target||20)*100)+'%',color:'var(--bl)'},
+    {label:'Goal Progress (Accepted)',val:goal.pct+'%',color:'var(--bl)'},
   ]))+
   rpSection('ti-filter','Stage Breakdown',
-    rpTable(['Stage','Count','% of Total'],RC_STAGES.map(s=>{
-      const n=rushees.filter(r=>r.stage===s).length;
-      const pct=rushees.length?Math.round(n/rushees.length*100):0;
-      return[s,n,`${pct}%`];
-    }))
+    rpTable(['Stage','Count','% of Total'],rcStageDistribution(rushees).map(s=>[s.stage,s.count,`${s.pct}%`]))
   )+
   rpSection('ti-alert-circle','Needs Attention',
     (()=>{

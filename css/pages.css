@@ -641,4 +641,33 @@
 .gs-footer{padding:8px 12px;font-size:11px;color:var(--ht);text-align:center;border-top:1px solid var(--bdr)}
 .gs-empty{padding:24px 12px;text-align:center;color:var(--mt);font-size:12px}
 .gs-empty i{font-size:22px;display:block;margin:0 auto 6px;opacity:.3}
+
+/* ── DEMO GUIDED TOUR — not part of the real ATO Executive System, demo-only (see js/demoTour.js) ── */
+.dt-card{position:fixed;bottom:20px;right:20px;width:320px;max-width:calc(100vw - 32px);background:var(--surf);border:1px solid var(--bdr2);border-radius:12px;box-shadow:var(--shadow-lg);padding:16px;z-index:9998;font-family:'Inter',system-ui,sans-serif}
+.dt-step{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold-tx);margin-bottom:6px}
+.dt-title{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.dt-body{font-size:12px;line-height:1.55;color:var(--mt);margin-bottom:14px}
+.dt-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dt-dots{display:flex;gap:5px;align-items:center}
+.dt-dot{width:5px;height:5px;border-radius:50%;background:var(--bdr2)}
+.dt-dot.active{background:var(--gold);width:14px;border-radius:3px}
+.dt-btns{display:flex;gap:6px}
+@media(max-width:600px){
+  .dt-card{left:12px;right:12px;bottom:12px;width:auto;max-width:none}
+}
+/* Temporary highlight ring for the tour's "Role Switcher" step — no layout shift, just a glow */
+.demo-tour-highlight{box-shadow:0 0 0 3px rgba(228,192,107,.55);border-radius:6px}
+
+/* ── DEMO END-OF-SESSION CTA — dismissible card near the bottom of the Dashboard, demo-only ── */
+.demo-cta-card{margin-top:14px;padding:18px 20px;border-radius:12px;border:1px solid var(--bdr2);background:linear-gradient(135deg,var(--surf2) 0%,var(--bg) 100%);position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.demo-cta-x{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--ht);cursor:pointer;font-size:15px;padding:4px;line-height:1}
+.demo-cta-x:hover{color:var(--tx)}
+.demo-cta-copy h3{font-size:14.5px;font-weight:700;margin:0 0 4px;color:var(--tx)}
+.demo-cta-copy p{font-size:12px;color:var(--mt);margin:0;max-width:440px;line-height:1.5}
+.demo-cta-btns{display:flex;gap:8px;flex-shrink:0}
+@media(max-width:640px){
+  .demo-cta-card{flex-direction:column;align-items:stretch}
+  .demo-cta-btns{width:100%}
+  .demo-cta-btns .btn{flex:1;justify-content:center}
+}
 @media(max-width:768px){.gs-wrap{max-width:none;flex:1}.tb-date{display:none}}

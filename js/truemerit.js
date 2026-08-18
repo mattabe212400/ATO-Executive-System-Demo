@@ -304,7 +304,7 @@ function tmBuildRecruitment(D, ctx) {
   rushees.forEach(r => { byStage[r.stage] = (byStage[r.stage] || 0) + 1; });
 
   const bidsExtended = rushees.filter(r => ['Bid Extended', 'Accepted'].includes(r.stage)).length;
-  const bidsAccepted = rushees.filter(r => r.stage === 'Accepted').length;
+  const bidsAccepted = (typeof rcAccepted === 'function' ? rcAccepted(rushees) : rushees.filter(r => r.stage === 'Accepted')).length;
 
   // Recruitment goal — current shape is per-semester ({semester: {target,label}}); a chapter
   // that hasn't migrated yet may still have the old flat {target,label} object, in which case

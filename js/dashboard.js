@@ -5,21 +5,26 @@
   // name. Same privacy stance already established for viewers on the Attendance page (see
   // renderAttendanceOwnOnly's own comment about hiding Risk Stratification) — applied here too.
   const isViewer=!!(CURRENT_USER&&CURRENT_USER.role==='viewer');
+  // Judicial data is lead-only under the real permission matrix (jbCanAccess()==isLeadUser(),
+  // and 'judicial' isn't even a base view-granted page like Attendance/Finance/Reports are) —
+  // unlike those, this must NOT be shown to every exec officer, only leads.
+  const seesJudicial=typeof jbCanAccess==='function'&&jbCanAccess();
 
   const tot=D.members.length||1;
   const avg=Math.round(D.members.reduce((s,m)=>s+aR(m.id),0)/tot);
-  const openT=D.tasks.filter(t=>t.status!=='done').length;
-  const ovT=D.tasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
+  const myTasks=visibleTasksFor(D.tasks);
+  const openT=myTasks.filter(t=>t.status!=='done').length;
+  const ovT=myTasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
   const cas=D.cases.filter(c=>!['resolved','dismissed'].includes(c.status)).length;
-  const dn=D.tasks.filter(t=>t.status==='done').length;
-  const taskPct=D.tasks.length?Math.round(dn/D.tasks.length*100):0;
+  const dn=myTasks.filter(t=>t.status==='done').length;
+  const taskPct=myTasks.length?Math.round(dn/myTasks.length*100):0;
 
   // ── KPI STAT STRIP ── (one bordered strip with internal dividers, not four identical cards)
   document.getElementById('d-kpi').innerHTML=
     statStrip('Chapter Attendance',avg+'%',avg>=85?'Above 85% target':'Below 85% target',avg>=85?'up':'down')+
     statStrip('Total Members',tot,getSemester()+' roster','neutral')+
-    statStrip('Open Tasks',openT,ovT>0?ovT+' overdue':'All on track',ovT>0?'down':'neutral')+
-    (isViewer?'':statStrip('Active Cases',cas,cas>0?'Requires attention':'No open cases',cas?'down':'neutral'));
+    statStrip(isLeadUser()?'Open Tasks':'My Open Tasks',openT,ovT>0?ovT+' overdue':'All on track',ovT>0?'down':'neutral')+
+    (seesJudicial?statStrip('Active Cases',cas,cas>0?'Requires attention':'No open cases',cas?'down':'neutral'):'');
 
   // ── QUICK ACTIONS ──
   dashBuildQuickActions(isViewer);
@@ -115,6 +120,18 @@
   const notesEl=document.getElementById('d-notes');
   if(notesEl)notesEl.innerHTML=D.notes.slice(0,3).map(n=>`<div style="padding:7px 0;border-bottom:1px solid var(--bdr);cursor:pointer" onclick="rbacNav('notes',null)"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${esc(n.title)}</span><span style="font-size:10px;color:var(--ht);flex-shrink:0">${fds(n.date)}</span></div><div style="font-size:10.5px;color:var(--mt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc((n.body||'').slice(0,80))}</div></div>`).join('')||es('ti-notes','slate','No meeting notes','Chapter meeting notes will appear here.','');
 
+  // ── ROLE-RELEVANT FOCUS (non-lead roles get role-specific priorities instead of a slightly
+  // reduced executive dashboard) ──
+  if(typeof dashBuildRoleFocus==='function')dashBuildRoleFocus(isViewer);
+
+  // Re-apply the demo's progressive-disclosure collapse (Officer KPIs, full Attendance Risk
+  // list, Social Monitors, Recent Notes) on every render, not just the first — renderDash() runs
+  // again on every nav to Dashboard, including after a role switch, and would otherwise silently
+  // re-reveal cards the visitor had collapsed (or re-collapse ones they'd explicitly expanded,
+  // see DASH_EXPANDED in js/demo.js).
+  if(typeof demoCollapseDashboardExtras==='function')demoCollapseDashboardExtras();
+  if(typeof dtCtaInit==='function')dtCtaInit();
+
   updateBadges();
 }
 
@@ -141,14 +158,17 @@ function dashBuildQuickActions(isViewer){
 function dashDrawHealth(isViewer){
   const {score,dims:allDims}=computeHealthDims();
   const find=k=>allDims.find(d=>d.k===k);
+  const seesJudicial=typeof jbCanAccess==='function'&&jbCanAccess();
   // Shorter labels for the widget's tight layout; values/colors come straight from the
   // canonical dims so they always match the full Scorecard page. Finances is exec-only data —
-  // dropped for General Members (role:'viewer'), same as the Active Cases KPI above.
+  // dropped for General Members (role:'viewer'). Accountability is judicial-derived (open
+  // J-Board case count) — judicial is lead-only under the real matrix, so this dimension is
+  // dropped for anyone who isn't a lead, not just viewers.
   const dims=[
     {...find('Attendance'),k:'Attendance'},
     {...find('Task Completion'),k:'Tasks'},
     {...find('Academics'),k:'GPA'},
-    {...find('Accountability'),k:'Accountability'},
+    ...(seesJudicial?[{...find('Accountability'),k:'Accountability'}]:[]),
     ...(isViewer?[]:[{...find('Finances'),k:'Finances'}]),
   ];
   const scoreColor=score>=80?'var(--gn)':score>=65?'var(--navy)':score>=50?'var(--am)':'var(--rd)';
@@ -215,7 +235,9 @@ function dashDrawHealth(isViewer){
 // privacy stance as the Attendance Risk widget and renderAttendanceOwnOnly's Risk Stratification.
 function dashBuildAlerts(avg,isViewer){
   const alerts=[];
-  const ovT=D.tasks.filter(t=>isOv(t.dueDate)&&t.status!=='done');
+  // Position-filtered (visibleTasksFor) — a non-lead officer's alert must never name another
+  // position's overdue task, same rule the Calendar and Tasks & Goals enforce.
+  const ovT=visibleTasksFor(D.tasks).filter(t=>isOv(t.dueDate)&&t.status!=='done');
   if(ovT.length&&!isViewer){
     const top=ovT.sort((a,b)=>({urgent:0,high:1,medium:2,low:3}[a.priority]||2)-({urgent:0,high:1,medium:2,low:3}[b.priority]||2))[0];
     alerts.push({type:'task',icon:'ti-clock',bg:'background:var(--am-bg)',ic:'color:var(--am-tx)',title:`${ovT.length} overdue task${ovT.length>1?'s':''}`,body:`Highest: "${top.title}", ${top.positionTitle||'Unassigned'}`});
@@ -260,7 +282,9 @@ function dashBuildAlerts(avg,isViewer){
 // ── OVERDUE TASKS ──
 function dashBuildOverdue(){
   const el=document.getElementById('d-overdue');if(!el)return;
-  const ov=D.tasks.filter(t=>isOv(t.dueDate)&&t.status!=='done')
+  // Position-filtered (visibleTasksFor) — leads see every position's overdue tasks, everyone
+  // else only sees tasks their own position owns, same rule the Calendar and Tasks & Goals use.
+  const ov=visibleTasksFor(D.tasks).filter(t=>isOv(t.dueDate)&&t.status!=='done')
     .sort((a,b)=>({urgent:0,high:1,medium:2,low:3}[a.priority]||2)-({urgent:0,high:1,medium:2,low:3}[b.priority]||2));
   if(!ov.length){
     el.innerHTML=`<div class="es-inline ok"><i class="ti ti-circle-check"></i>No overdue tasks</div>`;
@@ -299,6 +323,70 @@ function dashBuildAttRisk(){
       </div>
     </div>`;}).join('');
   if(risk.length>6)el.innerHTML+=`<div style="font-size:11px;color:var(--mt);text-align:center;padding:7px 0;cursor:pointer" onclick="rbacNav('attendance',null)">+${risk.length-6} more →</div>`;
+}
+
+// ── ROLE FOCUS ──
+// Non-lead roles get role-specific priorities here instead of a slightly reduced copy of the
+// executive dashboard (leads already see everything, so this stays hidden for them). Only a
+// handful of positions have dedicated content built — everyone else (and any position without
+// a case below) just doesn't get this card, same as before.
+function dashBuildRoleFocus(isViewer){
+  const card=document.getElementById('d-role-focus-card');
+  const titleEl=document.getElementById('d-role-focus-title');
+  const el=document.getElementById('d-role-focus');
+  if(!card||!el)return;
+  if(isLeadUser()){card.style.display='none';return;}
+
+  const title=CURRENT_USER?.title;
+  const row=(icon,label,val,onclick)=>`<div class="pr" style="cursor:${onclick?'pointer':'default'}"${onclick?` onclick="${onclick}"`:''}><i class="ti ${icon}" style="font-size:12px;color:var(--gold-tx);flex-shrink:0"></i><span style="flex:1;font-size:12px">${label}</span><span style="font-weight:600;font-size:12px">${val}</span></div>`;
+
+  if(isViewer){
+    const me=(typeof _myMemberRecord==='function')?_myMemberRecord():null;
+    const upReq=D.events.filter(e=>e.mandatory&&isUp(e.date)).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+    titleEl.innerHTML=`<i class="ti ti-focus-2 d2-card-ico" style="color:var(--gold-tx)"></i>Your Focus`;
+    card.style.display='';
+    el.innerHTML=(me?row('ti-chart-bar','My attendance',aR(me.id)+'%','rbacNav(\'attendance\',null)'):'')
+      +(upReq.length?upReq.map(e=>row('ti-calendar-event','Required: '+esc(e.title),fds(e.date),'rbacNav(\'calendar\',null)')).join(''):`<div style="font-size:11.5px;color:var(--ht);padding:6px 0">No upcoming required events.</div>`);
+    return;
+  }
+
+  if(title==='Recruitment'){
+    const rushees=(D.recruitment?.rushees||[]);
+    const goal=rcGoalProgress(rushees,(D.recruitment?.goal||{})[getSemester()]||D.recruitment?.goal||{target:20});
+    const nextEv=(D.events||[]).filter(e=>e.type==='recruitment'&&isUp(e.date)).sort((a,b)=>a.date.localeCompare(b.date))[0];
+    titleEl.innerHTML=`<i class="ti ti-user-plus d2-card-ico" style="color:var(--gold-tx)"></i>Recruitment Focus`;
+    card.style.display='';
+    el.innerHTML=row('ti-users','Bid ready',rcBidReady(rushees).length,'rbacNav(\'recruitment\',null)')
+      +row('ti-target','Season goal',goal.accepted+' / '+goal.target+' accepted','rbacNav(\'recruitment\',null)')
+      +(nextEv?row('ti-calendar-event','Next rush event',fds(nextEv.date),'rbacNav(\'recruitment\',null)'):'');
+    return;
+  }
+
+  if(title==='Treasurer'){
+    const dues=D.finance?.dues||{};
+    const paid=D.members.filter(m=>(dues[m.id]?.status||'Partial')==='Paid').length;
+    const owing=D.members.length-paid;
+    const deadline=(D.transitionHub?.deadlines||[]).filter(d=>d.owner==='Treasurer'&&!d.done)[0];
+    titleEl.innerHTML=`<i class="ti ti-cash d2-card-ico" style="color:var(--gold-tx)"></i>Treasurer Focus`;
+    card.style.display='';
+    el.innerHTML=row('ti-check','Dues collected',paid+' / '+D.members.length+' members','rbacNav(\'finance\',null)')
+      +(owing>0?row('ti-alert-circle','Members owing',owing,'rbacNav(\'finance\',null)'):'')
+      +(deadline?row('ti-calendar-due','Upcoming deadline',esc(deadline.title),'rbacNav(\'finance\',null)'):'');
+    return;
+  }
+
+  if(title==='Scholarship'){
+    const gpas=D.academics?.gpas||{};
+    const atRisk=D.members.filter(m=>{const v=parseFloat(gpas[m.id]?.cumulativeGpa);return !isNaN(v)&&v<2.6;}).length;
+    const deadline=(D.transitionHub?.deadlines||[]).filter(d=>d.owner==='Scholarship'&&!d.done)[0];
+    titleEl.innerHTML=`<i class="ti ti-school d2-card-ico" style="color:var(--gold-tx)"></i>Scholarship Focus`;
+    card.style.display='';
+    el.innerHTML=(atRisk>0?row('ti-alert-triangle','Members below 2.6 GPA',atRisk,'rbacNav(\'academics\',null)'):row('ti-circle-check','Academic standing','All above 2.6 GPA','rbacNav(\'academics\',null)'))
+      +(deadline?row('ti-calendar-due','Upcoming deadline',esc(deadline.title),'rbacNav(\'academics\',null)'):'');
+    return;
+  }
+
+  card.style.display='none';
 }
 
 // ── UPCOMING EVENTS WITH COUNTDOWN ──

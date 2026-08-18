@@ -133,6 +133,17 @@ function canSeePositionGroup(positionTitle){
   return myPositionTitles().includes(positionTitle);
 }
 function ownsPositionRecord(positionTitle){ return canSeePositionGroup(positionTitle); }
+
+// ── TASK VISIBILITY — single source of truth, used everywhere a task can appear (Tasks & Goals,
+// Calendar grid, Calendar day popover, Dashboard, global search, Reports, notifications). Leads
+// (President/VP/admin) see every position's tasks, same as canSeePositionGroup(); everyone else
+// only sees tasks assigned to a position they hold. Never filter tasks by assignee/title alone —
+// that misses position-owned tasks nobody has personally claimed yet, which still shouldn't leak
+// to an unauthorized viewer.
+function visibleTasksFor(tasks){
+  if(isLeadUser())return tasks||[];
+  return (tasks||[]).filter(t=>canSeePositionGroup(t.positionTitle));
+}
 function canAccess(page){
   if(!CURRENT_USER) return false;
   return getRoleAccess(CURRENT_USER.role, CURRENT_USER.title, CURRENT_USER.secondaryTitle).includes(page);
@@ -184,7 +195,12 @@ function resetInactivityTimer(){
   clearTimeout(_inactTimer);
   _inactTimer = setTimeout(lgLogout, TIMEOUT_MS);
 }
+// typeof document guard: lets tests/*.test.js require() this file's pure RBAC logic under plain
+// Node (see module.exports at the bottom) without a DOM — no-op in the browser, same guard
+// js/truemerit.js uses for the same reason.
+if(typeof document!=='undefined'){
 ['mousemove','keydown','click','scroll'].forEach(ev=>document.addEventListener(ev,resetInactivityTimer,{passive:true}));
+}
 
 function lgTimeOfDay(){
   const h = new Date().getHours();
@@ -276,6 +292,7 @@ function seRenderPositions(){
 }
 
 // ── OFFLINE DETECTION — cosmetic only; the demo has nothing to actually sync. ──
+if(typeof window!=='undefined'){
 window.addEventListener('online', ()=>{
   document.getElementById('offline-banner')?.classList.remove('show');
 });
@@ -284,4 +301,21 @@ window.addEventListener('offline', ()=>{
 });
 if(!navigator.onLine){
   document.getElementById('offline-banner')?.classList.add('show');
+}
+}
+
+// Requireable under plain Node (see tests/*.test.js) — no-op in the browser, same guard
+// js/truemerit.js uses. Exposes the pure RBAC/task-visibility logic; CURRENT_USER/CURRENT_CHAPTER
+// are still module-level globals set by the caller (tests assign them directly) since every
+// production call site (dozens of them, across every page) calls these functions with zero
+// arguments relying on that ambient state — changing that calling convention here was judged too
+// large/risky a refactor for this fix, so tests set the same globals the browser would.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    ALL_PAGES, BASE_VIEW_PAGES, VIEWER_PAGES, DEFAULT_POSITIONS,
+    getRoleAccess, canEditPage, isLeadUser, myPositionTitles, canSeePositionGroup,
+    ownsPositionRecord, canAccess, visibleTasksFor, isGeneralMemberUser,
+    setCurrentUser: (u) => { CURRENT_USER = u; },
+    setCurrentChapter: (c) => { CURRENT_CHAPTER = c; },
+  };
 }

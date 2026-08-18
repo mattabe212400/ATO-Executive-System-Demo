@@ -72,6 +72,15 @@ function loadDemoData(){
   ];
 
   // ── ATTENDANCE ──
+  // Deterministic (not Math.random()) so every reload produces the same numbers — attendance
+  // feeds the Chapter Health Score, and a score that drifts on every page load makes any
+  // trend/comparison (see D.healthHistory below) meaningless. seededPresence() below hashes
+  // (memberId, eventId) into a stable 0-1 value that stands in for Math.random() consistently.
+  function seededPresence(seed){
+    let h=0;
+    for(let i=0;i<seed.length;i++){ h=(h*31+seed.charCodeAt(i))|0; }
+    return (Math.abs(h)%10000)/10000;
+  }
   const mandEvIds = ['e01','e02','e03','e04','e05','e06'];
   const attendance = {};
   const attRates = {m01:1,m02:1,m03:.83,m04:1,m05:.83,m06:1,m07:.67,m08:.83,m09:.5,m10:.67,m11:.83,m12:.5,m13:.33,m14:1,m15:.67,m16:1,m17:.83,m18:.67};
@@ -79,7 +88,7 @@ function loadDemoData(){
     attendance[evId]={};
     members.forEach(m=>{
       const r = attRates[m.id] || 0.75;
-      attendance[evId][m.id] = Math.random() < r ? 'present' : (Math.random() < .3 ? 'excused' : 'absent');
+      attendance[evId][m.id] = seededPresence(m.id+evId) < r ? 'present' : (seededPresence(evId+m.id+'x') < .3 ? 'excused' : 'absent');
     });
     if(['e01','e02','e03'].includes(evId)){
       ['m01','m02','m03','m04'].forEach(id=>{ attendance[evId][id]='present'; });
@@ -581,7 +590,13 @@ function loadDemoData(){
     houseLife,
     transitionHub,
     notifs: [], agenda: {items:[],archived:[]},
-    healthHistory: [9,8,7,6,5,4,3,2,1,0].map(n=>({date:past(n),score:78+Math.round(Math.sin(n)*4)})),
+    // Starts empty rather than seeded with fabricated past scores — a fake history array would
+    // make the Health Scorecard's "vs [date]" trend compare today's real score against numbers
+    // that were never actually the chapter's health score. js/healthscore.js's
+    // hsRecordSnapshot() writes one real {date,score,dims} entry per calendar day as the
+    // Scorecard page is actually viewed, so the trend appears once genuine history exists and
+    // stays hidden (not fabricated) until then.
+    healthHistory: [],
     announcements: [
       {id:'ann01',title:'Spring Formal tickets on sale now',body:'Grab your Spring Formal ticket before the RSVP deadline. Buses will pick up from the Chapter House, see the Social Events page for the full schedule.',postedBy:'m01',postedByName:'James Mitchell',postedAt:past(2),pinned:true,expiresAt:future(14)},
       {id:'ann02',title:'Dues reminder: balance due this week',body:'A few members still have an outstanding balance for this semester. Please settle up with the Treasurer by Friday to avoid a late fee.',postedBy:'m03',postedByName:'Connor Walsh',postedAt:past(5),pinned:false,expiresAt:future(3)},
@@ -652,9 +667,8 @@ async function init(){
   const mbnDash = document.getElementById('mbn-dashboard');
   if(mbnDash) mbnDash.classList.add('active');
 
-  renderDash();
+  renderDash(); // also applies demoCollapseDashboardExtras() internally, at the end of its render
   updateBadges();
-  demoCollapseDashboardExtras();
 }
 
 // ══════════════════════════════════════════════
@@ -665,22 +679,31 @@ async function init(){
 // only the DOM already in index.html (dashboard.js/renderDash() still populate the hidden cards'
 // content normally; they're just not shown until requested) — no page/route/component change.
 // ══════════════════════════════════════════════
+// DASH_EXPANDED persists for the session (module state, like TASK_POS_OPEN/CAL_FILTER) so an
+// explicit "show full dashboard" click sticks across re-renders — renderDash() runs on every
+// nav to the Dashboard (including after a role switch), and without this flag each of those
+// re-renders would silently re-collapse cards the visitor had just asked to see.
+let DASH_EXPANDED = false;
 function demoCollapseDashboardExtras(){
   const officersCard = document.getElementById('d-officers-card');
   const soberCard = document.getElementById('d-sober') && document.getElementById('d-sober').closest('.d2-card');
   const notesCard = document.getElementById('d-notes') && document.getElementById('d-notes').closest('.d2-card');
-  const extras = [officersCard, soberCard, notesCard].filter(Boolean);
+  const attRiskCard = document.getElementById('d-att-risk') && document.getElementById('d-att-risk').closest('.d2-card');
+  const extras = [officersCard, soberCard, notesCard, attRiskCard].filter(Boolean);
+  const existingToggle = document.getElementById('d-show-more-toggle');
+  if(DASH_EXPANDED){ if(existingToggle) existingToggle.remove(); return; }
   if(!extras.length) return;
   extras.forEach(card => { card.style.display = 'none'; });
+  if(existingToggle || !document.querySelector('#page-dashboard .d2-body')) return;
 
   const body = document.querySelector('#page-dashboard .d2-body');
-  if(!body || document.getElementById('d-show-more-toggle')) return;
   const toggle = document.createElement('button');
   toggle.id = 'd-show-more-toggle';
   toggle.className = 'btn';
   toggle.style.cssText = 'margin-top:14px;width:100%;justify-content:center';
-  toggle.innerHTML = `<i class="ti ti-chevron-down"></i>Show full dashboard (Officer KPIs, Social Monitors, Recent Notes)`;
+  toggle.innerHTML = `<i class="ti ti-chevron-down"></i>Show full dashboard (Officer KPIs, full Attendance Risk list, Social Monitors, Recent Notes)`;
   toggle.onclick = () => {
+    DASH_EXPANDED = true;
     extras.forEach(card => { card.style.display = ''; });
     toggle.remove();
   };
@@ -705,18 +728,36 @@ function seRenderUsers(){
 // DEMO ROLE SWITCHER — reassigns CURRENT_USER against the real DEFAULT_POSITIONS titles so
 // sidebar/edit-control access is driven by the exact same getRoleAccess()/canEditPage() logic
 // production uses, not a simplified stand-in.
+//
+// CURRENT_USER is the one canonical active-demo-persona object: name, initials, position, and
+// (via getRoleAccess/canEditPage/canSeePositionGroup, which all read straight off CURRENT_USER)
+// permissions and position-scoped content all derive from it. Every visible identity reference
+// in the app — dashboard greeting, header avatar, sidebar profile, demo banner, Settings'
+// "Signed in as," "My Attendance"/"My Finances" (via _myMemberRecord(), which matches on
+// CURRENT_USER.mid), note/outreach authorship — reads CURRENT_USER at render time, so reassigning
+// every identity field here (not just .role/.title) is what keeps all of them in sync. Previously
+// only .role/.title were reassigned, so .name/.mid/.email stayed on the initial persona
+// (President James Mitchell) no matter which role was selected — e.g. switching to Recruitment
+// updated the sidebar/avatar (driven by the code below) but left the dashboard greeting reading
+// "Good morning, James" (driven by CURRENT_USER.name, untouched by the old version).
 // ══════════════════════════════════════════════
 function switchDemoRole(role){
   if(!CURRENT_USER || !role) return;
   const isViewer = role === 'General Member';
+  const person = isViewer ? null : D.members.find(m => m.role === role);
+
   CURRENT_USER.role = isViewer ? 'viewer' : 'exec';
   CURRENT_USER.title = isViewer ? 'General Member' : role;
+  CURRENT_USER.secondaryTitle = null;
+  CURRENT_USER.name = person ? person.name : (isViewer ? 'Guest Member' : role);
+  CURRENT_USER.mid = person ? person.id : null;
+  CURRENT_USER.email = person
+    ? person.name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.|\.$/g,'') + '@ato-demo.example'
+    : (isViewer ? 'guest.member@ato-demo.example' : role.toLowerCase().replace(/[^a-z]+/g,'-') + '@ato-demo.example');
 
-  const person = isViewer ? null : D.members.find(m => m.role === role);
   const av = person ? person.initials : (isViewer ? 'GM' : role.slice(0,2).toUpperCase());
-  const name = person ? person.name : (isViewer ? 'Guest Member' : role);
   document.getElementById('u-av').textContent = av;
-  document.getElementById('u-name').textContent = name;
+  document.getElementById('u-name').textContent = CURRENT_USER.name;
   document.getElementById('u-role').textContent = isViewer ? 'General Member' : role;
   document.getElementById('tb-av').textContent = av;
 
@@ -726,6 +767,9 @@ function switchDemoRole(role){
   const sel = document.getElementById('demo-role-switcher');
   if(sel) sel.selectedIndex = 0;
   rbacNav(isViewer ? 'calendar' : 'dashboard', null);
+  // Re-render on-demand pages that read CURRENT_USER but aren't necessarily the page being
+  // navigated to above, so their identity references don't go stale until next manually opened.
+  if(document.getElementById('page-settings')?.classList.contains('active') && typeof renderSettings==='function')renderSettings();
   toast(`Now viewing as ${isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
 }
 

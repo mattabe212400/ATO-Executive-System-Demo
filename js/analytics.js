@@ -54,33 +54,32 @@ function calcFinanceCollectionRate(){
 }
 // Current-snapshot recruitment funnel — real and derivable without any change-log, since it's
 // just today's stage distribution, not a trend over time (which isn't derivable — see the plan's
-// "explicitly not built" list: no stage-change history exists anywhere in the data model).
+// "explicitly not built" list: no stage-change history exists anywhere in the data model). Every
+// count below comes from js/recruitmentCalc.js's canonical functions, the same ones the
+// Recruitment CRM page itself uses — this can never disagree with the CRM's own numbers.
 function calcRecruitmentFunnel(){
   const rushees=D.recruitment?.rushees||[];
-  const total=rushees.length;
-  const stages=(typeof RC_STAGES!=='undefined'?RC_STAGES:['New Lead','Contacted','Attended Event','Active Rush','Interviewed','Bid Ready','Bid Extended','Accepted']);
-  const counts=stages.map((s,i)=>{
-    const count=rushees.filter(r=>r.stage===s).length;
-    return {stage:s, count, col:(typeof RC_STAGE_COLORS!=='undefined'?RC_STAGE_COLORS[i]:'var(--sky)')};
-  });
+  const total=rcTotalRushees(rushees);
+  const counts=rcStageDistribution(rushees).map(s=>({stage:s.stage,count:s.count,col:s.color}));
   // Drop-off: biggest relative decrease between adjacent stages, using cumulative-from-top counts
   // (a rushee in a later stage implicitly passed through earlier ones — this is a real, derivable
   // current-state shape even without any historical stage-change log).
   let dropOff=null, maxDrop=-1;
   for(let i=1;i<counts.length;i++){
-    const prevCum=counts.slice(0,i).reduce((s,c)=>s+c.count,0)+counts[i-1].count;
-    const cur=counts.slice(i).reduce((s,c)=>s+c.count,0);
     const prevTotal=counts.slice(i-1).reduce((s,c)=>s+c.count,0);
     if(prevTotal>0){
       const dropPct=1-(counts.slice(i).reduce((s,c)=>s+c.count,0)/prevTotal);
       if(dropPct>maxDrop){maxDrop=dropPct;dropOff={from:counts[i-1].stage,to:counts[i].stage,pct:Math.round(dropPct*100)};}
     }
   }
-  const accepted=rushees.filter(r=>r.stage==='Accepted').length;
-  const bidReadyPlus=rushees.filter(r=>['Bid Ready','Bid Extended','Accepted'].includes(r.stage)).length;
-  const conversionRate=total?Math.round(bidReadyPlus/total*100):0;
+  const accepted=rcAccepted(rushees).length;
+  const lateStage=rcLateStageProspects(rushees).length;
+  // "Late-stage share," not "conversion rate" — a share-of-total-pipeline percentage (bounded
+  // 0-100% by construction), not a stage-to-stage conversion, since no stage-history log exists
+  // to compute a real conversion from.
+  const lateStageRate=total?Math.round(lateStage/total*100):0;
   const acceptRate=total?Math.round(accepted/total*100):0;
-  return {total, counts, dropOff, conversionRate, acceptRate, accepted};
+  return {total, counts, dropOff, lateStage, lateStageRate, acceptRate, accepted};
 }
 // Recruiter performance — a real substitute for "recruitment source performance" (no `source`
 // field exists on rushee records; `recruiter` does, so this is what's actually derivable).
@@ -89,11 +88,11 @@ function calcRecruiterPerformance(){
   const byRecruiter={};
   rushees.forEach(r=>{
     if(!r.recruiter)return;
-    if(!byRecruiter[r.recruiter])byRecruiter[r.recruiter]={total:0,bidReadyPlus:0};
+    if(!byRecruiter[r.recruiter])byRecruiter[r.recruiter]={total:0,lateStage:0};
     byRecruiter[r.recruiter].total++;
-    if(['Bid Ready','Bid Extended','Accepted'].includes(r.stage))byRecruiter[r.recruiter].bidReadyPlus++;
+    if(['Bid Ready','Bid Extended','Accepted'].includes(r.stage))byRecruiter[r.recruiter].lateStage++;
   });
-  return Object.entries(byRecruiter).map(([mid,v])=>({member:mB(mid),...v,rate:v.total?Math.round(v.bidReadyPlus/v.total*100):0})).sort((a,b)=>b.bidReadyPlus-a.bidReadyPlus);
+  return Object.entries(byRecruiter).map(([mid,v])=>({member:mB(mid),...v,rate:v.total?Math.round(v.lateStage/v.total*100):0})).sort((a,b)=>b.lateStage-a.lateStage);
 }
 
 // ══════════════════════════════════════════════════
@@ -408,7 +407,7 @@ function ciRenderKpiRow(){
     statStrip('Attendance Rate',avgAtt+'%',attTrend===null?'No 30d comparison yet':(attTrend>=0?'+':'')+attTrend+'pts vs prior 30d',attTrend===null?'neutral':attTrend>=0?'up':'down')+
     statStrip('Task Completion',taskPct===null?'N/A':taskPct+'%',taskPct===null?'No tasks yet':dn+' of '+D.tasks.length+' done','neutral')+
     statStrip('Financial Collection',fin.rate+'%',recentPay||priorPay?'$'+Math.round(recentPay).toLocaleString()+' collected last 30d ('+(recentPay>=priorPay?'+':'')+Math.round(recentPay-priorPay).toLocaleString()+' vs prior)':fin.paidCount+' / '+fin.total+' paid','neutral')+
-    statStrip('Recruitment Conversion',rec.total?rec.conversionRate+'%':'N/A',rec.total?rec.total+' rushees tracked':'No rushees yet','neutral')+
+    statStrip('Bid Ready or Later',rec.total?rec.lateStageRate+'%':'N/A',rec.total?'Share of '+rec.total+' rushees tracked':'No rushees yet','neutral')+
     statStrip('Open Accountability Cases',openCases,openCases?'Requires attention':'All clear',openCases?'down':'up');
 }
 function ciRenderHealthLink(){
@@ -547,14 +546,14 @@ function ciRenderRecruitmentTab(){
   const kpiEl=document.getElementById('ci-rec-kpi');
   if(kpiEl) kpiEl.innerHTML=
     statStrip('Total Rushees',f.total,'In pipeline','neutral')+
-    statStrip('Conversion Rate',f.conversionRate+'%','Bid-ready or further','neutral')+
+    statStrip('Bid Ready or Later',f.lateStageRate+'%','Share of current pipeline','neutral')+
     statStrip('Accepted',f.accepted,f.total?Math.round(f.acceptRate)+'% of pipeline':'N/A','up');
   const funnelEl=document.getElementById('ci-rec-funnel');
   if(funnelEl) funnelEl.innerHTML = f.total ? f.counts.map(c=>`<div class="pr" style="cursor:pointer" onclick="rbacNav('recruitment',null)"><span class="pl">${esc(c.stage)}</span><div class="pb"><div class="pf" style="width:${f.total?Math.round(c.count/f.total*100):0}%;background:${c.col}"></div></div><span class="pv">${c.count}</span></div>`).join('') : es('ti-user-plus','blue','No rushees tracked yet','','');
   const recEl=document.getElementById('ci-rec-recruiters');
   if(recEl){
     const perf=calcRecruiterPerformance();
-    recEl.innerHTML = perf.length ? perf.map(p=>`<div class="sh-row"><div class="sh-av" style="width:22px;height:22px;font-size:8px">${esc(p.member.initials)}</div><div style="flex:1;min-width:0;font-size:11.5px">${esc(p.member.name)}</div><span style="font-size:11px;color:var(--mt)">${p.bidReadyPlus}/${p.total} (${p.rate}%)</span></div>`).join('') : es('ti-users','blue','No recruiter assignments yet','','');
+    recEl.innerHTML = perf.length ? perf.map(p=>`<div class="sh-row"><div class="sh-av" style="width:22px;height:22px;font-size:8px">${esc(p.member.initials)}</div><div style="flex:1;min-width:0;font-size:11.5px">${esc(p.member.name)}</div><span style="font-size:11px;color:var(--mt)" title="Bid ready or later, out of total assigned">${p.lateStage}/${p.total} (${p.rate}%)</span></div>`).join('') : es('ti-users','blue','No recruiter assignments yet','','');
   }
   const tableEl=document.getElementById('ci-rec-table');
   if(tableEl){

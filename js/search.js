@@ -35,6 +35,11 @@ function gsSearch(q) {
   const lq = q.toLowerCase();
   const results = [];
 
+  // Every category below is additionally gated by canAccess() on its destination page — a
+  // hidden sidebar link isn't enough on its own, since search results render their own
+  // title/subtitle text before any click-through navigation check ever runs. Members has no
+  // gate below since 'members' is on VIEWER_PAGES (every role can see the roster).
+
   // ── Members ──
   (D.members || []).forEach(m => {
     if (m.name.toLowerCase().includes(lq) || (m.role||'').toLowerCase().includes(lq)) {
@@ -47,8 +52,9 @@ function gsSearch(q) {
     }
   });
 
-  // ── Tasks ──
-  (D.tasks || []).forEach(t => {
+  // ── Tasks ── (visibleTasksFor: leads see every position, everyone else only their own — same
+  // rule Tasks & Goals, the Calendar, and the Dashboard all use, see js/auth.js)
+  (visibleTasksFor(D.tasks) || []).forEach(t => {
     if (t.title.toLowerCase().includes(lq) || (t.desc||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'tasks', id: t.id,
@@ -61,7 +67,7 @@ function gsSearch(q) {
   });
 
   // ── Meeting Notes ──
-  (D.notes || []).forEach(n => {
+  if (canAccess('notes')) (D.notes || []).forEach(n => {
     const bodyText = (n.body||'') + (n.announcements||'') + (n.oldBusiness||'') + (n.newBusiness||'');
     if (n.title.toLowerCase().includes(lq) || bodyText.toLowerCase().includes(lq)) {
       results.push({
@@ -73,7 +79,7 @@ function gsSearch(q) {
     }
   });
 
-  // ── Calendar Events ──
+  // ── Calendar Events ── (no gate: 'calendar' is on VIEWER_PAGES, every role can see it)
   (D.events || []).forEach(e => {
     if (e.title.toLowerCase().includes(lq) || (e.location||'').toLowerCase().includes(lq) || (e.type||'').toLowerCase().includes(lq)) {
       results.push({
@@ -90,7 +96,7 @@ function gsSearch(q) {
   });
 
   // ── Files ──
-  (D.files || []).forEach(f => {
+  if (canAccess('files')) (D.files || []).forEach(f => {
     if (f.name.toLowerCase().includes(lq) || (f.folder||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'files', id: f.id,
@@ -102,7 +108,7 @@ function gsSearch(q) {
   });
 
   // ── Recruitment Rushees ──
-  ((D.recruitment||{}).rushees || []).forEach(r => {
+  if (canAccess('recruitment')) ((D.recruitment||{}).rushees || []).forEach(r => {
     if (r.name.toLowerCase().includes(lq) || (r.major||'').toLowerCase().includes(lq) || (r.stage||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'recruitment', id: r.id,
@@ -113,8 +119,8 @@ function gsSearch(q) {
     }
   });
 
-  // ── Judicial Cases ──
-  (D.cases || []).forEach(c => {
+  // ── Judicial Cases ── (lead-only, same as the page itself — jbCanAccess()==isLeadUser())
+  if (typeof jbCanAccess==='function' && jbCanAccess()) (D.cases || []).forEach(c => {
     const memberName = mB(c.member).name;
     if (c.caseNum.toLowerCase().includes(lq) || memberName.toLowerCase().includes(lq) || (c.desc||'').toLowerCase().includes(lq) || (c.type||'').toLowerCase().includes(lq)) {
       results.push({
@@ -127,7 +133,7 @@ function gsSearch(q) {
   });
 
   // ── Finance: Fines ──
-  ((D.finance||{}).fines || []).forEach(f => {
+  if (canAccess('finance')) ((D.finance||{}).fines || []).forEach(f => {
     const m = mB(f.memberId);
     if ((m.name||'').toLowerCase().includes(lq) || (f.reason||'').toLowerCase().includes(lq)) {
       results.push({
@@ -140,7 +146,7 @@ function gsSearch(q) {
   });
 
   // ── Finance: Expenses ──
-  ((D.finance||{}).expenses || []).forEach(e => {
+  if (canAccess('finance')) ((D.finance||{}).expenses || []).forEach(e => {
     if ((e.description||'').toLowerCase().includes(lq) || (e.category||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'finance', id: e.id,
@@ -152,7 +158,7 @@ function gsSearch(q) {
   });
 
   // ── Alumni ──
-  ((D.alumni||{}).contacts || []).forEach(a => {
+  if (canAccess('alumni')) ((D.alumni||{}).contacts || []).forEach(a => {
     if ((a.name||'').toLowerCase().includes(lq) || (a.employer||'').toLowerCase().includes(lq) || (a.location||'').toLowerCase().includes(lq)) {
       results.push({
         cat: 'alumni', id: a.id,

@@ -2,8 +2,8 @@
 // RECRUITMENT CRM
 // ═══════════════════════════════════════════
 
-const RC_STAGES=['New Lead','Contacted','Attended Event','Active Rush','Interviewed','Bid Ready','Bid Extended','Accepted'];
-const RC_STAGE_COLORS=['#4FB6EC','#4FB6EC','#F5A623','#22C55E','#7b5ea7','#F0554A','#D6AD4E','#22C55E'];
+// RC_STAGES/RC_STAGE_COLORS live in js/recruitmentCalc.js (loaded before this file) — the single
+// source of truth every recruitment number in the app is computed from.
 const RC_TAGS=['Athlete','Legacy','Leadership','Good Fit','Needs Follow-up','Academics','Social Fit','Hot Prospect','Greek Life','Community'];
 const RC_TAG_CLASSES={Athlete:'athlete',Legacy:'legacy',Leadership:'leader','Hot Prospect':'hot','Good Fit':'active','Needs Follow-up':'dnb'};
 
@@ -118,17 +118,18 @@ async function renderRecruitment(){
 }
 
 // ── OVERVIEW ──
+// Every number here comes from js/recruitmentCalc.js's canonical functions — the same functions
+// power the funnel, goal panel, alerts, reports, and Chapter Intelligence, so none of these can
+// silently disagree with each other again.
 function rcRenderOverview(){
   const rushees=rcVisibleRushees();
-  const hot=rushees.filter(r=>r.bidScore>=70).length;
-  const bidReady=rushees.filter(r=>['Bid Ready','Bid Extended','Accepted'].includes(r.stage)).length;
-  const totalEvAtt=rushees.reduce((s,r)=>s+r.eventsAttended,0);
   const RCG=(D.recruitment.goal||{})[rcSem()]||{target:20,label:'New Members This Semester'};
+  const stats=rcOverviewStats(rushees,RCG);
   document.getElementById('rc-kpi').innerHTML=
-    statStrip('Total Rushees',rushees.length,`${rushees.length} of ${RCG.target} goal`,rushees.length>=RCG.target?'up':'neutral')+
-    statStrip('Hot Prospects',hot,'Score 70+',hot>0?'up':'neutral')+
-    statStrip('Event Attendances',totalEvAtt,'Across all rushees','neutral')+
-    statStrip('Bid Ready',bidReady,'Ready to extend',bidReady>0?'up':'neutral');
+    statStrip('Total Rushees',stats.total,`${stats.active} active prospects`,'neutral')+
+    statStrip('Hot Prospects',stats.hot,`Bid score ${RC_HOT_THRESHOLD}+`,stats.hot>0?'up':'neutral')+
+    statStrip('Event Attendances',stats.eventAttendances,'Across all rushees','neutral')+
+    statStrip('Bid Ready',stats.bidReady,'Currently in Bid Ready stage',stats.bidReady>0?'up':'neutral');
 
   rcDrawFunnel(rushees);
   rcDrawConversion(rushees);
@@ -138,32 +139,31 @@ function rcRenderOverview(){
   rcDrawGoal(rushees, RCG);
 }
 
-// ── FUNNEL: horizontal SVG ──
+// ── FUNNEL: current stage distribution ──
+// This pipeline has no stage-history/transition log (a stage change just overwrites r.stage in
+// place, nothing is appended anywhere) — so there is no valid way to compute a real
+// stage-to-stage conversion rate here. This shows each stage's share of today's total pipeline
+// instead of a fabricated conversion percentage. See rcDrawConversion() below for the one
+// snapshot-derived rate that IS mathematically sound (bounded, monotonic).
 function rcDrawFunnel(rushees){
   const el=document.getElementById('rc-funnel-wrap');
   const totEl=document.getElementById('rc-funnel-total');
   if(!el)return;
-  const stageCounts=RC_STAGES.map((s,i)=>({stage:s,count:rushees.filter(r=>r.stage===s).length,col:RC_STAGE_COLORS[i]}));
-  if(totEl)totEl.textContent=rushees.length+' total rushees';
+  const stageCounts=rcStageDistribution(rushees);
+  if(totEl)totEl.textContent=rcTotalRushees(rushees)+' total rushees · current stage distribution, not a historical trend';
 
-  // Build visual funnel as stacked horizontal bars with stage labels
-  const total=rushees.length||1;
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px;padding:4px 0">
-    ${stageCounts.map((s,i)=>{
-      const pct=Math.round(s.count/total*100);
-      const prev=i>0?stageCounts[i-1].count:null;
-      const convRate=prev&&prev>0?Math.round(s.count/prev*100):null;
-      const barW=Math.max(10,Math.round(s.count/total*100));
-      return`<div class="rc-hfunnel-row" tabindex="0" role="button" onclick="rcFilterToStage('${s.stage}')" title="${s.stage}: ${s.count} rushees">
+    ${stageCounts.map(s=>{
+      const barW=Math.max(10,s.pct);
+      return`<div class="rc-hfunnel-row" tabindex="0" role="button" onclick="rcFilterToStage('${s.stage}')" title="${s.stage}: ${s.count} rushees, ${s.pct}% of the current pipeline">
         <div class="rc-hfunnel-label">${s.stage}</div>
         <div class="rc-hfunnel-track">
-          <div class="rc-hfunnel-fill" style="width:0%;background:${s.col}" data-w="${barW}">
+          <div class="rc-hfunnel-fill" style="width:0%;background:${s.color}" data-w="${barW}">
             <span class="rc-hfunnel-count">${s.count}</span>
           </div>
         </div>
         <div class="rc-hfunnel-meta">
-          ${convRate!==null?`<span class="rc-hfunnel-conv" style="color:${convRate>=50?'var(--gn-tx)':convRate>=25?'var(--am-tx)':'var(--rd-tx)'}">↓ ${convRate}%</span>`:'<span style="font-size:9.5px;color:var(--ht)">N/A</span>'}
-          <span class="rc-hfunnel-pct">${pct}%</span>
+          <span class="rc-hfunnel-pct">${s.pct}% of pipeline</span>
         </div>
       </div>`;
     }).join('')}
@@ -171,18 +171,15 @@ function rcDrawFunnel(rushees){
   setTimeout(()=>el.querySelectorAll('[data-w]').forEach(b=>{b.style.width=b.dataset.w+'%';}),60);
 }
 
-// ── STAGE CONVERSION RATES ──
+// ── PIPELINE RETENTION (snapshot-based, not a historical conversion rate) ──
+// What share of prospects who've reached stage i (or later) are currently at stage i+1 or later.
+// Bounded 0-100% by construction, unlike a raw adjacent-bucket ratio — but still a read of
+// today's pipeline shape, not a tracked cohort over time (no stage-history log exists to build
+// one from). Labeled accordingly rather than called "conversion."
 function rcDrawConversion(rushees){
   const el=document.getElementById('rc-conversion');if(!el)return;
   if(!rushees.length){el.innerHTML=`<div style="color:var(--ht);font-size:12px;padding:14px 0;text-align:center">No rushees yet.</div>`;return;}
-  const pairs=[];
-  for(let i=0;i<RC_STAGES.length-1;i++){
-    const from=rushees.filter(r=>RC_STAGES.indexOf(r.stage)>=i).length;
-    const to=rushees.filter(r=>RC_STAGES.indexOf(r.stage)>=i+1).length;
-    if(from===0)continue;
-    const rate=Math.round(to/from*100);
-    pairs.push({from:RC_STAGES[i],to:RC_STAGES[i+1],rate,fromN:from,toN:to});
-  }
+  const pairs=rcCumulativeRetention(rushees);
   el.innerHTML=pairs.map(p=>{
     const col=p.rate>=60?'var(--gn)':p.rate>=35?'var(--am)':'var(--rd)';
     return`<div style="display:flex;align-items:center;gap:7px;padding:3px 0">
@@ -230,7 +227,7 @@ function rcDrawAlerts(rushees){
   const alerts=[];
   const stale=rushees.filter(r=>{if(!r.lastContact)return r.stage!=='New Lead';const days=Math.round((new Date()-new Date(r.lastContact+'T12:00:00'))/(86400000));return days>5&&!['Accepted','Bid Extended'].includes(r.stage);});
   if(stale.length)alerts.push({icon:'ti-clock',bg:'background:var(--am-bg)',ic:'color:var(--am-tx)',title:`${stale.length} not contacted in 5+ days`,body:stale.slice(0,2).map(r=>esc(r.name)).join(', ')+(stale.length>2?` +${stale.length-2} more`:'')});
-  const br=rushees.filter(r=>r.stage==='Bid Ready');
+  const br=rcBidReady(rushees);
   if(br.length)alerts.push({icon:'ti-star',bg:'background:var(--gn-bg)',ic:'color:var(--gn-tx)',title:`${br.length} rushee${br.length>1?'s':''} Bid Ready`,body:br.map(r=>esc(r.name)).join(', ')});
   const nextEv=rcEvents().filter(e=>isUp(e.date)).sort((a,b)=>a.date.localeCompare(b.date))[0];
   if(nextEv){const days=Math.round((new Date(nextEv.date+'T12:00:00')-new Date())/86400000);if(days<=2)alerts.push({icon:'ti-calendar-event',bg:'background:var(--bl-bg)',ic:'color:var(--bl-tx)',title:`"${esc(nextEv.title)}" ${days===0?'is today':days===1?'is tomorrow':'in '+days+' days'}`,body:to12h(nextEv.start)+(nextEv.location?' · '+esc(nextEv.location):'')});}
@@ -284,15 +281,15 @@ function rcDrawQuality(rushees){
 }
 
 // ── GOAL PANEL ──
+// Progress is Accepted / target — never total pipeline size (see rcGoalProgress in
+// js/recruitmentCalc.js). Two accepted against a goal of 20 reads "2 / 20, 10% of goal."
 function rcDrawGoal(rushees, RCG){
   const el=document.getElementById('rc-goal-panel');if(!el)return;
   const editBtn=document.getElementById('rc-goal-edit-btn');
   if(editBtn)editBtn.style.display=(canEditPage('recruitment')&&isCurrentSemester(rcSem()))?'':'none';
-  const accepted=rushees.filter(r=>r.stage==='Accepted').length;
   const bidExt=rushees.filter(r=>r.stage==='Bid Extended').length;
-  const bidReady=rushees.filter(r=>r.stage==='Bid Ready').length;
-  const pct=Math.min(100,Math.round(rushees.length/RCG.target*100));
-  const closePct=Math.min(100,Math.round((accepted+bidExt)/RCG.target*100));
+  const bidReady=rcBidReady(rushees).length;
+  const goal=rcGoalProgress(rushees,RCG);
 
   // Number capped at the system's 26px Headline max (DESIGN.md: no larger display tier exists) —
   // was 32px, the same over-scale mistake fixed elsewhere. Sub-stats are divided list rows now,
@@ -300,15 +297,15 @@ function rcDrawGoal(rushees, RCG){
   el.innerHTML=`
     <div style="text-align:center;margin-bottom:14px;padding:12px;background:radial-gradient(140% 160% at 0% 0%,rgba(214,173,78,.16) 0%,transparent 50%),linear-gradient(135deg,var(--surf2) 0%,var(--bg) 100%);border:1px solid var(--bdr2);border-radius:10px;color:var(--tx)">
       <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:4px">${esc(RCG.label)}</div>
-      <div style="font-size:26px;font-weight:700;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums">${rushees.length}<span style="font-size:13px;opacity:.6"> / ${RCG.target}</span></div>
+      <div style="font-size:26px;font-weight:700;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums" title="Accepted prospects out of the season goal">${goal.accepted}<span style="font-size:13px;opacity:.6"> / ${goal.target}</span></div>
       <div style="height:5px;background:rgba(0,0,0,.08);border-radius:99px;overflow:hidden;margin:8px 0 5px">
-        <div style="height:100%;background:var(--gold);border-radius:99px;width:100%;transform-origin:left;transform:scaleX(${pct/100});transition:transform .7s ease"></div>
+        <div style="height:100%;background:var(--gold);border-radius:99px;width:100%;transform-origin:left;transform:scaleX(${goal.pct/100});transition:transform .7s ease"></div>
       </div>
-      <div style="font-size:10px;opacity:.75">${pct}% of goal · ${Math.max(0,RCG.target-rushees.length)} to go</div>
+      <div style="font-size:10px;opacity:.75">${goal.pct}% of goal, based on accepted prospects · ${goal.remaining} to go</div>
     </div>
     <div>
       ${[
-        {label:'Accepted',n:accepted,c:'var(--gn)',icon:'ti-check'},
+        {label:'Accepted',n:goal.accepted,c:'var(--gn)',icon:'ti-check'},
         {label:'Bid Extended',n:bidExt,c:'var(--bl)',icon:'ti-mail'},
         {label:'Bid Ready',n:bidReady,c:'var(--am)',icon:'ti-star'},
       ].map(s=>`<div class="rc-stat">

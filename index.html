@@ -51,25 +51,26 @@
     <span id="demo-banner-text" style="opacity:.9">ATO Executive System · Viewing as <strong id="demo-role-label">President</strong> · All data is fictional</span>
     <select id="demo-role-switcher" onchange="switchDemoRole(this.value)" title="Switch role to explore RBAC access control" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;font-size:10.5px;padding:2px 6px;cursor:pointer;outline:none;max-width:210px;min-height:26px">
       <option value="" disabled selected style="color:#1e293b;background:#fff">Switch role…</option>
-      <option value="President" style="color:#1e293b;background:#fff">President: full access</option>
-      <option value="Vice President" style="color:#1e293b;background:#fff">Vice President: full access</option>
-      <option value="Treasurer" style="color:#1e293b;background:#fff">Treasurer: Finance</option>
-      <option value="Secretary" style="color:#1e293b;background:#fff">Secretary: Attendance, Notes, Members</option>
-      <option value="Risk Manager" style="color:#1e293b;background:#fff">Risk Manager: Social Monitors, Attendance</option>
-      <option value="Recruitment" style="color:#1e293b;background:#fff">Recruitment: Recruitment CRM</option>
-      <option value="Scholarship" style="color:#1e293b;background:#fff">Scholarship: Academics</option>
-      <option value="Philanthropy" style="color:#1e293b;background:#fff">Philanthropy</option>
-      <option value="Community Service" style="color:#1e293b;background:#fff">Community Service</option>
-      <option value="Alumni" style="color:#1e293b;background:#fff">Alumni: Alumni Relations</option>
-      <option value="House Manager" style="color:#1e293b;background:#fff">House Manager: House Mgmt</option>
-      <option value="Membership Educator" style="color:#1e293b;background:#fff">Membership Educator: New Member Education</option>
-      <option value="Chaplain" style="color:#1e293b;background:#fff">Chaplain: Chaplain Hub</option>
-      <option value="Social" style="color:#1e293b;background:#fff">Social: Social Monitors, Social Events</option>
-      <option value="Public Relations" style="color:#1e293b;background:#fff">Public Relations</option>
-      <option value="General Member" style="color:#1e293b;background:#fff">General Member: read-only</option>
+      <option value="President" style="color:#1e293b;background:#fff">President: full chapter access</option>
+      <option value="Vice President" style="color:#1e293b;background:#fff">Vice President: full chapter access</option>
+      <option value="Treasurer" style="color:#1e293b;background:#fff">Treasurer: manages finance</option>
+      <option value="Secretary" style="color:#1e293b;background:#fff">Secretary: manages attendance, members and notes</option>
+      <option value="Risk Manager" style="color:#1e293b;background:#fff">Risk Manager: manages social monitors and attendance</option>
+      <option value="Recruitment" style="color:#1e293b;background:#fff">Recruitment: manages Recruitment CRM</option>
+      <option value="Scholarship" style="color:#1e293b;background:#fff">Scholarship: manages academics and members</option>
+      <option value="Philanthropy" style="color:#1e293b;background:#fff">Philanthropy: manages philanthropy</option>
+      <option value="Community Service" style="color:#1e293b;background:#fff">Community Service: manages community service</option>
+      <option value="Alumni" style="color:#1e293b;background:#fff">Alumni: manages alumni relations and members</option>
+      <option value="House Manager" style="color:#1e293b;background:#fff">House Manager: manages house management and members</option>
+      <option value="Membership Educator" style="color:#1e293b;background:#fff">Membership Educator: manages new member education</option>
+      <option value="Chaplain" style="color:#1e293b;background:#fff">Chaplain: manages Chaplain Hub and members</option>
+      <option value="Social" style="color:#1e293b;background:#fff">Social: manages social monitors and social events</option>
+      <option value="Public Relations" style="color:#1e293b;background:#fff">Public Relations: chapter-wide view access</option>
+      <option value="General Member" style="color:#1e293b;background:#fff">General Member: personal and shared chapter access</option>
     </select>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button onclick="dtStart()" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:5px;cursor:pointer;font-size:10.5px;padding:3px 9px;min-height:26px">Take the tour</button>
     <button id="demo-banner-toggle" onclick="toggleDemoBanner()" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;min-width:26px;min-height:26px" title="Dismiss">×</button>
   </div>
 </div>
@@ -274,7 +275,10 @@
             <div id="d-health-dims" class="d2-hero-dims"></div>
           </div>
         </div>
-        <button class="card-a d2-hero-link" id="d-health-scorecard-link" onclick="rbacNav('healthscore',null)">Full scorecard →</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <button class="card-a" style="font-size:10.5px" onclick="openM('m-health-explain')"><i class="ti ti-info-circle"></i> How this is calculated</button>
+          <button class="card-a d2-hero-link" id="d-health-scorecard-link" onclick="rbacNav('healthscore',null)">Full scorecard →</button>
+        </div>
       </div>
 
       <!-- ── QUICK ACTIONS: discoverable, but secondary to everything below ── -->
@@ -299,6 +303,17 @@
               <button class="card-a" id="d-alerts-analytics-link" onclick="rbacNav('analytics',null)">Analytics</button>
             </div>
             <div id="d-alerts"></div>
+          </div>
+
+          <!-- Role Focus — role-specific priorities for non-lead roles, instead of a slightly
+               reduced copy of the executive dashboard. Hidden entirely (see dashBuildRoleFocus,
+               js/dashboard.js) for leads, who already get the full dashboard, and for positions
+               without dedicated focus content built yet. -->
+          <div class="card d2-card" id="d-role-focus-card" style="display:none">
+            <div class="card-hd">
+              <span class="card-t d2-card-t" id="d-role-focus-title"><i class="ti ti-focus-2 d2-card-ico" style="color:var(--gold-tx)"></i>Your Focus</span>
+            </div>
+            <div id="d-role-focus"></div>
           </div>
 
           <!-- Overdue Tasks -->
@@ -395,6 +410,19 @@
 
         </div><!-- /right -->
       </div><!-- /body -->
+
+      <!-- End-of-demo CTA — dismissible, demo-only, see js/demoTour.js's dtCtaInit(). -->
+      <div class="demo-cta-card" id="demo-cta-card" style="display:none">
+        <button class="demo-cta-x" id="demo-cta-dismiss" aria-label="Dismiss">×</button>
+        <div class="demo-cta-copy">
+          <h3>Ready to bring this to your chapter?</h3>
+          <p>See how the ATO Executive System can centralize your chapter's operations and give every officer a clearer way to lead.</p>
+        </div>
+        <div class="demo-cta-btns">
+          <a class="btn" href="https://atoexec.com" target="_blank" rel="noopener">Return to ATOExec.com</a>
+          <a class="btn btn-p" href="https://atoexec.com/intake" target="_blank" rel="noopener">Get Early Access</a>
+        </div>
+      </div>
 
     </div>
 
@@ -1290,10 +1318,11 @@
               <button class="card-a" onclick="rcTab(document.querySelector('[data-tab=rc-pipeline]'),'rc-pipeline')">Pipeline Board →</button>
             </div>
           </div>
-          <!-- SVG Funnel -->
+          <!-- Current stage distribution, not a historical conversion trend (see rcDrawFunnel's
+               comment in js/recruitment.js for why: this pipeline keeps no stage-history log). -->
           <div id="rc-funnel-wrap" style="margin-bottom:4px"></div>
           <!-- Stage click hint -->
-          <div style="font-size:10px;color:var(--ht);text-align:center;margin-top:2px">Click a stage to filter rushees</div>
+          <div style="font-size:10px;color:var(--ht);text-align:center;margin-top:2px">Click a stage to filter rushees · percentages show each stage's share of the current pipeline</div>
         </div>
 
         <div class="d2-body">
@@ -1303,9 +1332,13 @@
               <div class="card-hd"><span class="card-t" style="display:flex;align-items:center;gap:5px"><i class="ti ti-bell" style="font-size:11px;color:var(--am)"></i>Recruitment Alerts</span></div>
               <div id="rc-alerts"></div>
             </div>
-            <!-- Stage Conversion Rates -->
+            <!-- Pipeline Retention — a snapshot-based estimate (today's pipeline shape), not a
+                 tracked historical conversion rate. This chapter's data has no stage-history log,
+                 so there is no real "conversion rate" to show; see rcDrawConversion() in
+                 js/recruitment.js. -->
             <div class="card">
-              <div class="card-hd"><span class="card-t" style="display:flex;align-items:center;gap:5px"><i class="ti ti-arrow-right" style="font-size:11px;color:var(--mt)"></i>Stage Conversion</span></div>
+              <div class="card-hd"><span class="card-t" style="display:flex;align-items:center;gap:5px"><i class="ti ti-arrow-right" style="font-size:11px;color:var(--mt)"></i>Pipeline Retention</span></div>
+              <div style="font-size:10px;color:var(--ht);margin:-4px 0 6px" title="Based on today's pipeline snapshot, not tracked historical cohorts">What share of prospects who reached each stage are still at that stage or further</div>
               <div id="rc-conversion" style="display:flex;flex-direction:column;gap:6px;margin-top:2px"></div>
             </div>
           </div>
@@ -1365,7 +1398,7 @@
       <!-- Pipeline Board Tab -->
       <div id="rc-pipeline" style="display:none">
         <div class="list-toolbar">
-          <div style="font-size:11.5px;color:var(--mt)">Drag cards between stages to update rushee status</div>
+          <div style="font-size:11.5px;color:var(--mt)">Drag cards between stages to update rushee status · shows active-pipeline stages only, not Attended Event or Accepted (see the Rushees tab for the full list)</div>
           <div class="list-toolbar-actions">
             <button class="btn btn-p" id="rc-add-btn-2" onclick="rcOpenAdd()"><i class="ti ti-plus"></i>Add Rushee</button>
           </div>
@@ -2144,7 +2177,10 @@
             <div class="d2-hero-summary" id="hs-summary"></div>
             <span class="d2-hero-trend" id="hs-trend" style="display:none"></span>
             <div id="hs-hero-dims" class="d2-hero-dims"></div>
-            <div id="hs-updated" style="font-size:9.5px;color:var(--ht);margin-top:6px"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+              <div id="hs-updated" style="font-size:9.5px;color:var(--ht)"></div>
+              <button class="card-a" style="font-size:10.5px" onclick="openM('m-health-explain')"><i class="ti ti-info-circle"></i> How this is calculated</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2735,6 +2771,31 @@
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-truemerit'))">Cancel</button><button class="btn btn-p" id="tm-generate-btn" onclick="tmGenerateAndDownload()"><i class="ti ti-download"></i>Generate & Download JSON</button></div>
 </div></div>
 
+<!-- Chapter Health Score explanation — plain-language methodology, reachable from both the
+     Dashboard's mini widget and the full Scorecard page. Static text describing js/healthscore.js
+     computeHealthDims() — weights/thresholds here must stay in sync with that function. -->
+<div class="mo" role="dialog" aria-modal="true" id="m-health-explain" onclick="closeM(event,this)"><div class="md">
+  <div class="md-t">How the Health Score is calculated<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-health-explain'))"><i class="ti ti-x"></i></button></div>
+  <div style="font-size:12px;line-height:1.6;color:var(--tx)">
+    <p style="margin:0 0 12px">The Health Score is a weighted average of nine areas of chapter operations, each scored 0-100. One number for a quick read on how the chapter is doing overall.</p>
+    <table class="tbl" style="margin-bottom:12px"><thead><tr><th>Area</th><th>Weight</th><th>What it measures</th></tr></thead><tbody>
+      <tr><td>Attendance</td><td>20%</td><td>Average member attendance rate at mandatory events</td></tr>
+      <tr><td>Task Completion</td><td>16%</td><td>Share of chapter tasks marked done</td></tr>
+      <tr><td>Academics</td><td>14%</td><td>Average member GPA, scaled to a 0-100 range</td></tr>
+      <tr><td>Accountability</td><td>12%</td><td>Number of open Judicial Board cases (fewer is better)</td></tr>
+      <tr><td>Finances</td><td>11%</td><td>Share of members who have paid dues in full</td></tr>
+      <tr><td>Recruitment</td><td>8%</td><td>Rushees in the pipeline against the season goal</td></tr>
+      <tr><td>Community Service</td><td>7%</td><td>Hours logged against the chapter's semester goal</td></tr>
+      <tr><td>Social Events</td><td>7%</td><td>Average planning readiness across recent/upcoming events</td></tr>
+      <tr><td>Alumni</td><td>5%</td><td>Number of alumni contacts in the directory</td></tr>
+    </tbody></table>
+    <p style="margin:0 0 10px"><strong>Grades:</strong> 80+ is an A, 65-79 is a B, 50-64 is a C, below 50 is an F. The same thresholds set the score's color everywhere it appears.</p>
+    <p style="margin:0 0 10px"><strong>Missing data:</strong> an area with no data yet (for example, no rushees before rush season starts) is left out of the score entirely, not counted as a 0, and the remaining areas' weights are scaled up to fill the gap. It's marked "No data yet" wherever it's shown.</p>
+    <p style="margin:0 0 10px"><strong>How often it changes:</strong> the score recalculates instantly from live chapter data every time it's shown, so it reflects the current state of Attendance, Tasks, Academics, and every other area right now, not a periodic snapshot.</p>
+    <p style="margin:0">The score, grade, and every area shown come from one calculation, so the Dashboard widget and the full Scorecard page always agree.</p>
+  </div>
+</div></div>
+
 <!-- Add Chapter Achievement — feeds the True Merit export's awards_and_achievements section. -->
 <div class="mo" role="dialog" aria-modal="true" id="m-add-achievement" onclick="closeM(event,this)"><div class="md"><div class="md-t">Add Chapter Achievement<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-add-achievement'))"><i class="ti ti-x"></i></button></div>
   <div class="fr"><div class="fld"><label for="tma-title">Title *</label><input id="tma-title" placeholder="e.g. National Chapter of Excellence Award"></div></div>
@@ -3068,6 +3129,7 @@
 
 <!-- Core -->
 <script src="js/data.js"></script>
+<script src="js/recruitmentCalc.js"></script>
 <script src="js/helpers.js"></script>
 <script src="js/members.js"></script>
 <script src="js/events.js"></script>
@@ -3115,6 +3177,7 @@
 <!-- Demo bootstrap — seeds fictional data, auto-signs in, and stands in for the real Firebase
      backend. Loaded last so nothing above it needs to know it's running in demo mode. -->
 <script src="js/demo.js"></script>
+<script src="js/demoTour.js"></script>
 
 <!-- Mobile bottom navigation -->
 <div class="mobile-bnav" id="mobile-bnav">

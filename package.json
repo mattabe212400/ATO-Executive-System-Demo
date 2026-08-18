@@ -1,0 +1,8 @@
+{
+  "name": "ato-demo-tests",
+  "private": true,
+  "description": "CI-only test tooling for the ATO Executive System demo site. The demo itself has no build step and no npm dependencies (it's plain HTML/CSS/JS, loaded as <script> tags) — this package.json exists solely so its recruitment-calculation, RBAC/task-visibility, persona-sync, and Health Score logic can be exercised by Node's built-in test runner. No test framework dependency is added: node:test/node:assert are part of Node itself.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
