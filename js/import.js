@@ -34,21 +34,23 @@ function openImportModal(type) {
     : type === 'bibleStudyProgram' ? (typeof canEditRitual === 'function' && canEditRitual())
     : type === 'bibleStudyChapters' ? (typeof bsFull === 'function' && bsFull())
     : type === 'alumni' ? canEditPage('alumni')
+    : type === 'peerMentorProgram' ? (typeof canEditNewMemberEducation === 'function' && canEditNewMemberEducation())
     : canWrite();
   if (!allowed) { toast('You do not have permission to import this data.', 'error'); return; }
   _importType = type;
   _importRows = [];
   _importSkippedCount = 0;
-  const titles = { members: 'Import Members', grades: 'Import Grades', positionGoals: 'Import Goal Sheet', bylaws: 'Import Bylaws', committeeProgram: 'Import Committee Program', bibleStudyProgram: 'Import Bible Study Program', bibleStudyChapters: 'Import Bible Study Program', alumni: 'Import Alumni Directory' };
+  const titles = { members: 'Import Members', grades: 'Import Grades', positionGoals: 'Import Goal Sheet', bylaws: 'Import Bylaws', committeeProgram: 'Import Committee Program', bibleStudyProgram: 'Import Bible Study Program', bibleStudyChapters: 'Import Bible Study Program', alumni: 'Import Alumni Directory', peerMentorProgram: 'Import Peer Mentor Program' };
   const instructions = {
     members: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Grad Year</em>, <em>Class Year</em>, <em>Role</em>, <em>Live In</em>, <em>Major</em>, <em>Email</em>, <em>Phone</em>, <em>Hometown</em><br><span style="color:var(--ht)">Toggle "Update existing members" below to overwrite info for names already in the roster.</span>`,
-    grades:  `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Cumulative GPA</em>, <em>Semester GPA</em><br><span style="color:var(--ht)">Members must already exist in the roster. Unmatched names are skipped.</span>`,
+    grades:  `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <strong>GPA</strong> (required)<br><span style="color:var(--ht)">Members must already exist in the roster. Unmatched names are skipped.</span>`,
     positionGoals: `Upload a CSV with these columns (header row required):<br><strong>Position</strong> (required, must match one of this chapter's officer titles), <strong>Goal</strong> (required — the full goal statement, e.g. "Raise at least $5,000 for the national philanthropy this semester")<br><span style="color:var(--ht)">One row per semester goal — the same position can appear on multiple rows to give it multiple goals. Rows with a Position that doesn't match a configured chapter position are skipped. Legacy 5-column files (<strong>Position, Title, Target, Current, Unit</strong>) are still accepted — Title is used as the goal statement and the progress columns are ignored.</span>`,
     bylaws:  `Upload a CSV with these columns (header row required):<br><strong>Article</strong> (required), <em>Section</em>, <strong>Content</strong> (required, HTML supported e.g. &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;)<br><span style="color:var(--ht)">One row per section. Rows sharing the same Article are combined into one bylaw article, in the order they appear. This replaces your chapter's entire Bylaws section.</span>`,
     committeeProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em><br><span style="color:var(--ht)">One row per week/session of this committee's program. This replaces this committee's entire program. Other committees are unaffected.</span>`,
     bibleStudyProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>Understanding</em>, <em>Discussion</em><br><span style="color:var(--ht)">One row per week of the Bible study curriculum. Understanding and Discussion are optional, longer-form fields shown in each week's click-through detail view. Use &lt;br&gt; for line breaks instead of a literal line break inside the cell. This replaces the chapter's entire Bible Study Program.</span>`,
     bibleStudyChapters: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em>, <em>PassageToRead</em>, <em>LeaderSummary</em>, <em>GroupDiscussionFocus</em>, <em>LeaderPageRange</em>, <em>DiscussionPageRange</em>, <em>ExpectedPdfFilename</em>, <em>EstimatedPreparationMinutes</em>, <em>EstimatedSessionMinutes</em><br><span style="color:var(--ht)">One row per chapter. Only Week and Topic are required. This updates matching chapters in place by week number (PDFs, schedules, attendance, and notes on other chapters are never touched). The chapter PDF itself is uploaded separately via Manage Chapter PDFs, not through this CSV.</span>`,
     alumni: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Number</em>, <em>Email</em>, <em>Initiation Date</em><br><span style="color:var(--ht)">Adds new alumni to the directory. Rows whose name already matches someone in the directory are skipped: industry, current location, and LinkedIn can be filled in afterward from the directory table.</span>`,
+    peerMentorProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em><br><span style="color:var(--ht)">One row per week/session of the Peer Mentor Program curriculum. This replaces the entire program. Mentors and group assignments are managed separately, not through this CSV.</span>`,
   };
   document.getElementById('imp-title').textContent = titles[type] || 'Import';
   document.getElementById('imp-instructions').innerHTML = instructions[type] || '';
@@ -173,7 +175,7 @@ function impPreview(text) {
   _importRows = _importType === 'members' ? impBuildMemberRows(rows, preview)
     : _importType === 'positionGoals' ? impBuildPositionGoalRows(rows, preview)
     : _importType === 'bylaws' ? impBuildBylawRows(rows, preview)
-    : (_importType === 'committeeProgram' || _importType === 'bibleStudyProgram') ? impBuildWeeklyProgramRows(rows, preview)
+    : (_importType === 'committeeProgram' || _importType === 'bibleStudyProgram' || _importType === 'peerMentorProgram') ? impBuildWeeklyProgramRows(rows, preview)
     : _importType === 'bibleStudyChapters' ? impBuildBsChapterRows(rows, preview)
     : _importType === 'alumni' ? impBuildAlumniRows(rows, preview)
     : impBuildGradeRows(rows, preview);
@@ -256,22 +258,20 @@ function impBuildGradeRows(rows, previewEl) {
     if (!name) { skipped.push('(blank name)'); return; }
     const member = membersByName[name.toLowerCase().trim()];
     if (!member) { skipped.push(name + ': not in roster'); return; }
-    const cumRaw = impCol(row, 'cumulative gpa', 'cumulative', 'cum gpa', 'gpa', 'overall gpa', 'cgpa');
-    const semRaw = impCol(row, 'semester gpa', 'semester', 'sem gpa', 'prior gpa', 'term gpa', 'last semester', 'sgpa');
-    const cumGpa = cumRaw ? parseFloat(cumRaw) : NaN;
-    const semGpa = semRaw ? parseFloat(semRaw) : NaN;
-    if (isNaN(cumGpa) && isNaN(semGpa)) { skipped.push(name + ': no valid GPA values'); return; }
-    toUpdate.push({ member, cumGpa: isNaN(cumGpa) ? null : cumGpa, semGpa: isNaN(semGpa) ? null : semGpa });
+    const gpaRaw = impCol(row, 'gpa', 'semester gpa', 'semester', 'sem gpa', 'prior gpa', 'term gpa', 'last semester', 'sgpa', 'cumulative gpa', 'cumulative', 'cum gpa', 'overall gpa', 'cgpa');
+    const gpa = gpaRaw ? parseFloat(gpaRaw) : NaN;
+    if (isNaN(gpa)) { skipped.push(name + ': no valid GPA value'); return; }
+    toUpdate.push({ member, gpa });
   });
 
   let html = '';
   if (toUpdate.length) {
     html += `<div style="font-size:12px;font-weight:600;color:var(--gn);margin-bottom:6px">${toUpdate.length} member${toUpdate.length !== 1 ? 's' : ''} to update:</div>`;
     html += `<div style="max-height:180px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">`;
-    html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Name</th><th style="padding:5px 8px;text-align:left">Cumulative GPA</th><th style="padding:5px 8px;text-align:left">Semester GPA</th></tr></thead><tbody>`;
+    html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Name</th><th style="padding:5px 8px;text-align:left">GPA</th></tr></thead><tbody>`;
     toUpdate.forEach((u, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(u.member.name)}</td><td style="padding:5px 8px">${u.cumGpa !== null ? u.cumGpa.toFixed(2) : 'N/A'}</td><td style="padding:5px 8px">${u.semGpa !== null ? u.semGpa.toFixed(2) : 'N/A'}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(u.member.name)}</td><td style="padding:5px 8px">${u.gpa.toFixed(2)}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -565,6 +565,12 @@ async function doImport() {
       D.chaplainHub.bibleStudyProgram = _importRows;
       await saveD('chaplainHub');
       toast(`Bible Study Program replaced with ${_importRows.length} week${_importRows.length !== 1 ? 's' : ''}`, 'success');
+    } else if (_importType === 'peerMentorProgram') {
+      if (!D.newMemberEducation.peerMentor) D.newMemberEducation.peerMentor = { program: [], mentorIds: [], assignments: {} };
+      D.newMemberEducation.peerMentor.program = _importRows;
+      await saveD('newMemberEducation');
+      if (typeof nmeRenderPeerMentor === 'function') nmeRenderPeerMentor();
+      toast(`Peer Mentor Program replaced with ${_importRows.length} week${_importRows.length !== 1 ? 's' : ''}`, 'success');
     } else if (_importType === 'bibleStudyChapters') {
       if (!D.bibleStudyCurriculum) D.bibleStudyCurriculum = { title: 'Bible Study Program', subtitle: '', source: { name: '', organization: '', attribution: '' }, schemaVersion: 1, chapters: [] };
       let updated = 0, created = 0;
@@ -610,8 +616,7 @@ async function doImport() {
       if (!D.academics.gpas) D.academics.gpas = {};
       _importRows.forEach(u => {
         const existing = D.academics.gpas[u.member.id] || {};
-        if (u.cumGpa !== null) existing.cumulativeGpa = u.cumGpa;
-        if (u.semGpa !== null) existing.priorGpa = u.semGpa;
+        existing.priorGpa = u.gpa;
         D.academics.gpas[u.member.id] = existing;
       });
       await saveD('academics');
@@ -677,8 +682,16 @@ function impDownloadTemplate(type) {
   } else if (type === 'alumni') {
     csv = 'Name,Number,Email,Initiation Date\nJohn Smith,515-555-0101,jsmith@iastate.edu,2020-09-15\nJane Doe,515-555-0102,jdoe@iastate.edu,2019-09-20';
     filename = 'alumni_directory_template.csv';
+  } else if (type === 'peerMentorProgram') {
+    csv = 'Week,Topic,Notes\n'
+      + '1,Welcome & Expectations,First one-on-one meeting -- get to know each other and set a regular meeting cadence\n'
+      + '2,Chapter History & Values,Cover founding history and what the values mean day to day\n'
+      + '3,Academics Check-In,Review study habits and point new members to campus resources if needed\n'
+      + '4,Risk Management,Walk through the risk management policy and answer questions\n'
+      + '5,Open Check-In,Open-ended -- surface any concerns before initiation';
+    filename = 'peer_mentor_program_template.csv';
   } else {
-    csv = 'Name,Cumulative GPA,Semester GPA\nJohn Smith,3.45,3.20\nJane Doe,2.89,3.10';
+    csv = 'Name,GPA\nJohn Smith,3.20\nJane Doe,3.10';
     filename = 'grades_template.csv';
   }
   downloadCSV(filename, csv);

@@ -11,7 +11,7 @@
   const seesJudicial=typeof jbCanAccess==='function'&&jbCanAccess();
 
   const tot=D.members.length||1;
-  const avg=Math.round(D.members.reduce((s,m)=>s+aR(m.id),0)/tot);
+  const avg=chapterAvgAttendance();
   const myTasks=visibleTasksFor(D.tasks);
   const openT=myTasks.filter(t=>t.status!=='done').length;
   const ovT=myTasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
@@ -86,13 +86,14 @@
     }
   }
 
-  // ── ATTENDANCE BAR CHART ──
-  const mandPast=D.events.filter(e=>e.mandatory&&!isUp(e.date)).sort((a,b)=>a.date.localeCompare(b.date)).slice(-8);
+  // ── ATTENDANCE BAR CHART ── (calcAttendanceTrend, js/analytics.js — the shared calc, so this
+  // never drifts from the Attendance page's own per-event chart)
+  const trend=calcAttendanceTrend(8);
   const chartEl=document.getElementById('d-chart');
   const labEl=document.getElementById('d-chart-labels');
-  if(mandPast.length>=2){
-    const chartData=mandPast.map(ev=>{const att=D.attendance[ev.id]||{};const pres=Object.values(att).filter(v=>v==='present'||v==='excused').length;return tot?Math.round(pres/tot*100):0;});
-    const chartLabels=mandPast.map(ev=>mos(ev.date)+' '+dom(ev.date));
+  if(trend.length>=2){
+    const chartData=trend.map(t=>t.val);
+    const chartLabels=trend.map(t=>t.label);
     const mx=Math.max(...chartData,1);
     if(chartEl)chartEl.innerHTML=chartData.map((v,i)=>`<div class="mb" style="flex:1;height:${Math.round(v/mx*100)}%;background:${v<75?'var(--rd)':v<85?'var(--am)':i===chartData.length-1?'var(--navy)':'var(--sky-bg)'};border-radius:3px 3px 0 0;transition:height .4s ease" title="${chartLabels[i]}: ${v}%"></div>`).join('');
     if(labEl)labEl.innerHTML=chartLabels.map(l=>`<span>${l}</span>`).join('');
@@ -377,7 +378,7 @@ function dashBuildRoleFocus(isViewer){
 
   if(title==='Scholarship'){
     const gpas=D.academics?.gpas||{};
-    const atRisk=D.members.filter(m=>{const v=parseFloat(gpas[m.id]?.cumulativeGpa);return !isNaN(v)&&v<2.6;}).length;
+    const atRisk=D.members.filter(m=>{const v=parseFloat(gpas[m.id]?.priorGpa);return !isNaN(v)&&v<2.6;}).length;
     const deadline=(D.transitionHub?.deadlines||[]).filter(d=>d.owner==='Scholarship'&&!d.done)[0];
     titleEl.innerHTML=`<i class="ti ti-school d2-card-ico" style="color:var(--gold-tx)"></i>Scholarship Focus`;
     card.style.display='';
@@ -466,11 +467,16 @@ function renderAttendance(){
   const range=semesterDateRange(sem);
   const semEvents=range?D.events.filter(e=>e.date>=range.start&&e.date<=range.end):D.events;
   const semEventIds=new Set(semEvents.map(e=>e.id));
-  const tot=D.members.length;const avg=Math.round(D.members.reduce((s,m)=>s+aRForSemester(m.id,sem),0)/tot);
+  const avg=chapterAvgAttendanceForSemester(D.members,sem);
   const excused=Object.entries(D.attendance||{}).filter(([evId])=>semEventIds.has(evId)).reduce((s,[,ev])=>s+Object.values(ev).filter(v=>v==='excused').length,0);
   const absent=Object.entries(D.attendance||{}).filter(([evId])=>semEventIds.has(evId)).reduce((s,[,ev])=>s+Object.values(ev).filter(v=>v==='absent').length,0);
   const attHd=document.getElementById('att-hd');if(attHd)attHd.textContent='Member Attendance: '+sem;
-  document.getElementById('a-kpi').innerHTML=statStrip('Semester avg',avg+'%',sem,avg>=85?'up':'down')+statStrip('Excused Misses',excused,sem+' total','neutral')+statStrip('Unexcused Misses',absent,sem+' total',absent>20?'down':'neutral')+statStrip('Warnings issued',D.members.filter(m=>aRForSemester(m.id,sem)<75).length,'Below 75%',D.members.filter(m=>aRForSemester(m.id,sem)<75).length>0?'down':'neutral');
+  // Attendance fines (js/finance.js's finAddAttendanceFine()) are tagged type:'Attendance' —
+  // scoped to this semester by date range, same pattern finance.js/reports.js use elsewhere.
+  const attFines=(D.finance?.fines||[]).filter(f=>f.type==='Attendance'&&(!range||(f.date>=range.start&&f.date<=range.end)));
+  const finesCollected=attFines.filter(f=>f.status==='Paid').reduce((s,f)=>s+f.amount,0);
+  const finesOutstanding=attFines.filter(f=>f.status==='Unpaid').reduce((s,f)=>s+f.amount,0);
+  document.getElementById('a-kpi').innerHTML=statStrip('Semester avg',avg+'%',sem,avg>=85?'up':'down')+statStrip('Excused Misses',excused,sem+' total','neutral')+statStrip('Unexcused Misses',absent,sem+' total',absent>20?'down':'neutral')+statStrip('Fines Collected','$'+finesCollected.toLocaleString(),sem+' total','up')+statStrip('Fines Outstanding','$'+finesOutstanding.toLocaleString(),finesOutstanding>0?'Needs collection':'All paid',finesOutstanding>0?'down':'up');
   document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attendance Rate</th><th>Status</th><th></th></tr></thead><tbody>${D.members.length?sortedMembers().map(m=>{const r=aRForSemester(m.id,sem);const t=attTier(r);return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div><span style="font-weight:500">${esc(m.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(m.classYear)}</td><td style="font-weight:500;color:${t.color}">${r}%</td><td><span class="badge ${t.badge}">${t.label}</span></td><td><button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(m.name)}" onclick="openEditMember('${m.id}')"><i class="ti ti-pencil"></i></button></td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No members yet. Add members to start tracking attendance.</td></tr>'}</tbody>`;
   document.getElementById('a-mobile-cards').innerHTML=D.members.length?sortedMembers().map(m=>{
     const r=aRForSemester(m.id,sem);const t=attTier(r);
@@ -491,19 +497,27 @@ function renderAttendance(){
   }).join(''):'<div style="color:var(--ht);font-size:12px;padding:20px;text-align:center">No members yet. Add members to start tracking attendance.</div>';
   // Attendance can be marked for a mandatory event any time — before it happens (e.g. pre-marking
   // a known absence) or after — so the only gates here are "is this event mandatory" and "is the
-  // semester it falls in still editable," not whether the event date has already passed.
-  document.getElementById('a-events').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Mandatory</th><th></th></tr></thead><tbody>${semEvents.length?semEvents.map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="${evCS(e.type)}">${esc(e.type)}</span></td><td>${fd(e.date)}</td><td>${e.mandatory?'<span class="badge br2">Required</span>':'N/A'}</td><td>${e.mandatory&&isCurrentSemester(sem)?`<button class="btn" style="height:23px;font-size:10.5px" onclick="openMarkAttEv('${e.id}')"><i class="ti ti-checkbox"></i>Mark</button>`:'N/A'}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No events yet. Create an event to start tracking attendance.</td></tr>'}</tbody>`;
+  // semester it falls in still editable," not whether the event date has already passed. View is
+  // separate from Mark — it's read-only (who attended/was excused/was unexcused), so it's offered
+  // to anyone who can see this page at all, not gated by canEditAttendance() like Mark is.
+  const attActionBtns=(e,wide)=>{
+    const hasData=D.attendance[e.id]&&Object.keys(D.attendance[e.id]).length>0;
+    const viewBtn=hasData?`<button class="btn" style="height:${wide?26:23}px;font-size:${wide?11:10.5}px${wide?';width:100%':''}" onclick="openViewAtt('${e.id}')"><i class="ti ti-eye"></i>View</button>`:'';
+    const markBtn=(e.mandatory&&isCurrentSemester(sem))?`<button class="btn" style="height:${wide?26:23}px;font-size:${wide?11:10.5}px${wide?';width:100%':''}" onclick="openMarkAttEv('${e.id}')"><i class="ti ti-checkbox"></i>Mark${wide?' Attendance':''}</button>`:'';
+    return [viewBtn,markBtn].filter(Boolean).join(wide?'<div style="height:6px"></div>':' ')||'N/A';
+  };
+  document.getElementById('a-events').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Mandatory</th><th></th></tr></thead><tbody>${semEvents.length?semEvents.map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="${evCS(e.type)}">${esc(e.type)}</span></td><td>${fd(e.date)}</td><td>${e.mandatory?'<span class="badge br2">Required</span>':'N/A'}</td><td style="white-space:nowrap">${attActionBtns(e,false)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No events yet. Create an event to start tracking attendance.</td></tr>'}</tbody>`;
   const evMobEl=document.getElementById('a-events-mobile-cards');
   if(evMobEl)evMobEl.innerHTML=semEvents.length?semEvents.map(e=>`<div class="mob-card card">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">
       <div style="font-weight:600;font-size:13px">${esc(e.title)}</div>
       ${e.mandatory?'<span class="badge br2" style="flex-shrink:0">Required</span>':''}
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:${e.mandatory&&isCurrentSemester(sem)?'10px':'0'}">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
       <span class="badge" style="${evCS(e.type)}">${esc(e.type)}</span>
       <span style="font-size:11px;color:var(--mt)">${fd(e.date)}</span>
     </div>
-    ${e.mandatory&&isCurrentSemester(sem)?`<button class="btn" style="height:26px;font-size:11px;width:100%" onclick="openMarkAttEv('${e.id}')"><i class="ti ti-checkbox"></i>Mark Attendance</button>`:''}
+    ${attActionBtns(e,true)}
   </div>`).join(''):'<div style="grid-column:1/-1;color:var(--ht);font-size:12px;padding:20px;text-align:center">No events yet. Create an event to start tracking attendance.</div>';
   attRenderAnalytics();
   updateBadges();

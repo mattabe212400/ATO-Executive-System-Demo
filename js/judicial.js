@@ -31,8 +31,114 @@ function renderJudicial(){
   renderJudicialContent();
 }
 
+// ── JUDICIAL BOARD MEMBERSHIP — 9 mandatory seats, plus an uncapped Substitutes list for
+// members who fill in (e.g. a seated member recusing from a specific case). Separate from case
+// data — this is who serves, not case records — so it rides the standard position-configurable
+// data/{key} collection (js/data.js's FS_KEYS) rather than the judicialCases collection's
+// stricter per-case read gate. jbCanEditBoard() mirrors jbCanAccess() (isLeadUser()) rather than
+// aliasing it directly, so the two can diverge later if a non-lead Judicial position is ever
+// allowed to view (but not manage) board composition.
+const JB_SEATS=9;
+function jbCanEditBoard(){ return isLeadUser(); }
+function jbRenderBoard(){
+  const badge=document.getElementById('jb-board-badge');
+  const body=document.getElementById('jb-board-body');
+  if(!body)return;
+  if(!D.judicialBoard)D.judicialBoard={members:[],substitutes:[]};
+  if(!D.judicialBoard.members)D.judicialBoard.members=[];
+  if(!D.judicialBoard.substitutes)D.judicialBoard.substitutes=[];
+  // Defensive filter, not a mutation — a removed member's id could still be sitting in either
+  // list if they were deleted from the roster without first being taken off the board.
+  const members=D.judicialBoard.members.filter(id=>D.members.some(m=>m.id===id));
+  const subs=D.judicialBoard.substitutes.filter(id=>D.members.some(m=>m.id===id));
+  const canEdit=jbCanEditBoard();
+
+  if(badge){
+    badge.textContent=members.length+' / '+JB_SEATS+' seats filled';
+    badge.className='badge '+(members.length>=JB_SEATS?'bg2':members.length>0?'ba2':'br2');
+  }
+
+  const takenIds=new Set([...members,...subs]);
+  const availOpts=sortedMembers().filter(m=>!takenIds.has(m.id)).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+
+  const seatRows=members.map(id=>{
+    const m=mB(id);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr)">
+      <div class="sh-av" style="width:24px;height:24px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div>
+      <span style="font-size:12.5px;font-weight:500;flex:1">${esc(m.name)}</span>
+      ${canEdit?`<button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="jbRemoveBoardMember('${id}')" aria-label="Remove ${esc(m.name)} from board"><i class="ti ti-x"></i></button>`:''}
+    </div>`;
+  }).join('');
+
+  const addSeatRow=(canEdit&&members.length<JB_SEATS)?`<div style="display:flex;align-items:center;gap:8px;padding:6px 0 0">
+    <select id="jb-board-add-sel" style="flex:1;min-width:0;height:30px;padding:0 8px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx)">
+      <option value="" disabled selected>Fill seat ${members.length+1} of ${JB_SEATS}...</option>
+      ${availOpts}
+    </select>
+    <button class="btn btn-p" style="height:30px;font-size:11px" onclick="jbAddBoardMember(document.getElementById('jb-board-add-sel').value)"><i class="ti ti-plus"></i>Add</button>
+  </div>`:'';
+
+  const subChips=subs.map(id=>{
+    const m=mB(id);
+    return`<span class="badge bm2" style="display:inline-flex;align-items:center;gap:5px;padding:4px 4px 4px 9px">${esc(m.name)}${canEdit?`<button onclick="jbRemoveSubstitute('${id}')" aria-label="Remove ${esc(m.name)} from substitutes" style="background:none;border:none;padding:0;cursor:pointer;display:flex;color:inherit"><i class="ti ti-x" style="font-size:10px"></i></button>`:''}</span>`;
+  }).join('');
+
+  const addSubRow=canEdit?`<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+    <select id="jb-sub-add-sel" style="flex:1;min-width:0;height:30px;padding:0 8px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx)">
+      <option value="" disabled selected>Add a substitute...</option>
+      ${availOpts}
+    </select>
+    <button class="btn" style="height:30px;font-size:11px" onclick="jbAddSubstitute(document.getElementById('jb-sub-add-sel').value)"><i class="ti ti-plus"></i>Add</button>
+  </div>`:'';
+
+  body.innerHTML=`
+    ${seatRows||`<div style="color:var(--ht);font-size:12px;padding:8px 0">No board members assigned yet.</div>`}
+    ${addSeatRow}
+    <div style="border-top:1px solid var(--bdr);margin-top:11px;padding-top:11px">
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mt);margin-bottom:7px">Substitutes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${subChips||`<span style="color:var(--ht);font-size:12px">None yet.</span>`}</div>
+      ${addSubRow}
+    </div>`;
+}
+async function jbAddBoardMember(memberId){
+  if(!jbCanEditBoard()){toast('Only a chapter lead can manage Judicial Board membership.','error');return;}
+  if(!memberId)return;
+  const jbd=D.judicialBoard;
+  if(jbd.members.includes(memberId))return;
+  if(jbd.members.length>=JB_SEATS){toast('All '+JB_SEATS+' board seats are filled. Remove someone first.','error');return;}
+  jbd.members.push(memberId);
+  try{ await saveD('judicialBoard'); jbRenderBoard(); toast('Board member added','success'); }
+  catch(e){ jbd.members=jbd.members.filter(id=>id!==memberId); toast('Failed to add board member. Please try again.','error'); jbRenderBoard(); }
+}
+async function jbRemoveBoardMember(memberId){
+  if(!jbCanEditBoard())return;
+  const jbd=D.judicialBoard;
+  const had=jbd.members.includes(memberId);
+  jbd.members=jbd.members.filter(id=>id!==memberId);
+  try{ await saveD('judicialBoard'); jbRenderBoard(); toast('Board member removed','info'); }
+  catch(e){ if(had)jbd.members.push(memberId); toast('Failed to remove board member. Please try again.','error'); jbRenderBoard(); }
+}
+async function jbAddSubstitute(memberId){
+  if(!jbCanEditBoard()){toast('Only a chapter lead can manage Judicial Board membership.','error');return;}
+  if(!memberId)return;
+  const jbd=D.judicialBoard;
+  if(jbd.substitutes.includes(memberId))return;
+  jbd.substitutes.push(memberId);
+  try{ await saveD('judicialBoard'); jbRenderBoard(); toast('Substitute added','success'); }
+  catch(e){ jbd.substitutes=jbd.substitutes.filter(id=>id!==memberId); toast('Failed to add substitute. Please try again.','error'); jbRenderBoard(); }
+}
+async function jbRemoveSubstitute(memberId){
+  if(!jbCanEditBoard())return;
+  const jbd=D.judicialBoard;
+  const had=jbd.substitutes.includes(memberId);
+  jbd.substitutes=jbd.substitutes.filter(id=>id!==memberId);
+  try{ await saveD('judicialBoard'); jbRenderBoard(); toast('Substitute removed','info'); }
+  catch(e){ if(had)jbd.substitutes.push(memberId); toast('Failed to remove substitute. Please try again.','error'); jbRenderBoard(); }
+}
+
 function renderJudicialContent(){
   initSemesterSelect('jb-semester-select',jbKnownSemesters(),jbSemesterChanged,jbSem());
+  jbRenderBoard();
   const sem=jbSem();
   const newBtn=document.getElementById('jb-new-case-btn');
   if(newBtn)newBtn.style.display=isCurrentSemester(sem)?'':'none';
@@ -86,7 +192,7 @@ function renderJudicialContent(){
   const jbc=document.getElementById('j-jb-count');if(jbc){jbc.textContent=String(jbCases.length);jbc.style.display=jbCases.length?'':'none';}
   const mrc=document.getElementById('j-mr-count');if(mrc){mrc.textContent=String(mrCases.length);mrc.style.display=mrCases.length?'':'none';}
 
-  document.getElementById('j-res').innerHTML=`<thead><tr><th>Case #</th><th>Type</th><th>Member</th><th>Resolution</th><th>Outcome</th><th>Docs</th><th></th></tr></thead><tbody>${res.length?res.map(c=>`<tr><td class="cn">${esc(c.caseNum)}</td><td>${tl[c.type]||esc(c.type)}</td><td style="font-weight:500">${esc(c.memberName||mB(c.member).name)}</td><td style="color:var(--mt);max-width:220px;white-space:normal;line-height:1.4">${esc(c.resolution)||'N/A'}</td><td><span class="badge ${sc[c.status]||'bm2'}">${sl[c.status]||esc(c.status)}</span></td><td>${jbDocsCompact(c)}</td><td>${isCurrentSemester(sem)?`<button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteCase('${c.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;color:var(--mt);padding:18px">No resolved cases ${isCurrentSemester(sem)?'this semester':'in '+esc(sem)}</td></tr>`}</tbody>`;
+  document.getElementById('j-res').innerHTML=`<thead><tr><th>Case #</th><th>Type</th><th>Member</th><th>Resolution</th><th>Outcome</th><th>Docs</th><th></th></tr></thead><tbody>${res.length?res.map(c=>`<tr><td class="cn">${esc(c.caseNum)}</td><td>${tl[c.type]||esc(c.type)}</td><td style="font-weight:500">${esc(c.memberName||mB(c.member).name)}</td><td style="color:var(--mt);max-width:220px;white-space:normal;line-height:1.4">${esc(c.resolution)||'N/A'}</td><td><span class="badge ${sc[c.status]||'bm2'}">${sl[c.status]||esc(c.status)}</span></td><td>${jbDocsCompact(c)}</td><td style="white-space:nowrap">${isCurrentSemester(sem)?`<button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openResolveCase('${c.id}')" aria-label="Edit resolution for ${esc(c.caseNum)}"><i class="ti ti-edit"></i></button><button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteCase('${c.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;color:var(--mt);padding:18px">No resolved cases ${isCurrentSemester(sem)?'this semester':'in '+esc(sem)}</td></tr>`}</tbody>`;
   const resMobEl=document.getElementById('j-res-mobile-cards');
   if(resMobEl)resMobEl.innerHTML=res.length?res.map(c=>`<div class="mob-card card">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
@@ -97,7 +203,7 @@ function renderJudicialContent(){
     <div style="font-size:11px;color:var(--mt);margin-bottom:6px">${tl[c.type]||esc(c.type)}</div>
     <div style="font-size:11.5px;color:var(--mt);line-height:1.4;margin-bottom:8px">${esc(c.resolution)||'N/A'}</div>
     ${jbDocsCompact(c)}
-    ${isCurrentSemester(sem)?`<button class="btn btn-d" style="height:24px;font-size:10.5px;width:100%;margin-top:8px" onclick="deleteCase('${c.id}')" aria-label="Delete case ${esc(c.caseNum)}"><i class="ti ti-trash"></i>Delete</button>`:''}
+    ${isCurrentSemester(sem)?`<div style="display:flex;gap:6px;margin-top:8px"><button class="btn" style="height:24px;font-size:10.5px;flex:1" onclick="openResolveCase('${c.id}')"><i class="ti ti-edit"></i>Edit</button><button class="btn btn-d" style="height:24px;font-size:10.5px;flex:1" onclick="deleteCase('${c.id}')" aria-label="Delete case ${esc(c.caseNum)}"><i class="ti ti-trash"></i>Delete</button></div>`:''}
   </div>`).join(''):`<div style="grid-column:1/-1;text-align:center;color:var(--mt);padding:18px;font-size:12px">No resolved cases ${isCurrentSemester(sem)?'this semester':'in '+esc(sem)}</div>`;
 
   const bylawsEl=document.getElementById('j-bylaws');
@@ -197,7 +303,9 @@ function jbHandleAttach(inp){
 }
 
 async function jbDeleteDoc(caseId,docId){
-  const ok=await confirmDialog('Remove Document','Remove this attachment? This cannot be undone.');
+  const caseForDoc=D.cases.find(x=>x.id===caseId);
+  const docRec=caseForDoc&&caseForDoc.docs?caseForDoc.docs.find(d=>d.id===docId):null;
+  const ok=await confirmDialog('Remove Document',`Remove "${docRec?docRec.name:'this attachment'}"? This cannot be undone.`);
   if(!ok)return;
   const c=D.cases.find(x=>x.id===caseId);
   if(!c||!c.docs)return;
@@ -442,7 +550,11 @@ async function resolveCase(){
   const res=document.getElementById('rc-r').value.trim();
   if(!res){toast('Resolution is required','error');return;}
   const status=document.getElementById('rc-s').value;
-  const ok=await confirmDialog('Resolve Case',`Mark case ${c.caseNum} as "${status}"? This will move it to resolved cases.`,'Confirm',false);
+  // Re-editing an already-finalized case (e.g. correcting the resolution text later) just
+  // updates it in place — only a genuinely still-open case is actually "moving" to resolved.
+  const alreadyFinalized=['resolved','dismissed','appealed'].includes(c.status);
+  const confirmMsg=alreadyFinalized?`Update case ${c.caseNum}'s resolution?`:`Mark case ${c.caseNum} as "${status}"? This will move it to resolved cases.`;
+  const ok=await confirmDialog('Resolve Case',confirmMsg,'Confirm',false);
   if(!ok)return;
   const prev={resolution:c.resolution,status:c.status};
   c.resolution=res;c.status=status;

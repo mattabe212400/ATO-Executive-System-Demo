@@ -5,14 +5,13 @@
 // (below) and the Dashboard's mini health widget (js/dashboard.js:dashDrawHealth) call this,
 // so the two can never show different numbers for the same underlying data again.
 function computeHealthDims(){
-  const tot=D.members.length||1;
-  const avg=Math.round(D.members.reduce((s,m)=>s+aR(m.id),0)/tot);
+  const avg=chapterAvgAttendance();
   const openT=D.tasks.filter(t=>t.status!=='done').length;
   const doneT=D.tasks.filter(t=>t.status==='done').length;
   const taskPct=D.tasks.length?Math.round(doneT/D.tasks.length*100):50;
   const openCases=D.cases.filter(c=>!['resolved','dismissed'].includes(c.status)).length;
   const caseScore=Math.max(0,100-openCases*18);
-  const gpas=D.members.map(m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.cumulativeGpa||rec.priorGpa||'';return v?parseFloat(v):null;}).filter(g=>g!==null&&!isNaN(g));
+  const gpas=D.members.map(m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.priorGpa||'';return v?parseFloat(v):null;}).filter(g=>g!==null&&!isNaN(g));
   const avgGpa=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length):0;
   const gpaScore=avgGpa?Math.round((avgGpa/4)*100):50;
   const finDues=D.finance?.dues||{};

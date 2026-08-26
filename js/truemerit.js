@@ -379,7 +379,7 @@ function tmBuildAcademics(D, ctx) {
   const history = (D.academics?.history || []).filter(h => tmSemesterInSet(h.semester, ctx.semesters));
   const bySemester = {};
   history.forEach(h => {
-    bySemester[h.semester] = { chapter_gpa: h.chapterGpa ?? null, cumulative_chapter_gpa: h.cumulativeChapterGpa ?? null, members_reporting: h.memberCount ?? null };
+    bySemester[h.semester] = { chapter_gpa: h.chapterGpa ?? null, members_reporting: h.memberCount ?? null };
   });
   const sorted = [...history].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   let trend = null;

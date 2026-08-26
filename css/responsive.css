@@ -99,6 +99,7 @@
   #notes-g{grid-template-columns:1fr!important}
   .case-actions{flex-wrap:wrap}
   #ma-list{grid-template-columns:1fr!important}
+  #va-groups{grid-template-columns:1fr!important}
   .tbl td,.tbl th{padding:5px 7px;font-size:11px}
   .lg-box{width:calc(100vw - 32px);padding:28px 20px}
   #ac-table th:nth-child(3),#ac-table td:nth-child(3){display:none}

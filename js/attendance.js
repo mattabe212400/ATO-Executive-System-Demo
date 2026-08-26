@@ -99,14 +99,52 @@ function saveAttendance(){
   _attCheckForFines(evId);
 }
 
+// ── VIEW ATTENDANCE (read-only breakdown by name) ──
+// Open to anyone who can view the Attendance page at all — unlike openMarkAttEv(), this has no
+// canEditAttendance() gate, since it shows the same information a member-level rate already
+// implies, just broken out by name instead of collapsed into a percentage.
+function openViewAtt(evId){
+  const ev=D.events.find(e=>e.id===evId);if(!ev)return;
+  const rec=D.attendance[evId]||{};
+  document.getElementById('va-title').textContent='Attendance: '+ev.title+' ('+fds(ev.date)+')';
+  const groups={present:[],excused:[],absent:[],unmarked:[]};
+  sortedMembers().forEach(m=>{
+    const st=rec[m.id];
+    if(st==='present'||st==='excused'||st==='absent')groups[st].push(m);
+    else groups.unmarked.push(m);
+  });
+  const nameRow=m=>`<div>${esc(m.name)}</div>`;
+  const noneRow=`<div style="color:var(--ht)">None</div>`;
+  document.getElementById('va-present').innerHTML=groups.present.length?groups.present.map(nameRow).join(''):noneRow;
+  document.getElementById('va-excused').innerHTML=groups.excused.length?groups.excused.map(nameRow).join(''):noneRow;
+  document.getElementById('va-absent').innerHTML=groups.absent.length?groups.absent.map(nameRow).join(''):noneRow;
+  const unmarkedWrap=document.getElementById('va-unmarked-wrap');
+  if(unmarkedWrap)unmarkedWrap.style.display=groups.unmarked.length?'':'none';
+  const unmarkedEl=document.getElementById('va-unmarked');
+  if(unmarkedEl)unmarkedEl.innerHTML=groups.unmarked.map(m=>`<span class="badge bm2">${esc(m.name)}</span>`).join('');
+  // Excused misses are neutral, same rule as aR() (js/helpers.js) — removed from the rate's
+  // denominator entirely, not counted as attended.
+  const counted=groups.present.length+groups.absent.length;
+  const rate=counted?Math.round(groups.present.length/counted*100):100;
+  const t=attTier(rate);
+  document.getElementById('va-kpi').innerHTML=
+    statStrip('Attended',groups.present.length,'','neutral')+
+    statStrip('Excused',groups.excused.length,'Not counted','neutral')+
+    statStrip('Unexcused',groups.absent.length,'','neutral')+
+    statStrip('Event Rate',counted?rate+'%':'N/A',counted?t.label:'Nothing to count',counted?(rate>=ATT_TARGET?'up':'down'):'neutral');
+  openM('m-viewatt');
+}
+
 // ── UNEXCUSED-MISS FINES ──
 // After saving, anyone left as an Unexcused Miss who doesn't already have an Attendance fine for
-// this specific event gets offered one — the Secretary types the amount right there, per member.
+// this specific event AND is fine-eligible (finAttendanceFineEligible(), js/finance.js — Freshmen/
+// Sophomores always, Juniors/Seniors only if they live in) gets offered one — the Secretary types
+// the amount right there, per member.
 let _attFineEvId=null, _attFineMembers=[];
 function _attCheckForFines(evId){
   const ev=D.events.find(e=>e.id===evId);
   const needsFine=Object.entries(_attTmp)
-    .filter(([mid,st])=>st==='absent'&&!finHasAttendanceFine(mid,evId))
+    .filter(([mid,st])=>st==='absent'&&!finHasAttendanceFine(mid,evId)&&finAttendanceFineEligible(mid))
     .map(([mid])=>mB(mid));
   if(!needsFine.length)return;
   _attFineEvId=evId;

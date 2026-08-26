@@ -27,7 +27,7 @@ const FS_KEYS = [
   'academics', 'recruitment', 'philanthropy', 'communityService', 'agenda',
   'alumni', 'ritual', 'newMemberEducation', 'transitionHub', 'settings',
   'kcrew', 'chores', 'social', 'healthHistory', 'chaplainHub', 'bibleStudyCurriculum',
-  'houseLife', 'achievements'
+  'houseLife', 'achievements', 'judicialBoard'
 ];
 
 // ── Default structure for empty collections ──
@@ -78,6 +78,8 @@ function dDefaults(){
   // Ritual — narrowed to the checklist only; sessions/progress now live in D.newMemberEducation.
   if(!D.ritual)D.ritual={items:[]};
   if(!D.newMemberEducation)D.newMemberEducation={sessions:[],requirements:[],progress:{}};
+  if(!D.newMemberEducation.peerMentor)D.newMemberEducation.peerMentor={program:[],mentorIds:[],assignments:{}};
+  if(!D.judicialBoard)D.judicialBoard={members:[],substitutes:[]};
   if(!D.transitionHub)D.transitionHub={deadlines:[],issues:[],archive:[]};
   if(!D.settings)D.settings={name:'',year:'',classYear:'Senior',notifAttendance:true,notifTasks:true,notifSober:true,notifWeekly:true,chapterName:(typeof CURRENT_USER!=='undefined'&&CURRENT_USER?.chapterName)||'',university:(typeof CURRENT_USER!=='undefined'&&CURRENT_USER?.university)||'',chapterSize:'',chapterFounded:''};
   if(!D.kcrew)D.kcrew={schedule:{lunch:{mon:[],tue:[],wed:[],thu:[],fri:[]},dinner:{mon:[],tue:[],wed:[],thu:[]}}};

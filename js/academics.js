@@ -1,4 +1,4 @@
-﻿// ── ACADEMICS ──
+// ── ACADEMICS ──
 
 function acCanAccess(){
   return canEditPage('academics');
@@ -62,11 +62,9 @@ function filterGpaModal(){
   }
 
   list.innerHTML=members.map(m=>{
-    const cumV=gpaVal(m.id,'cumulativeGpa');
     const priV=gpaVal(m.id,'priorGpa');
-    // Warning flag: use semester GPA if present, else cumulative
-    const isWarn=cumV&&parseFloat(cumV)<2.75||priV&&parseFloat(priV)<2.75;
-    return`<div style="display:grid;grid-template-columns:1fr 68px 68px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);${isWarn?'background:var(--rd-bg);margin:0 -2px;padding:6px 4px;border-radius:5px;':''}">
+    const isWarn=priV&&parseFloat(priV)<2.75;
+    return`<div style="display:grid;grid-template-columns:1fr 68px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);${isWarn?'background:var(--rd-bg);margin:0 -2px;padding:6px 4px;border-radius:5px;':''}">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
         <div class="sh-av" style="width:24px;height:24px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div>
         <div style="min-width:0">
@@ -74,7 +72,6 @@ function filterGpaModal(){
           <div style="font-size:10px;color:var(--mt)">${esc(m.classYear)}</div>
         </div>
       </div>
-      ${inp(m.id,'cumulativeGpa','Cumulative GPA')}
       ${inp(m.id,'priorGpa','Last Semester GPA')}
     </div>`;
   }).join('');
@@ -94,13 +91,11 @@ function saveGPAs(){
   }
 
   for(const m of members){
-    const cumV=parseGpa((document.getElementById('gpa-cumulativeGpa-'+m.id)||{value:''}).value);
     const priV=parseGpa((document.getElementById('gpa-priorGpa-'+m.id)||{value:''}).value);
-    if(cumV==='err'||priV==='err'){toast('Invalid GPA for '+m.name+': must be 0.00–4.00','error');return;}
+    if(priV==='err'){toast('Invalid GPA for '+m.name+': must be 0.00–4.00','error');return;}
     const cur=D.academics.gpas[m.id]||{};
     const updated={
       semesterGpa:'',
-      cumulativeGpa: cumV!==null?cumV:(cur.cumulativeGpa||''),
       priorGpa: priV!==null?priV:(cur.priorGpa||''),
     };
     if(JSON.stringify(cur)!==JSON.stringify(updated)){changed++;D.academics.gpas[m.id]=updated;}
@@ -113,10 +108,8 @@ function saveGPAs(){
   if(useGpas.length){
     const avg=(useGpas.reduce((a,b)=>a+b,0)/useGpas.length).toFixed(3);
     const sem=(document.getElementById('gpa-semester')||{value:getSemester()}).value||getSemester();
-    const cumGpas=members.map(m=>(D.academics.gpas[m.id]||{}).cumulativeGpa).filter(v=>v&&v!=='').map(v=>parseFloat(v)).filter(g=>!isNaN(g));
-    const cumAvg=cumGpas.length?(cumGpas.reduce((a,b)=>a+b,0)/cumGpas.length).toFixed(3):null;
     const existing=D.academics.history.findIndex(h=>h.semester===sem);
-    const entry={semester:sem,chapterGpa:avg,cumulativeChapterGpa:cumAvg,memberCount:useGpas.length,date:localDateStr()};
+    const entry={semester:sem,chapterGpa:avg,memberCount:useGpas.length,date:localDateStr()};
     if(existing>=0)D.academics.history[existing]=entry;
     else D.academics.history.unshift(entry);
   }
@@ -156,59 +149,44 @@ function renderAcademics(){
   document.querySelectorAll('.ac-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===AC_ACTIVE_TAB));
   document.querySelectorAll('#ac-content div[id^="ac-pane-"]').forEach(d=>{d.style.display=d.id===AC_ACTIVE_TAB?'block':'none';});
 
-  // Build member GPA objects with all three values
+  // Build member GPA objects
   function getMemberGpas(m){
     const rec=D.academics.gpas[m.id]||{};
-    const sem=rec.semesterGpa&&rec.semesterGpa!==''?parseFloat(rec.semesterGpa):null;
-    const cum=rec.cumulativeGpa&&rec.cumulativeGpa!==''?parseFloat(rec.cumulativeGpa):null;
     const pri=rec.priorGpa&&rec.priorGpa!==''?parseFloat(rec.priorGpa):null;
-    return{m,sem,cum,pri,hasAny:sem!==null||cum!==null||pri!==null};
+    return{m,pri,hasAny:pri!==null};
   }
   const allMemberGpas=sortedMembers().map(getMemberGpas);
   const withAny=allMemberGpas.filter(x=>x.hasAny);
 
-  // Chapter GPA = prior semester avg (per spec); fallback to semester avg
+  // Chapter GPA = prior semester avg (per spec)
   const hist=D.academics.history;
   const latestHist=hist[0]||null;
   const chapterGpaDisplay=latestHist?parseFloat(latestHist.chapterGpa).toFixed(2):null;
 
-  // For KPIs: use semester GPA if present for warnings/deans list (current standing)
-  const withCum=allMemberGpas.filter(x=>x.cum!==null);
-  const withPri=allMemberGpas.filter(x=>x.pri!==null);
-  const deansList=withCum.filter(x=>x.cum>=3.5).length;
-  const goodStand=withCum.filter(x=>x.cum>=3.0&&x.cum<3.5).length;
-  // Warning: flag by cumulative, or last semester if no cumulative
-  const warnMembers=withAny.filter(x=>{
-    const check=x.cum!==null?x.cum:(x.pri!==null?x.pri:null);
-    return check!==null&&check<2.75;
-  });
+  const deansList=withAny.filter(x=>x.pri>=3.5).length;
+  const goodStand=withAny.filter(x=>x.pri>=3.0&&x.pri<3.5).length;
+  const warnMembers=withAny.filter(x=>x.pri<2.75);
 
   // KPIs
   document.getElementById('ac-kpi').innerHTML=
     statStrip('Chapter GPA',chapterGpaDisplay||'N/A',latestHist?'Prior semester · '+latestHist.semester+(latestHist.semester&&latestHist.semester.toLowerCase().startsWith('spring')?' · Excludes Spring graduates':''):'No history yet, save GPAs to record','neutral')+
-    statStrip("Dean's List",deansList,'3.50 and above (cumulative)',deansList>0?'up':'neutral')+
-    statStrip('Good Standing',goodStand,'3.00 – 3.49 (cumulative)','neutral')+
+    statStrip("Dean's List",deansList,'3.50 and above','neutral')+
+    statStrip('Good Standing',goodStand,'3.00 – 3.49','neutral')+
     statStrip('Academic Warnings',warnMembers.length,'Below 2.75',warnMembers.length>0?'down':'neutral');
 
-  // Sort by cumulative GPA descending for ranking, then semester, then prior
-  const ranked=[...withAny].sort((a,b)=>{
-    const ag=a.cum??a.pri??0;
-    const bg=b.cum??b.pri??0;
-    return bg-ag;
-  });
+  // Sort by GPA descending for ranking
+  const ranked=[...withAny].sort((a,b)=>b.pri-a.pri);
   const noGpa=allMemberGpas.filter(x=>!x.hasAny);
 
   // Main table
   document.getElementById('ac-table').innerHTML=`<thead><tr>
     <th>#</th><th>Member</th><th>Class</th>
-    <th style="text-align:center">Cumulative GPA</th>
-    <th style="text-align:center">Last Semester</th>
+    <th style="text-align:center">Last Semester GPA</th>
     <th>Status</th>
   </tr></thead><tbody>${[
     ...ranked.map((x,i)=>({...x,rank:i+1})),
     ...noGpa.map(x=>({...x,rank:null}))
   ].map(row=>{
-    const statusGpa=row.cum??row.pri??null;
     return`<tr data-name="${row.m.name}" data-class="${row.m.classYear}">
       <td style="color:var(--ht);font-size:11px">${row.rank||'N/A'}</td>
       <td><div style="display:flex;align-items:center;gap:7px">
@@ -216,16 +194,14 @@ function renderAcademics(){
         <span style="font-weight:500">${row.m.name}</span>
       </div></td>
       <td style="color:var(--mt)">${row.m.classYear}</td>
-      <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.cum)}">${row.cum!==null?row.cum.toFixed(2):'N/A'}</span></td>
       <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.pri)}">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span></td>
-      <td>${gpaTrend(statusGpa)}</td>
+      <td>${gpaTrend(row.pri)}</td>
     </tr>`;
   }).join('')}</tbody>`;
   document.getElementById('ac-mobile-cards').innerHTML=[
     ...ranked.map((x,i)=>({...x,rank:i+1})),
     ...noGpa.map(x=>({...x,rank:null}))
   ].map(row=>{
-    const statusGpa=row.cum??row.pri??null;
     return`<div class="mob-card card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="sh-av" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${row.m.initials}</div>
@@ -235,16 +211,14 @@ function renderAcademics(){
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span class="gpa-badge ${gpaColor(row.cum)}" style="font-size:13px">${row.cum!==null?row.cum.toFixed(2):'N/A'}</span>
-        <span style="font-size:10px;color:var(--mt)">Cumulative</span>
-        <span class="gpa-badge ${gpaColor(row.pri)}" style="font-size:11px;margin-left:auto">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span>
-        <span style="font-size:10px;color:var(--mt)">Last Sem.</span>
+        <span class="gpa-badge ${gpaColor(row.pri)}" style="font-size:13px">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span>
+        <span style="font-size:10px;color:var(--mt)">Last Semester GPA</span>
       </div>
-      <div>${gpaTrend(statusGpa)}</div>
+      <div>${gpaTrend(row.pri)}</div>
     </div>`;
   }).join('') || `<div style="color:var(--ht);font-size:12px;padding:20px;text-align:center">No GPA data yet.</div>`;
 
-  // Top 5 by cumulative GPA
+  // Top 5 by GPA
   const top=ranked.slice(0,5);
   document.getElementById('ac-top').innerHTML=top.length?top.map((x,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr)">
@@ -254,8 +228,7 @@ function renderAcademics(){
         <div style="font-size:10px;color:var(--mt)">${x.m.classYear}</div>
       </div>
       <div style="text-align:right">
-        ${x.cum!==null?`<span class="gpa-badge gpa-high" style="display:block;margin-bottom:2px">${x.cum.toFixed(2)} cum</span>`:''}
-        ${x.pri!==null?`<span class="gpa-badge gpa-good" style="display:block">${x.pri.toFixed(2)} last sem</span>`:''}
+        <span class="gpa-badge gpa-high">${x.pri.toFixed(2)}</span>
       </div>
     </div>`).join(''):'<div style="color:var(--ht);font-size:12px;padding:8px 0;text-align:center">No GPAs entered yet</div>';
 
@@ -264,19 +237,14 @@ function renderAcademics(){
   const warnEmpty=document.getElementById('ac-warn-empty');
   if(warnMembers.length){
     warnEmpty.style.display='none';
-    warnEl.innerHTML=warnMembers.sort((a,b)=>{
-      const ag=a.cum??a.pri??4;const bg=b.cum??b.pri??4;return ag-bg;
-    }).map(x=>`
+    warnEl.innerHTML=warnMembers.sort((a,b)=>a.pri-b.pri).map(x=>`
       <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr)">
         <div class="sh-av" style="width:24px;height:24px;font-size:8.5px;background:var(--rd);color:#fff">${x.m.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:500">${x.m.name}</div>
           <div style="font-size:10px;color:var(--mt)">${x.m.classYear}</div>
         </div>
-        <div style="text-align:right;display:flex;flex-direction:column;gap:2px">
-          ${x.cum!==null?`<span class="gpa-badge gpa-risk" style="font-size:9px">${x.cum.toFixed(2)} cum</span>`:''}
-          ${x.pri!==null?`<span class="gpa-badge ${gpaColor(x.pri)}" style="font-size:9px">${x.pri.toFixed(2)} last sem</span>`:''}
-        </div>
+        <span class="gpa-badge gpa-risk" style="font-size:9px">${x.pri.toFixed(2)}</span>
       </div>`).join('');
   } else {
     warnEmpty.style.display='block';
@@ -284,8 +252,8 @@ function renderAcademics(){
     warnEl.innerHTML='';
   }
 
-  // Distribution (based on semester GPA; fallback to cumulative)
-  const distGpas=withAny.map(x=>x.cum??x.pri??null).filter(g=>g!==null);
+  // Distribution
+  const distGpas=withAny.map(x=>x.pri).filter(g=>g!==null);
   const buckets=[
     {label:"3.50 – 4.00 (Dean's List)",min:3.5,max:4.01,color:'var(--gn)'},
     {label:'3.00 – 3.49 (Good Standing)',min:3.0,max:3.5,color:'var(--bl)'},
@@ -311,9 +279,8 @@ function renderAcademics(){
     histEl.innerHTML=`<div class="tw"><table class="tbl">
       <thead><tr>
         <th>Semester</th>
-        <th style="text-align:center">Chapter GPA<br><span style="font-weight:400;font-size:9px;color:var(--ht)">(last sem avg)</span></th>
-        <th style="text-align:center">Cumulative Avg</th>
-        <th>Members</th><th>Updated</th><th>vs Prior</th>
+        <th style="text-align:center">Last-Semester GPA<br><span style="font-weight:400;font-size:9px;color:var(--ht)">avg of each member's grade for that one term</span></th>
+        <th>Updated</th><th>vs Prior</th>
       </tr></thead>
       <tbody>${hist.map((h,i)=>{
         const prior=hist[i+1];
@@ -321,9 +288,10 @@ function renderAcademics(){
         if(prior){const d=(parseFloat(h.chapterGpa)-parseFloat(prior.chapterGpa));delta=`<span style="color:${d>=0?'var(--gn)':'var(--rd)'}">${d>=0?'↑':'↓'}${Math.abs(d).toFixed(3)}</span>`;}
         return`<tr>
           <td style="font-weight:500">${h.semester}</td>
-          <td style="text-align:center"><span class="gpa-badge ${gpaColor(h.chapterGpa)}">${parseFloat(h.chapterGpa).toFixed(2)}</span></td>
-          <td style="text-align:center">${h.cumulativeChapterGpa?`<span class="gpa-badge ${gpaColor(h.cumulativeChapterGpa)}">${parseFloat(h.cumulativeChapterGpa).toFixed(2)}</span>`:'<span style="color:var(--ht)">N/A</span>'}</td>
-          <td style="color:var(--mt)">${h.memberCount}</td>
+          <td style="text-align:center">
+            <span class="gpa-badge ${gpaColor(h.chapterGpa)}">${parseFloat(h.chapterGpa).toFixed(2)}</span>
+            <div style="font-size:9px;color:var(--ht);margin-top:2px">${h.memberCount} member${h.memberCount!==1?'s':''} reporting</div>
+          </td>
           <td style="color:var(--ht)">${fds(h.date)}</td>
           <td>${delta||'<span style="color:var(--ht)">N/A</span>'}</td>
         </tr>`;
@@ -634,4 +602,3 @@ window.addEventListener('resize',()=>{
     anDrawLine();
   }
 });
-

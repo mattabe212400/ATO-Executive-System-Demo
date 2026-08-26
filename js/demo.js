@@ -220,15 +220,15 @@ function loadDemoData(){
 
   // ── ACADEMICS ──
   const gpas = {
-    m01:{cumulativeGpa:'3.72',priorGpa:'3.81',semesterGpa:'3.65'}, m02:{cumulativeGpa:'3.45',priorGpa:'3.50',semesterGpa:'3.40'},
-    m03:{cumulativeGpa:'3.88',priorGpa:'3.92',semesterGpa:'3.85'}, m04:{cumulativeGpa:'3.21',priorGpa:'3.18',semesterGpa:'3.30'},
-    m05:{cumulativeGpa:'3.05',priorGpa:'2.98',semesterGpa:'3.15'}, m06:{cumulativeGpa:'2.89',priorGpa:'2.75',semesterGpa:'3.00'},
-    m07:{cumulativeGpa:'3.94',priorGpa:'3.90',semesterGpa:'3.97'}, m08:{cumulativeGpa:'3.33',priorGpa:'3.40',semesterGpa:'3.28'},
-    m09:{cumulativeGpa:'2.71',priorGpa:'2.65',semesterGpa:'2.78'}, m10:{cumulativeGpa:'2.55',priorGpa:'2.60',semesterGpa:'2.50'},
-    m11:{cumulativeGpa:'3.10',priorGpa:'3.05',semesterGpa:'3.20'}, m12:{cumulativeGpa:'3.62',priorGpa:'',semesterGpa:'3.62'},
-    m13:{cumulativeGpa:'2.40',priorGpa:'',semesterGpa:'2.40'}, m14:{cumulativeGpa:'3.55',priorGpa:'3.48',semesterGpa:'3.60'},
-    m15:{cumulativeGpa:'2.95',priorGpa:'3.00',semesterGpa:'2.88'}, m16:{cumulativeGpa:'3.78',priorGpa:'3.82',semesterGpa:'3.74'},
-    m17:{cumulativeGpa:'3.15',priorGpa:'3.10',semesterGpa:'3.22'}, m18:{cumulativeGpa:'3.40',priorGpa:'3.35',semesterGpa:'3.45'},
+    m01:{priorGpa:'3.81',semesterGpa:''}, m02:{priorGpa:'3.50',semesterGpa:''},
+    m03:{priorGpa:'3.92',semesterGpa:''}, m04:{priorGpa:'3.18',semesterGpa:''},
+    m05:{priorGpa:'2.98',semesterGpa:''}, m06:{priorGpa:'2.75',semesterGpa:''},
+    m07:{priorGpa:'3.90',semesterGpa:''}, m08:{priorGpa:'3.40',semesterGpa:''},
+    m09:{priorGpa:'2.65',semesterGpa:''}, m10:{priorGpa:'2.60',semesterGpa:''},
+    m11:{priorGpa:'3.05',semesterGpa:''}, m12:{priorGpa:'3.62',semesterGpa:''},
+    m13:{priorGpa:'2.40',semesterGpa:''}, m14:{priorGpa:'3.48',semesterGpa:''},
+    m15:{priorGpa:'3.00',semesterGpa:''}, m16:{priorGpa:'3.82',semesterGpa:''},
+    m17:{priorGpa:'3.10',semesterGpa:''}, m18:{priorGpa:'3.35',semesterGpa:''},
   };
 
   // ── FINANCE ──
@@ -439,9 +439,10 @@ function loadDemoData(){
   D = {
     members, events, attendance, tasks, goals, notes,
     cases, shifts, transitions, committeeLeaders,
+    judicialBoard: { members: ['m01','m02','m06','m14','m17'], substitutes: ['m09','m10'] },
     academics: { gpas, history: [
-      {semester:'Spring 2026',chapterGpa:'3.22',cumulativeChapterGpa:'3.26',memberCount:17,date:past(210)},
-      {semester:'Fall 2026',chapterGpa:'3.28',cumulativeChapterGpa:'3.29',memberCount:18,date:past(20)},
+      {semester:'Spring 2026',chapterGpa:'3.22',memberCount:17,date:past(210)},
+      {semester:'Fall 2026',chapterGpa:'3.28',memberCount:18,date:past(20)},
     ] },
     finance: {
       dues, fines, expenses, plans: [],
@@ -494,32 +495,19 @@ function loadDemoData(){
     newMemberEducation: {
       // Sessions live on the shared calendar (D.events, type:'pledge') — see the events array above.
       sessions: [],
-      requirements: [
-        {id:'req01',title:'Attend Orientation Session',due:past(35),desc:''},
-        {id:'req03',title:'Complete 5 Community Service Hours',due:future(21),desc:''},
-        {id:'req04',title:'Submit Peer Mentor Preference Form',due:future(28),desc:''},
-      ],
-      progress: {
-        m11:{req01:true,req03:true,req04:false},
-        m12:{req01:true,req03:false,req04:false},
-        m13:{req01:true,req03:false,req04:false},
+      requirements: [],
+      progress: {},
+      peerMentor: {
+        mentorIds: ['m16','m07','m14'],
+        assignments: { m11:'m16', m12:'m16', m13:'m07' },
+        program: [
+          {week:1,topic:'Welcome & Expectations',notes:'First one-on-one meeting -- get to know each other and set a regular meeting cadence'},
+          {week:2,topic:'Chapter History & Values',notes:'Cover founding history and what the values mean day to day'},
+          {week:3,topic:'Academics Check-In',notes:'Review study habits and point new members to campus resources if needed'},
+          {week:4,topic:'Risk Management',notes:'Walk through the risk management policy and answer questions'},
+          {week:5,topic:'Open Check-In',notes:'Open-ended -- surface any concerns before initiation'},
+        ],
       },
-      mentorGroups: [
-        {id:'mg01',name:'Group 1',mentorIds:['m16'],newMemberIds:['m11','m12'],createdBy:'m16',createdAt:Date.now(),updatedAt:Date.now()},
-        {id:'mg02',name:'Group 2',mentorIds:['m07','m14'],newMemberIds:['m13'],createdBy:'m16',createdAt:Date.now(),updatedAt:Date.now()},
-      ],
-      mentorProgramAgenda: [
-        {id:'ag01',week:1,topic:'Welcome & Expectations',notes:'Icebreakers; why you joined; set expectations for the semester'},
-        {id:'ag02',week:2,topic:'Fraternity History & Founding Values',notes:'Review founding principles and what brotherhood means to you'},
-        {id:'ag03',week:3,topic:'Time Management & Academic Success',notes:'Study habits; campus resources; balancing classes and chapter life'},
-        {id:'ag04',week:4,topic:'Brotherhood & Building Relationships',notes:'Getting to know brothers outside your pledge class'},
-        {id:'ag05',week:5,topic:'Risk Management & Personal Responsibility',notes:'Chapter risk policies; making smart decisions'},
-        {id:'ag06',week:6,topic:'Community Service & Philanthropy',notes:'Upcoming service opportunities; why philanthropy matters'},
-        {id:'ag07',week:7,topic:'Financial Responsibility',notes:'Dues; budgeting; the chapter\'s finances'},
-        {id:'ag08',week:8,topic:'Leadership & Getting Involved',notes:'Committees and ways to get involved beyond new member status'},
-        {id:'ag09',week:9,topic:'Alumni Relations',notes:'Staying connected after graduation'},
-        {id:'ag10',week:10,topic:'Reflection & Initiation Prep',notes:'Reflect on the semester; what full membership means'},
-      ],
     },
     social: {
       planning: {
@@ -743,34 +731,40 @@ function seRenderUsers(){
 // ══════════════════════════════════════════════
 function switchDemoRole(role){
   if(!CURRENT_USER || !role) return;
-  const isViewer = role === 'General Member';
+  // 'Peer Mentor' isn't a real position (peer mentors are just Active members flagged
+  // isPeerMentor via Settings) — it's a viewer like General Member, plus that one flag, so
+  // visitors can preview the New Member Education carve-out from getRoleAccess()/canEditPage()
+  // (js/auth.js) without it being a selectable DEFAULT_POSITIONS title.
+  const isPeerMentorPreview = role === 'Peer Mentor';
+  const isViewer = role === 'General Member' || isPeerMentorPreview;
   const person = isViewer ? null : D.members.find(m => m.role === role);
 
   CURRENT_USER.role = isViewer ? 'viewer' : 'exec';
   CURRENT_USER.title = isViewer ? 'General Member' : role;
   CURRENT_USER.secondaryTitle = null;
-  CURRENT_USER.name = person ? person.name : (isViewer ? 'Guest Member' : role);
+  CURRENT_USER.isPeerMentor = isPeerMentorPreview;
+  CURRENT_USER.name = person ? person.name : (isPeerMentorPreview ? 'Guest Member (Peer Mentor)' : isViewer ? 'Guest Member' : role);
   CURRENT_USER.mid = person ? person.id : null;
   CURRENT_USER.email = person
     ? person.name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.|\.$/g,'') + '@ato-demo.example'
-    : (isViewer ? 'guest.member@ato-demo.example' : role.toLowerCase().replace(/[^a-z]+/g,'-') + '@ato-demo.example');
+    : (isPeerMentorPreview ? 'guest.mentor@ato-demo.example' : isViewer ? 'guest.member@ato-demo.example' : role.toLowerCase().replace(/[^a-z]+/g,'-') + '@ato-demo.example');
 
   const av = person ? person.initials : (isViewer ? 'GM' : role.slice(0,2).toUpperCase());
   document.getElementById('u-av').textContent = av;
   document.getElementById('u-name').textContent = CURRENT_USER.name;
-  document.getElementById('u-role').textContent = isViewer ? 'General Member' : role;
+  document.getElementById('u-role').textContent = isPeerMentorPreview ? 'General Member · Peer Mentor' : isViewer ? 'General Member' : role;
   document.getElementById('tb-av').textContent = av;
 
   rbacApplySidebar();
   const label = document.getElementById('demo-role-label');
-  if(label) label.textContent = isViewer ? 'General Member' : role;
+  if(label) label.textContent = isPeerMentorPreview ? 'General Member (Peer Mentor)' : isViewer ? 'General Member' : role;
   const sel = document.getElementById('demo-role-switcher');
   if(sel) sel.selectedIndex = 0;
   rbacNav(isViewer ? 'calendar' : 'dashboard', null);
   // Re-render on-demand pages that read CURRENT_USER but aren't necessarily the page being
   // navigated to above, so their identity references don't go stale until next manually opened.
   if(document.getElementById('page-settings')?.classList.contains('active') && typeof renderSettings==='function')renderSettings();
-  toast(`Now viewing as ${isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
+  toast(`Now viewing as ${isPeerMentorPreview ? 'a General Member with Peer Mentor access' : isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
 }
 
 // ══════════════════════════════════════════════

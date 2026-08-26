@@ -67,6 +67,7 @@
       <option value="Social" style="color:#1e293b;background:#fff">Social: manages social monitors and social events</option>
       <option value="Public Relations" style="color:#1e293b;background:#fff">Public Relations: chapter-wide view access</option>
       <option value="General Member" style="color:#1e293b;background:#fff">General Member: personal and shared chapter access</option>
+      <option value="Peer Mentor" style="color:#1e293b;background:#fff">General Member (Peer Mentor): adds New Member Education</option>
     </select>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
@@ -647,6 +648,16 @@
           </div>
         </div>
 
+        <!-- Judicial Board Members — 9 mandatory seats, plus an uncapped Substitutes list for
+             members who fill in (e.g. a seated member recusing from a specific case). -->
+        <div class="card" style="margin-bottom:13px">
+          <div class="card-hd">
+            <span class="card-t">Judicial Board Members</span>
+            <span id="jb-board-badge" class="badge bm2"></span>
+          </div>
+          <div id="jb-board-body"></div>
+        </div>
+
         <!-- JB Hearing Cases -->
         <div class="card" style="margin-bottom:13px">
           <div class="card-hd">
@@ -972,7 +983,7 @@
         <div class="d2-stats" id="ac-kpi" style="margin-bottom:13px"></div>
         <div class="g3">
           <div class="card">
-            <div class="card-hd"><span class="card-t" style="color:var(--gn-tx)"><i class="ti ti-trophy" style="font-size:12px;color:var(--gn);margin-right:4px"></i>Top Cumulative GPAs</span><button class="card-a" onclick="acTab(document.querySelector('[data-tab=ac-pane-members]'),'ac-pane-members')">All Members →</button></div>
+            <div class="card-hd"><span class="card-t" style="color:var(--gn-tx)"><i class="ti ti-trophy" style="font-size:12px;color:var(--gn);margin-right:4px"></i>Top GPAs</span><button class="card-a" onclick="acTab(document.querySelector('[data-tab=ac-pane-members]'),'ac-pane-members')">All Members →</button></div>
             <div id="ac-top" style="display:flex;flex-direction:column;gap:6px"></div>
           </div>
           <div class="card">
@@ -1696,7 +1707,7 @@
           <div class="card"><div class="card-hd"><span class="card-t">Top Volunteers</span><span id="cs-total-hrs" style="font-size:11px;color:var(--mt)"></span></div><div id="cs-leaderboard"></div></div>
         </div>
       </div>
-      <div class="card" style="margin-top:13px" id="cs-hours-tbl-card"><div class="card-hd"><span class="card-t">Member Hours</span><div class="sbar" style="max-width:200px;margin-bottom:0;height:24px"><i class="ti ti-search" style="font-size:12px"></i><input id="cs-search" placeholder="Search..." aria-label="Search member hours" oninput="csFilterHours()" style="font-size:11px"></div></div><div class="tw"><table class="tbl" id="cs-hours-table"></table></div></div>
+      <div class="card" style="margin-top:13px" id="cs-hours-tbl-card"><div class="card-hd"><span class="card-t">Member Hours</span><div style="display:flex;align-items:center;gap:7px"><div class="sbar" style="max-width:200px;margin-bottom:0;height:24px"><i class="ti ti-search" style="font-size:12px"></i><input id="cs-search" placeholder="Search..." aria-label="Search member hours" oninput="csFilterHours()" style="font-size:11px"></div><button class="btn" style="height:26px;font-size:11px" onclick="xport('communityservice')"><i class="ti ti-download"></i>Export</button></div></div><div class="tw"><table class="tbl" id="cs-hours-table"></table></div></div>
       <div id="cs-hours-mobile-cards"></div>
       <div class="card" style="margin-top:13px"><div class="card-hd"><span class="card-t">Below Requirement</span></div><div class="tw"><table class="tbl" id="cs-missing-table"></table></div></div>
     </div>
@@ -2011,25 +2022,41 @@
     <!-- ═══════════ NEW MEMBER EDUCATION ═══════════ -->
     <div class="page" id="page-newMemberEducation">
       <div class="ph" id="nme-main-header">
-        <div class="ph-left"><h2 class="page-title">New Member Education</h2><div class="page-sub">Sessions, requirements, and initiation progress</div></div>
+        <div class="ph-left"><h2 class="page-title">New Member Education</h2><div class="page-sub">Sessions and initiation progress</div></div>
         <div class="ph-actions">
           <div id="nme-edit-actions" style="display:flex;gap:5px;flex-wrap:wrap">
             <button class="btn btn-p" id="nme-add-session-btn" onclick="nmeOpenAddSession()"><i class="ti ti-plus"></i>Add Session</button>
-            <button class="btn" id="nme-add-req-btn" onclick="nmeOpenAddRequirement()"><i class="ti ti-list-check"></i>Add Requirement</button>
           </div>
-          <button class="btn" onclick="nmeExport()"><i class="ti ti-download"></i>Export CSV</button>
         </div>
       </div>
       <div class="d2-stats" id="nme-kpi" style="margin-bottom:13px"></div>
       <div id="nme-grade-checks" style="margin-bottom:13px"></div>
-      <div class="d2-body">
-        <div class="d2-left">
-          <div class="card"><div class="card-hd"><span class="card-t">New Member Progress</span></div><div class="tw"><table class="tbl" id="nme-progress-table"></table></div></div>
-          <div class="card"><div class="card-hd"><span class="card-t">At-Risk Members</span></div><div class="tw"><table class="tbl" id="nme-risk-table"></table></div></div>
+      <div class="card"><div class="card-hd"><span class="card-t">Education Sessions</span><div style="display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border:1px solid var(--bdr);border-radius:7px;background:var(--surf2)"><i class="ti ti-calendar-time" style="font-size:12px;color:var(--mt)"></i><select id="nme-semester-select" aria-label="Semester" style="height:21px;padding:0 3px;border:none;background:transparent;font-size:11px;font-weight:500;font-family:inherit;color:var(--tx)"></select></div></div><div class="tw"><table class="tbl" id="nme-sessions-table"></table></div></div>
+
+      <!-- Peer Mentor Program — Peer Mentors are Active members, not new members; new members
+           get assigned INTO a mentor's rotating group rather than the mentors being assigned to
+           them. A Peer Mentor's own account can be granted view+edit on this page specifically
+           (Settings → General Member Users' "Peer Mentor" checkbox) without becoming a full
+           officer. -->
+      <div class="card" style="margin-top:13px">
+        <div class="card-hd">
+          <span class="card-t">Peer Mentor Program</span>
+          <button class="btn" id="nme-pm-import-btn" onclick="openImportModal('peerMentorProgram')"><i class="ti ti-table-import"></i>Import Program</button>
         </div>
-        <div class="d2-right">
-          <div class="card"><div class="card-hd"><span class="card-t">Education Sessions</span><div style="display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border:1px solid var(--bdr);border-radius:7px;background:var(--surf2)"><i class="ti ti-calendar-time" style="font-size:12px;color:var(--mt)"></i><select id="nme-semester-select" aria-label="Semester" style="height:21px;padding:0 3px;border:none;background:transparent;font-size:11px;font-weight:500;font-family:inherit;color:var(--tx)"></select></div></div><div class="tw"><table class="tbl" id="nme-sessions-table"></table></div></div>
-          <div class="card"><div class="card-hd"><span class="card-t">Requirements</span></div><div class="tw"><table class="tbl" id="nme-requirements-table"></table></div></div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mt);margin-bottom:7px">Peer Mentors</div>
+          <div id="nme-pm-mentors"></div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+            <span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mt)">Groups</span>
+            <button class="btn" id="nme-pm-randomize-btn" onclick="nmePeerMentorRandomize()"><i class="ti ti-arrows-shuffle"></i>Randomize Groups</button>
+          </div>
+          <div id="nme-pm-groups"></div>
+        </div>
+        <div>
+          <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mt);margin-bottom:7px">Curriculum</div>
+          <div class="tw"><table class="tbl" id="nme-pm-program-table"></table></div>
         </div>
       </div>
     </div>
@@ -2040,18 +2067,6 @@
       <div class="fr"><div class="fld"><label for="nmes-facilitator">Facilitator</label><select id="nmes-facilitator"></select></div></div>
       <div class="fr"><div class="fld"><label for="nmes-notes">Notes</label><textarea id="nmes-notes" placeholder="Topics, materials needed, etc."></textarea></div></div>
       <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:5px"><button class="btn" onclick="closeM(null,document.getElementById('m-nme-addsession'))">Cancel</button><button class="btn btn-p" onclick="nmeAddSession()">Add Session</button></div>
-    </div></div>
-    <div class="mo" role="dialog" aria-modal="true" id="m-nme-addreq" onclick="closeM(event,this)"><div class="md">
-      <div class="md-t">Add Requirement<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-nme-addreq'))"><i class="ti ti-x"></i></button></div>
-      <div class="fr"><div class="fld"><label for="nmereq-title">Requirement</label><input id="nmereq-title" placeholder="e.g. Complete Risk Management Quiz"></div></div>
-      <div class="fr c2"><div class="fld"><label for="nmereq-due">Due Date</label><input id="nmereq-due" type="date"></div><div class="fld"><label for="nmereq-desc">Description</label><input id="nmereq-desc" placeholder="Optional details"></div></div>
-      <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:5px"><button class="btn" onclick="closeM(null,document.getElementById('m-nme-addreq'))">Cancel</button><button class="btn btn-p" onclick="nmeAddRequirement()">Add Requirement</button></div>
-    </div></div>
-    <div class="mo" role="dialog" aria-modal="true" id="m-nme-progress" onclick="closeM(event,this)"><div class="md">
-      <div class="md-t" id="nmep-title">Update Progress<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-nme-progress'))"><i class="ti ti-x"></i></button></div>
-      <input type="hidden" id="nmep-member-id">
-      <div id="nmep-list" style="max-height:280px;overflow-y:auto"></div>
-      <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:9px"><button class="btn" onclick="closeM(null,document.getElementById('m-nme-progress'))">Close</button></div>
     </div></div>
 
     <!-- ═══════════ VENDORS / CONTACTS ═══════════ -->
@@ -2879,12 +2894,11 @@
 <!-- ── UPDATE GPA MODAL ── -->
 <div class="mo" role="dialog" aria-modal="true" id="m-updategpa" onclick="closeM(event,this)"><div class="md" style="width:700px;max-height:88vh">
   <div class="md-t">Update Member GPAs<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-updategpa'))"><i class="ti ti-x"></i></button></div>
-  <div style="font-size:11.5px;color:var(--mt);margin-bottom:11px">Enter each member's Cumulative GPA and Last Semester GPA. Leave blank to keep unchanged. Chapter GPA is the average of Last Semester GPAs.</div>
+  <div style="font-size:11.5px;color:var(--mt);margin-bottom:11px">Enter each member's Last Semester GPA. Leave blank to keep unchanged. Chapter GPA is the average of Last Semester GPAs.</div>
 
   <!-- Column legend -->
-  <div style="display:grid;grid-template-columns:1fr 68px 68px;gap:8px;align-items:center;padding:6px 9px;background:#f5f5f3;border-radius:7px;margin-bottom:9px;font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em">
+  <div style="display:grid;grid-template-columns:1fr 68px;gap:8px;align-items:center;padding:6px 9px;background:#f5f5f3;border-radius:7px;margin-bottom:9px;font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em">
     <span>Member</span>
-    <span style="text-align:center">Cumulative</span>
     <span style="text-align:center">Last Semester</span>
   </div>
 
@@ -3017,6 +3031,31 @@
   </div>
   <div id="ma-list" style="max-height:400px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:5px"></div>
   <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:13px"><button class="btn" onclick="closeM(null,document.getElementById('m-markatt'))">Cancel</button><button class="btn btn-p" onclick="saveAttendance()">Save Attendance</button></div>
+</div></div>
+
+<!-- ── VIEW ATTENDANCE (read-only breakdown, open to anyone who can view the Attendance page,
+     not just editors — canEditAttendance() gates the Mark modal above, not this one) ── -->
+<div class="mo" role="dialog" aria-modal="true" id="m-viewatt" onclick="closeM(event,this)"><div class="md" style="width:560px"><div class="md-t"><span id="va-title">Attendance</span><button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-viewatt'))"><i class="ti ti-x"></i></button></div>
+  <div id="va-kpi" class="d2-stats" style="margin-bottom:13px"></div>
+  <div id="va-groups" style="max-height:420px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div>
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gn-tx);margin-bottom:6px">Attended</div>
+      <div id="va-present" style="display:flex;flex-direction:column;gap:4px;font-size:12px"></div>
+    </div>
+    <div>
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--am-tx);margin-bottom:6px">Excused</div>
+      <div id="va-excused" style="display:flex;flex-direction:column;gap:4px;font-size:12px"></div>
+    </div>
+    <div>
+      <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--rd-tx)">Unexcused</div>
+      <div id="va-absent" style="display:flex;flex-direction:column;gap:4px;font-size:12px;margin-top:6px"></div>
+    </div>
+  </div>
+  <div id="va-unmarked-wrap" style="margin-top:13px;padding-top:11px;border-top:1px solid var(--bdr)">
+    <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ht);margin-bottom:6px">Not Yet Marked</div>
+    <div id="va-unmarked" style="display:flex;flex-wrap:wrap;gap:5px;font-size:12px;color:var(--mt)"></div>
+  </div>
+  <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:13px"><button class="btn" onclick="closeM(null,document.getElementById('m-viewatt'))">Close</button></div>
 </div></div>
 
 <!-- ── UNEXCUSED MISS FINES (prompted right after saving attendance) ── -->

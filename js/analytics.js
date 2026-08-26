@@ -11,12 +11,15 @@
 
 // Replaces 5 independent reimplementations of the same attendance-trend math.
 function calcAttendanceTrend(n){
-  const tot=D.members.length||1;
+  const totAll=D.members.length||1;
   const mandPast=D.events.filter(e=>e.mandatory&&!isUp(e.date)).sort((a,b)=>a.date.localeCompare(b.date));
   if(mandPast.length<2) return [];
   return mandPast.slice(-n).map(ev=>{
-    const att=D.attendance[ev.id]||{};
-    const pres=Object.values(att).filter(v=>v==='present'||v==='excused').length;
+    const vals=Object.values(D.attendance[ev.id]||{});
+    // Excused misses are neutral -- removed from the denominator, not counted as attended.
+    const pres=vals.filter(v=>v==='present').length;
+    const excused=vals.filter(v=>v==='excused').length;
+    const tot=Math.max(1,totAll-excused);
     return {date:ev.date, label:mos(ev.date)+' '+dom(ev.date), title:ev.title, val:Math.round(pres/tot*100)};
   });
 }
@@ -222,11 +225,12 @@ function attDrawEventBars(){
   if(!mandPast.length){
     el.innerHTML=`<div style="padding:24px;text-align:center;color:var(--ht);font-size:12px">No past mandatory events yet.</div>`;return;
   }
-  const tot=D.members.length||1;
+  const totAll=D.members.length||1;
   el.innerHTML=mandPast.map(ev=>{
-    const att=D.attendance[ev.id]||{};
-    const pres=Object.values(att).filter(v=>v==='present'||v==='excused').length;
-    const pct=Math.round(pres/tot*100);
+    const vals=Object.values(D.attendance[ev.id]||{});
+    const pres=vals.filter(v=>v==='present').length;
+    const excused=vals.filter(v=>v==='excused').length;
+    const pct=Math.round(pres/Math.max(1,totAll-excused)*100);
     const col=attTier(pct).color;
     return`<div class="att-ev-bar">
       <span class="att-ev-label" title="${esc(ev.title)} · ${fd(ev.date)}">${esc(ev.title)}</span>
@@ -243,7 +247,7 @@ function attDrawClassYear(){
   if(!years.length){el.innerHTML=`<div style="color:var(--ht);font-size:12px;padding:8px 0;text-align:center">No members yet.</div>`;return;}
   el.innerHTML=years.map(yr=>{
     const mems=D.members.filter(m=>m.classYear===yr);
-    const avg=mems.length?Math.round(mems.reduce((s,m)=>s+aR(m.id),0)/mems.length):0;
+    const avg=mems.length?chapterAvgAttendance(mems):0;
     const col=attTier(avg).color;
     return`<div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
@@ -388,7 +392,7 @@ function ciRenderOverview(){
 }
 function ciRenderKpiRow(){
   const {score}=computeHealthDims();
-  const avgAtt=Math.round(D.members.reduce((s,m)=>s+aR(m.id),0)/(D.members.length||1));
+  const avgAtt=chapterAvgAttendance();
   const dn=D.tasks.filter(t=>t.status==='done').length;
   const taskPct=D.tasks.length?Math.round(dn/D.tasks.length*100):null;
   const fin=calcFinanceCollectionRate();
@@ -461,7 +465,7 @@ function ciRenderAttendanceTab(){
     const years=[...new Set(D.members.map(m=>m.classYear))].filter(Boolean).sort();
     classEl.innerHTML=years.map(yr=>{
       const mems=D.members.filter(m=>m.classYear===yr);
-      const avg=mems.length?Math.round(mems.reduce((s,m)=>s+aR(m.id),0)/mems.length):0;
+      const avg=mems.length?chapterAvgAttendance(mems):0;
       const t=attTier(avg);
       return `<div class="pr"><span class="pl">${esc(yr)} (${mems.length})</span><div class="pb"><div class="pf" style="width:${avg}%;background:${t.color}"></div></div><span class="pv">${avg}%</span></div>`;
     }).join('');
@@ -482,7 +486,7 @@ function ciRenderAcademicsTab(){
     trendEl.innerHTML = hist.length ? hist.map(h=>`<div class="pr"><span class="pl" style="width:110px">${esc(h.semester)}</span><div class="pb"><div class="pf" style="width:${Math.min(100,parseFloat(h.chapterGpa)/4*100)}%;background:var(--bl)"></div></div><span class="pv">${h.chapterGpa}</span></div>`).join('') : `<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No semester GPA snapshots yet (created when officers save GPAs in Academics).</div>`;
   }
   const members=ciFilterMembers();
-  const gpaOf=m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.cumulativeGpa||rec.priorGpa||'';return v?parseFloat(v):null;};
+  const gpaOf=m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.priorGpa||'';return v?parseFloat(v):null;};
   const distEl=document.getElementById('ci-ac-dist');
   if(distEl){
     const gpas=members.map(gpaOf).filter(g=>g!==null&&!isNaN(g));
@@ -496,10 +500,10 @@ function ciRenderAcademicsTab(){
   }
   const tableEl=document.getElementById('ci-ac-table');
   if(tableEl){
-    const withGpa=[...members].sort(mNameCompare).map(m=>({m,cum:D.academics?.gpas?.[m.id]?.cumulativeGpa||'',sem:D.academics?.gpas?.[m.id]?.semesterGpa||''}));
-    tableEl.innerHTML = withGpa.length ? `<thead><tr><th>Member</th><th>Class</th><th>Cumulative GPA</th><th>Semester GPA</th></tr></thead><tbody>${
-      withGpa.map(({m,cum,sem})=>`<tr><td style="font-weight:500">${esc(m.name)}</td><td>${esc(m.classYear)}</td><td>${esc(cum)||'N/A'}</td><td>${esc(sem)||'N/A'}</td></tr>`).join('')
-    }</tbody>` : `<tbody><tr><td colspan="4" style="text-align:center;color:var(--ht);padding:14px">No members in this filter.</td></tr></tbody>`;
+    const withGpa=[...members].sort(mNameCompare).map(m=>({m,pri:D.academics?.gpas?.[m.id]?.priorGpa||''}));
+    tableEl.innerHTML = withGpa.length ? `<thead><tr><th>Member</th><th>Class</th><th>Last Semester GPA</th></tr></thead><tbody>${
+      withGpa.map(({m,pri})=>`<tr><td style="font-weight:500">${esc(m.name)}</td><td>${esc(m.classYear)}</td><td>${esc(pri)||'N/A'}</td></tr>`).join('')
+    }</tbody>` : `<tbody><tr><td colspan="3" style="text-align:center;color:var(--ht);padding:14px">No members in this filter.</td></tr></tbody>`;
   }
 }
 

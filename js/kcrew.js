@@ -187,7 +187,7 @@ function kcUpdateSlot(sel){
 
 function kcChoreLabel(memberIds){
   if(!memberIds||!memberIds.length)return'Unassigned';
-  return esc(memberIds.map(id=>mB(id).name.split(' ')[0]).join(', '));
+  return esc(memberIds.map(id=>mB(id).name).join(', '));
 }
 
 // Chores only ever concern members who actually live in the house (the "Live-in" field on the

@@ -151,12 +151,17 @@ function aR(memberId){
   const joinDate=m&&m.joinDate;
   const eligibleEvents=joinDate?mandEvents.filter(e=>e.date>=joinDate):mandEvents;
   if(!eligibleEvents.length){return 100;}
-  let present=0;
+  // Excused misses are neutral -- removed from the count entirely, not treated as attended. An
+  // excused absence doesn't help or hurt a member's attendance rate.
+  let present=0,excused=0;
   eligibleEvents.forEach(ev=>{
     const rec=(D.attendance[ev.id]||{})[memberId];
-    if(rec==='present'||rec==='excused')present++;
+    if(rec==='present')present++;
+    else if(rec==='excused')excused++;
   });
-  return Math.round(present/eligibleEvents.length*100);
+  const counted=eligibleEvents.length-excused;
+  if(!counted)return 100;
+  return Math.round(present/counted*100);
 }
 
 // Same math as aR() above, scoped to one semester's date range instead of all-time — aR() itself
@@ -171,12 +176,49 @@ function aRForSemester(memberId,semesterLabel){
   const joinDate=m&&m.joinDate;
   const eligibleEvents=joinDate?mandEvents.filter(e=>e.date>=joinDate):mandEvents;
   if(!eligibleEvents.length){return 100;}
-  let present=0;
+  let present=0,excused=0;
   eligibleEvents.forEach(ev=>{
     const rec=(D.attendance[ev.id]||{})[memberId];
-    if(rec==='present'||rec==='excused')present++;
+    if(rec==='present')present++;
+    else if(rec==='excused')excused++;
   });
-  return Math.round(present/eligibleEvents.length*100);
+  const counted=eligibleEvents.length-excused;
+  if(!counted)return 100;
+  return Math.round(present/counted*100);
+}
+
+// Does this member have at least one mandatory event that actually counts toward a rate (on/
+// after their join date, and not excused)? aR()/aRForSemester() return 100 both for a member
+// with zero eligible events AND for a member whose eligible events were ALL excused (nothing
+// left to divide by) — correct for that member's OWN row in both cases, but wrong to silently
+// average into a chapter-wide rate. Chapter-wide averages must filter to members who have at
+// least one real present-or-absent data point first, not divide by every member on the roster.
+function _aREligible(memberId,mandEvents){
+  const m=D.members.find(x=>x.id===memberId);
+  const joinDate=m&&m.joinDate;
+  const eligible=joinDate?mandEvents.filter(e=>e.date>=joinDate):mandEvents;
+  if(!eligible.length)return false;
+  const allExcused=eligible.every(e=>(D.attendance[e.id]||{})[memberId]==='excused');
+  return !allExcused;
+}
+// Chapter-wide average attendance rate, all-time — the single source every dashboard/health/
+// report widget should call instead of independently reducing D.members over aR(). Pass any
+// member subset (e.g. one class year); defaults to the whole roster.
+function chapterAvgAttendance(members){
+  members=members||D.members;
+  const mandEvents=D.events.filter(e=>e.mandatory&&!isUp(e.date));
+  const eligible=members.filter(m=>_aREligible(m.id,mandEvents));
+  if(!eligible.length)return 100;
+  return Math.round(eligible.reduce((s,m)=>s+aR(m.id),0)/eligible.length);
+}
+// Same as chapterAvgAttendance(), scoped to one semester — the Attendance page's own average.
+function chapterAvgAttendanceForSemester(members,semesterLabel){
+  members=members||D.members;
+  const range=semesterDateRange(semesterLabel);
+  const mandEvents=D.events.filter(e=>e.mandatory&&!isUp(e.date)&&(!range||(e.date>=range.start&&e.date<=range.end)));
+  const eligible=members.filter(m=>_aREligible(m.id,mandEvents));
+  if(!eligible.length)return 100;
+  return Math.round(eligible.reduce((s,m)=>s+aRForSemester(m.id,semesterLabel),0)/eligible.length);
 }
 
 // Tasks "owned" by a member = tasks whose Position matches their roster role — NOT
@@ -497,7 +539,13 @@ function xport(type){
   }
   _xportAudit(type);
   let data='',fn='export.csv';
-  if(type==='members'){data='Name,Class Year,Grad Year,Role,Live-In,Member Status\n';sortedMembers().forEach(m=>{data+=csvSafe(m.name)+','+m.classYear+','+m.year+','+m.role+','+(m.liveIn?'Yes':'No')+','+(m.memberStatus||'Active')+'\n';});fn='members.csv';}
+  if(type==='members'){
+    data='Name,Class Year,Grad Year,Position,Live-In,Member Status,Major,Hometown,Email,Phone,Join Date\n';
+    sortedMembers().forEach(m=>{
+      data+=`"${csvSafe(m.name)}",${m.classYear},${m.year},"${csvSafe(m.role||'')}",${m.liveIn?'Yes':'No'},${m.memberStatus||'Active'},"${csvSafe(m.major||'')}","${csvSafe(m.hometown||'')}","${csvSafe(m.email||'')}","${csvSafe(m.phone||'')}",${m.joinDate||''}\n`;
+    });
+    fn='members.csv';
+  }
   else if(type==='attendance'){data='Member,Attendance Rate\n';sortedMembers().forEach(m=>{data+=csvSafe(m.name)+','+aR(m.id)+'%\n';});fn='attendance.csv';}
   else if(type==='finance'){
     const dues=typeof finDuesMapForSemester==='function'?finDuesMapForSemester(getSemester()):(D.finance.dues||{});
@@ -506,9 +554,19 @@ function xport(type){
     fn='dues.csv';
   }
   else if(type==='academics'){
-    data='Member,Class,Cumulative GPA,Last Semester GPA\n';
-    sortedMembers().forEach(m=>{const g=D.academics.gpas[m.id]||{};data+=`"${csvSafe(m.name)}",${m.classYear},${g.cumulativeGpa||''},${g.priorGpa||''}\n`;});
+    data='Member,Class,Last Semester GPA\n';
+    sortedMembers().forEach(m=>{const g=D.academics.gpas[m.id]||{};data+=`"${csvSafe(m.name)}",${m.classYear},${g.priorGpa||''}\n`;});
     fn='academics.csv';
+  }
+  else if(type==='communityservice'){
+    data='Member,Hours,Event,Date\n';
+    const events=(typeof csEvents==='function')?csEvents():[];
+    const hours=(typeof csVisibleHours==='function')?csVisibleHours():(D.communityService?.hours||[]);
+    [...hours].sort((a,b)=>b.date.localeCompare(a.date)).forEach(h=>{
+      const ev=events.find(e=>e.id===h.eventId);
+      data+=`"${csvSafe(h.memberName||mB(h.memberId).name)}",${h.hours},"${csvSafe(ev?ev.title:'General')}",${h.date}\n`;
+    });
+    fn='community_service_hours.csv';
   }
   else if(type==='recruitment'){
     data='Name,Stage,Major,Hometown,Bid Score,Last Contact,Recruiter\n';

@@ -85,8 +85,14 @@ function getRoleAccess(role, title, secondaryTitle){
   if(role==='admin') return ALL_PAGES;
   if(role==='viewer'){
     const viewerPos = positions['General Member'];
-    const viewerPages = viewerPos ? Object.keys(viewerPos.pages||{}) : VIEWER_PAGES;
-    return intersect(viewerPages.filter(p=>p!=='dashboard'));
+    let viewerPages = viewerPos ? Object.keys(viewerPos.pages||{}) : VIEWER_PAGES;
+    viewerPages = viewerPages.filter(p=>p!=='dashboard');
+    // Peer Mentor — a General Member additionally flagged isPeerMentor (Settings → General
+    // Member Users' "Peer Mentor" checkbox) gets New Member Education added on top of the normal
+    // viewer page set, view+edit (see canEditPage()'s matching override below). Everything else
+    // about them stays identical to a plain General Member.
+    if(CURRENT_USER?.isPeerMentor && !viewerPages.includes('newMemberEducation')) viewerPages=[...viewerPages,'newMemberEducation'];
+    return intersect(viewerPages);
   }
   const primary = _positionForTitle(positions, title);
   const secondary = _positionForTitle(positions, secondaryTitle);
@@ -98,7 +104,9 @@ function getRoleAccess(role, title, secondaryTitle){
 function canEditPage(page){
   if(!CURRENT_USER) return false;
   if(CURRENT_USER.role==='admin') return true;
-  if(CURRENT_USER.role==='viewer') return false;
+  // Peer Mentor exception — see getRoleAccess()'s matching viewer-branch comment. Every other
+  // page stays read-only-or-nothing for a viewer; this is the one deliberate carve-out.
+  if(CURRENT_USER.role==='viewer') return !!CURRENT_USER.isPeerMentor && page==='newMemberEducation';
   const positions = CURRENT_CHAPTER?.positions || {};
   const primary = _positionForTitle(positions, CURRENT_USER.title);
   const secondary = _positionForTitle(positions, CURRENT_USER.secondaryTitle);

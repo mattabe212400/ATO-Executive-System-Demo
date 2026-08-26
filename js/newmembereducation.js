@@ -1,4 +1,4 @@
-﻿// ── NEW MEMBER EDUCATION ──
+// ── NEW MEMBER EDUCATION ──
 function canEditNewMemberEducation(){
   return canEditPage('newMemberEducation');
 }
@@ -9,25 +9,15 @@ function canEditNewMemberEducation(){
 function nmeGetClass(){
   return sortedMembers().filter(m=>(m.memberStatus||'Active')==='New Member');
 }
-function nmeReqDone(memberId,reqId){
-  return !!(D.newMemberEducation.progress[memberId]&&D.newMemberEducation.progress[memberId][reqId]);
-}
-function nmeProgressPct(memberId){
-  const requirements=D.newMemberEducation.requirements||[];
-  if(!requirements.length)return 0;
-  const done=requirements.filter(r=>nmeReqDone(memberId,r.id)).length;
-  return Math.round(done/requirements.length*100);
-}
 // Sessions live in the shared D.events calendar (type:'pledge'), same pattern as Social/
 // Philanthropy/Community Service — so a scheduled session always matches what's on the
 // Calendar, not a separate copy. Attendance for them is tracked the normal way, through the
 // Attendance page (D.attendance keyed by event id), not a local per-session array.
 function nmeSessions(){ return (D.events||[]).filter(e=>e.type==='pledge'); }
 
-// ── Semester scoping — deliberately narrow: only the sessions/events view is date-range
-// filtered. Requirements/progress stay always-current/unfiltered, since "New Member" is a live
-// memberStatus field, not a frozen semester cohort — once someone's initiated they naturally age
-// out of nmeGetClass() with nothing retroactive to preserve, unlike Rushees.
+// ── Semester scoping — only the sessions/events view is date-range filtered, since "New
+// Member" is a live memberStatus field, not a frozen semester cohort — once someone's
+// initiated they naturally age out of nmeGetClass(), unlike Rushees.
 let NME_SELECTED_SEM=null;
 function nmeSem(){ return NME_SELECTED_SEM||getSemester(); }
 function nmeKnownSemesters(){
@@ -45,37 +35,28 @@ function renderNewMemberEducation(){
   // The curriculum/progress-tracking on this page names and ranks every new member's standing,
   // which isn't general-member-visible (same reasoning renderAttendanceOwnOnly() uses to hide
   // Risk Stratification from viewers) — enforced by leaving 'newMemberEducation' out of
-  // VIEWER_PAGES (js/auth.js) rather than an in-page gate, now that the Peer Mentor Program
-  // section (the one part viewers used to see here) has moved to Committees.
+  // VIEWER_PAGES (js/auth.js). The one exception is a General Member individually flagged
+  // isPeerMentor (Settings → General Member Users), who gets this whole page — Peer Mentor
+  // Program included, moved back here from Committees — via getRoleAccess()'s viewer-branch
+  // override, not a change to VIEWER_PAGES itself.
   const editActions=document.getElementById('nme-edit-actions');
   if(editActions)editActions.style.display=canEditNewMemberEducation()?'':'none';
   initSemesterSelect('nme-semester-select',nmeKnownSemesters(),nmeSemesterChanged,nmeSem());
   const addSessBtn=document.getElementById('nme-add-session-btn');
   if(addSessBtn)addSessBtn.style.display=(canEditNewMemberEducation()&&isCurrentSemester(nmeSem()))?'':'none';
-  const nme=D.newMemberEducation;
   const sessions=nmeVisibleSessions();
-  const requirements=nme.requirements||[];
   const newMembers=nmeGetClass();
   const today=localDateStr();
   const completedSessions=sessions.filter(s=>s.date&&s.date<today).length;
-  const progressPcts=newMembers.map(m=>nmeProgressPct(m.id));
-  const avgProgress=progressPcts.length?Math.round(progressPcts.reduce((a,b)=>a+b,0)/progressPcts.length):0;
-  const atRisk=newMembers.filter(m=>nmeProgressPct(m.id)<50).length;
-  const reqCompletedTotal=newMembers.reduce((s,m)=>s+requirements.filter(r=>nmeReqDone(m.id,r.id)).length,0);
 
   document.getElementById('nme-kpi').innerHTML=
     statStrip('New Members',newMembers.length,'In program','neutral')+
     statStrip('Sessions Scheduled',sessions.length,completedSessions+' completed','neutral')+
-    statStrip('Sessions Completed',completedSessions,sessions.length+' total','neutral')+
-    statStrip('Avg Progress',avgProgress+'%','Across new members',avgProgress>=75?'up':avgProgress>=50?'neutral':'down')+
-    statStrip('At-Risk Members',atRisk,atRisk?'Below 50% progress':'All on track',atRisk?'down':'up')+
-    statStrip('Requirements Completed',reqCompletedTotal,'Across all new members','neutral');
+    statStrip('Sessions Completed',completedSessions,sessions.length+' total','neutral');
 
-  nmeRenderProgress();
-  nmeRenderRisk();
   nmeRenderSessions();
-  nmeRenderRequirements();
   nmeRenderGradeChecks();
+  nmeRenderPeerMentor();
 }
 
 // ── NEW MEMBER GRADE CHECKS — moved here from Academics' Grade Checks tab, since this table is
@@ -144,38 +125,6 @@ function nmeRenderGradeChecks(){
     </div>`;
 }
 
-function nmeRenderProgress(){
-  const requirements=D.newMemberEducation.requirements||[];
-  const newMembers=nmeGetClass();
-  const canEdit=canEditNewMemberEducation();
-  const el=document.getElementById('nme-progress-table');
-  if(!el)return;
-  if(!newMembers.length){ el.innerHTML=`<tbody><tr><td>${es('ti-school','blue','No new members','Members with Member Status set to "New Member" (on the Members page) appear here.','')}</td></tr></tbody>`; return; }
-  el.innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Progress</th><th>Requirements</th><th>Status</th></tr></thead><tbody>${
-    newMembers.map(m=>{
-      const done=requirements.filter(r=>nmeReqDone(m.id,r.id)).length;
-      const pct=nmeProgressPct(m.id);
-      const status=pct>=100?['On Track','bg2']:pct>=50?['In Progress','ba2']:['At Risk','br2'];
-      return `<tr style="${canEdit?'cursor:pointer':''}" ${canEdit?`onclick="nmeOpenProgress('${m.id}')"`:''}>
-        <td style="font-weight:500">${esc(m.name)}</td><td style="color:var(--mt)">${esc(m.classYear)}</td>
-        <td><div class="pb" style="width:70px;display:inline-block;vertical-align:middle"><div class="pf" style="width:${pct}%;background:${pgc(pct)}"></div></div> <span style="font-size:11px">${pct}%</span></td>
-        <td>${done}/${requirements.length}</td><td><span class="badge ${status[1]}">${status[0]}</span></td>
-      </tr>`;
-    }).join('')
-  }</tbody>`;
-}
-
-function nmeRenderRisk(){
-  const newMembers=nmeGetClass();
-  const el=document.getElementById('nme-risk-table');
-  if(!el)return;
-  const risk=newMembers.filter(m=>nmeProgressPct(m.id)<50);
-  if(!risk.length){ el.innerHTML=`<tbody><tr><td>${es('ti-circle-check','green','No members at risk','Everyone is on track.','')}</td></tr></tbody>`; return; }
-  el.innerHTML=`<thead><tr><th>Member</th><th>Progress</th></tr></thead><tbody>${
-    [...risk].sort(mNameCompare).map(m=>`<tr><td style="font-weight:500">${esc(m.name)}</td><td style="color:var(--rd)">${nmeProgressPct(m.id)}%</td></tr>`).join('')
-  }</tbody>`;
-}
-
 function nmeRenderSessions(){
   const sessions=nmeVisibleSessions();
   const canEdit=canEditNewMemberEducation()&&isCurrentSemester(nmeSem());
@@ -202,21 +151,6 @@ async function nmeSaveSessionNotes(id,value){
   ev.notes=notes;
   try{ await saveD('events'); }
   catch(e){ ev.notes=prev; toast('Failed to save notes. Please try again.','error'); nmeRenderSessions(); }
-}
-
-function nmeRenderRequirements(){
-  const requirements=D.newMemberEducation.requirements||[];
-  const newMembers=nmeGetClass();
-  const canEdit=canEditNewMemberEducation();
-  const el=document.getElementById('nme-requirements-table');
-  if(!el)return;
-  if(!requirements.length){ el.innerHTML=`<tbody><tr><td>${es('ti-list-check','blue','No requirements yet','Add requirements new members must complete.',canEdit?`<button class="btn btn-p" onclick="nmeOpenAddRequirement()">Add Requirement</button>`:'')}</td></tr></tbody>`; return; }
-  el.innerHTML=`<thead><tr><th>Requirement</th><th>Due</th><th>Completed</th>${canEdit?'<th></th>':''}</tr></thead><tbody>${
-    requirements.map(r=>{
-      const done=newMembers.filter(m=>nmeReqDone(m.id,r.id)).length;
-      return `<tr><td style="font-weight:500">${esc(r.title)}</td><td>${r.due?fds(r.due):'N/A'}</td><td>${done}/${newMembers.length}</td>${canEdit?`<td><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="nmeDeleteRequirement('${r.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button></td>`:''}</tr>`;
-    }).join('')
-  }</tbody>`;
 }
 
 // ── SESSIONS ──
@@ -252,7 +186,7 @@ async function nmeDeleteSession(id){
   const sess=D.events.find(e=>e.id===id);
   if(sess&&!isCurrentSemester(semesterLabelForDate(sess.date))){toast('This session is in a past semester and is read-only.','error');return;}
   const attNote=canEditPage('attendance')?' and its attendance record':'';
-  const ok=await confirmDialog('Delete Session','Delete this session'+attNote+'?');
+  const ok=await confirmDialog('Delete Session',`Delete "${sess?sess.title:'this session'}"`+attNote+'?');
   if(!ok)return;
   const removed=D.events.find(e=>e.id===id);
   const removedAtt=D.attendance[id];
@@ -275,73 +209,184 @@ async function nmeDeleteSession(id){
   }
 }
 
-// ── REQUIREMENTS ──
-function nmeOpenAddRequirement(){
-  if(!canEditNewMemberEducation()){toast('Only officers with New Member Education access can add requirements.','error');return;}
-  document.getElementById('nmereq-title').value='';
-  document.getElementById('nmereq-due').value='';
-  document.getElementById('nmereq-desc').value='';
-  openM('m-nme-addreq');
+// ── PEER MENTOR PROGRAM — moved here from Committees (it used to just be a generic committee
+// entry). Peer Mentors are ACTIVE members, not new members — new members get assigned INTO a
+// mentor's group, not the other way around. Groups are deliberately rotating rather than fixed
+// for the semester: nmePeerMentorRandomize() reshuffles which new members sit in which mentor's
+// group while the mentor roster itself is untouched. A general member can additionally be
+// granted view+edit on this page specifically via Settings' "Peer Mentor" checkbox
+// (seTogglePeerMentor(), js/auth.js) without becoming a full officer — see getRoleAccess()/
+// canEditPage()'s viewer-branch overrides there.
+function nmeEnsurePeerMentor(){
+  if(!D.newMemberEducation.peerMentor)D.newMemberEducation.peerMentor={program:[],mentorIds:[],assignments:{}};
+  if(!D.newMemberEducation.peerMentor.program)D.newMemberEducation.peerMentor.program=[];
+  if(!D.newMemberEducation.peerMentor.mentorIds)D.newMemberEducation.peerMentor.mentorIds=[];
+  if(!D.newMemberEducation.peerMentor.assignments)D.newMemberEducation.peerMentor.assignments={};
 }
-async function nmeAddRequirement(){
-  if(!canEditNewMemberEducation())return;
-  const title=document.getElementById('nmereq-title').value.trim();
-  if(!title){toast('Requirement title is required','error');return;}
-  const req={id:uid(),title,due:document.getElementById('nmereq-due').value||null,desc:document.getElementById('nmereq-desc').value.trim()};
-  D.newMemberEducation.requirements.push(req);
+function nmeRenderPeerMentor(){
+  nmeEnsurePeerMentor();
+  const pm=D.newMemberEducation.peerMentor;
+  const canEdit=canEditNewMemberEducation();
+  const importBtn=document.getElementById('nme-pm-import-btn');
+  if(importBtn)importBtn.style.display=canEdit?'':'none';
+  const randomBtn=document.getElementById('nme-pm-randomize-btn');
+  if(randomBtn)randomBtn.style.display=canEdit?'':'none';
+
+  // Mentors are drawn from Active members only. A stored id that no longer resolves to an
+  // Active member (status changed, or removed from the roster) is dropped defensively at render
+  // time, not mutated into saved state on every render.
+  const activeMembers=sortedMembers().filter(m=>(m.memberStatus||'Active')==='Active');
+  const mentorIds=pm.mentorIds.filter(id=>activeMembers.some(m=>m.id===id));
+  const newMembers=nmeGetClass();
+
+  const mentorsEl=document.getElementById('nme-pm-mentors');
+  if(mentorsEl){
+    const takenIds=new Set(mentorIds);
+    const availOpts=activeMembers.filter(m=>!takenIds.has(m.id)).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    const rows=mentorIds.map(id=>{
+      const m=mB(id);
+      return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr)">
+        <div class="sh-av" style="width:24px;height:24px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div>
+        <span style="font-size:12.5px;font-weight:500;flex:1">${esc(m.name)}</span>
+        ${canEdit?`<button class="btn btn-d" style="height:22px;font-size:10px;padding:0 6px" onclick="nmeRemoveMentor('${id}')" aria-label="Remove ${esc(m.name)} as a Peer Mentor"><i class="ti ti-x"></i></button>`:''}
+      </div>`;
+    }).join('');
+    const addRow=canEdit?`<div style="display:flex;align-items:center;gap:8px;padding:6px 0 0">
+      <select id="nme-pm-mentor-sel" style="flex:1;min-width:0;height:30px;padding:0 8px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx)">
+        <option value="" disabled selected>Add a Peer Mentor...</option>
+        ${availOpts}
+      </select>
+      <button class="btn btn-p" style="height:30px;font-size:11px" onclick="nmeAddMentor(document.getElementById('nme-pm-mentor-sel').value)"><i class="ti ti-plus"></i>Add</button>
+    </div>`:'';
+    mentorsEl.innerHTML=(rows||`<div style="color:var(--ht);font-size:12px;padding:8px 0">No Peer Mentors assigned yet.</div>`)+addRow;
+  }
+
+  const groupsEl=document.getElementById('nme-pm-groups');
+  if(groupsEl){
+    const byMentor={};
+    mentorIds.forEach(id=>{byMentor[id]=[];});
+    const unassigned=[];
+    newMembers.forEach(m=>{
+      const mentorId=pm.assignments[m.id];
+      if(mentorId&&byMentor[mentorId])byMentor[mentorId].push(m);
+      else unassigned.push(m);
+    });
+    const moveSelect=(memberId,currentMentorId)=>canEdit?`<select style="height:24px;max-width:105px;flex-shrink:0;font-size:10.5px;padding:0 4px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);color:var(--tx)" onchange="nmeMoveNewMember('${memberId}',this.value)" aria-label="Move to group">
+      <option value="" ${!currentMentorId?'selected':''}>Unassigned</option>
+      ${mentorIds.map(id=>`<option value="${id}" ${id===currentMentorId?'selected':''}>${esc(mB(id).name)}</option>`).join('')}
+    </select>`:'';
+    if(!mentorIds.length){
+      groupsEl.innerHTML=`<div style="color:var(--ht);font-size:12px;padding:8px 0">Add at least one Peer Mentor above to start forming groups.</div>`;
+    }else{
+      const mentorCards=mentorIds.map(id=>{
+        const mentor=mB(id);
+        const group=byMentor[id]||[];
+        return`<div class="card" style="margin:0">
+          <div class="card-hd" style="padding:8px 10px"><span class="card-t" style="font-size:12px">${esc(mentor.name)}</span><span class="badge bm2">${group.length}</span></div>
+          <div style="padding:0 10px 8px">${group.length?group.map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;font-size:11.5px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span>${moveSelect(m.id,id)}</div>`).join(''):`<div style="color:var(--ht);font-size:11px;padding:6px 0">No new members yet.</div>`}</div>
+        </div>`;
+      }).join('');
+      const unassignedCard=unassigned.length?`<div class="card" style="margin:0;border-style:dashed">
+        <div class="card-hd" style="padding:8px 10px"><span class="card-t" style="font-size:12px;color:var(--ht)">Unassigned</span><span class="badge br2">${unassigned.length}</span></div>
+        <div style="padding:0 10px 8px">${unassigned.map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;font-size:11.5px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span>${moveSelect(m.id,'')}</div>`).join('')}</div>
+      </div>`:'';
+      groupsEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">${mentorCards}${unassignedCard}</div>`;
+    }
+  }
+
+  const progEl=document.getElementById('nme-pm-program-table');
+  if(progEl){
+    const program=[...pm.program].sort((a,b)=>a.week-b.week);
+    progEl.innerHTML=program.length?`<thead><tr><th>Week</th><th>Topic</th><th>Notes</th></tr></thead><tbody>${
+      program.map(w=>`<tr><td style="font-weight:500">${w.week}</td><td>${esc(w.topic)}</td><td style="color:var(--mt)">${esc(w.notes)||'N/A'}</td></tr>`).join('')
+    }</tbody>`:`<tbody><tr><td>${es('ti-list-check','blue','No program imported yet','Use Import Program to add the Peer Mentor Program curriculum.','')}</td></tr></tbody>`;
+  }
+}
+async function nmeAddMentor(memberId){
+  if(!canEditNewMemberEducation()){toast('Only officers with New Member Education access can manage Peer Mentors.','error');return;}
+  if(!memberId)return;
+  nmeEnsurePeerMentor();
+  const pm=D.newMemberEducation.peerMentor;
+  if(pm.mentorIds.includes(memberId))return;
+  pm.mentorIds.push(memberId);
   try{
     await saveD('newMemberEducation');
-    closeM(null,document.getElementById('m-nme-addreq'));
-    renderNewMemberEducation();
-    toast('Requirement added','success');
+    nmeRenderPeerMentor();
+    toast('Peer Mentor added','success');
   }catch(e){
-    D.newMemberEducation.requirements=D.newMemberEducation.requirements.filter(x=>x.id!==req.id);
-    toast('Failed to add requirement. Please try again.','error');
+    pm.mentorIds=pm.mentorIds.filter(id=>id!==memberId);
+    nmeRenderPeerMentor();
+    toast('Failed to add Peer Mentor. Please try again.','error');
   }
 }
-async function nmeDeleteRequirement(id){
+async function nmeRemoveMentor(memberId){
   if(!canEditNewMemberEducation())return;
-  const ok=await confirmDialog('Delete Requirement','Delete this requirement? Progress toward it will be lost.');
-  if(!ok)return;
-  const removed=D.newMemberEducation.requirements.find(r=>r.id===id);
-  D.newMemberEducation.requirements=D.newMemberEducation.requirements.filter(r=>r.id!==id);
-  try{await saveD('newMemberEducation');renderNewMemberEducation();toast('Requirement deleted','info');}
-  catch(e){if(removed)D.newMemberEducation.requirements.push(removed);toast('Failed to delete requirement. Please try again.','error');}
-}
-
-// ── PER-MEMBER PROGRESS (finally wires up what nmProgress never did) ──
-function nmeOpenProgress(memberId){
-  if(!canEditNewMemberEducation())return;
-  const m=mB(memberId);
-  document.getElementById('nmep-member-id').value=memberId;
-  document.getElementById('nmep-title').textContent=m.name+': Progress';
-  const requirements=D.newMemberEducation.requirements||[];
-  const el=document.getElementById('nmep-list');
-  if(!requirements.length){ el.innerHTML=es('ti-list-check','blue','No requirements yet','Add requirements first.',''); }
-  else{
-    el.innerHTML=requirements.map(r=>`
-      <label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);cursor:pointer">
-        <input type="checkbox" ${nmeReqDone(memberId,r.id)?'checked':''} onchange="nmeToggleProgress('${memberId}','${r.id}',this.checked)">
-        <span style="font-size:12.5px">${esc(r.title)}</span>
-      </label>`).join('');
+  nmeEnsurePeerMentor();
+  const pm=D.newMemberEducation.peerMentor;
+  const hadIdx=pm.mentorIds.indexOf(memberId);
+  if(hadIdx<0)return;
+  const prevAssignments={...pm.assignments};
+  pm.mentorIds.splice(hadIdx,1);
+  // Anyone assigned to the removed mentor becomes unassigned rather than silently orphaned in
+  // saved state — nmeRenderPeerMentor()'s render-time filter would treat them as unassigned
+  // regardless, but clearing the stored assignment keeps the saved data itself honest.
+  Object.keys(pm.assignments).forEach(mid=>{ if(pm.assignments[mid]===memberId)delete pm.assignments[mid]; });
+  try{
+    await saveD('newMemberEducation');
+    nmeRenderPeerMentor();
+    toast('Peer Mentor removed','info');
+  }catch(e){
+    pm.mentorIds.splice(hadIdx,0,memberId);
+    pm.assignments=prevAssignments;
+    nmeRenderPeerMentor();
+    toast('Failed to remove Peer Mentor. Please try again.','error');
   }
-  openM('m-nme-progress');
 }
-function nmeToggleProgress(memberId,reqId,checked){
+async function nmeMoveNewMember(newMemberId,mentorId){
   if(!canEditNewMemberEducation())return;
-  if(!D.newMemberEducation.progress[memberId])D.newMemberEducation.progress[memberId]={};
-  D.newMemberEducation.progress[memberId][reqId]=checked;
-  saveD('newMemberEducation');
-  renderNewMemberEducation();
+  nmeEnsurePeerMentor();
+  const pm=D.newMemberEducation.peerMentor;
+  const prev=pm.assignments[newMemberId];
+  if(mentorId)pm.assignments[newMemberId]=mentorId;
+  else delete pm.assignments[newMemberId];
+  try{
+    await saveD('newMemberEducation');
+    nmeRenderPeerMentor();
+  }catch(e){
+    if(prev)pm.assignments[newMemberId]=prev;
+    else delete pm.assignments[newMemberId];
+    nmeRenderPeerMentor();
+    toast('Failed to move member. Please try again.','error');
+  }
 }
-
-function nmeExport(){
-  const requirements=D.newMemberEducation.requirements||[];
+async function nmePeerMentorRandomize(){
+  if(!canEditNewMemberEducation()){toast('Only officers with New Member Education access can manage Peer Mentors.','error');return;}
+  nmeEnsurePeerMentor();
+  const pm=D.newMemberEducation.peerMentor;
+  const mentorIds=pm.mentorIds.filter(id=>{const m=D.members.find(x=>x.id===id);return m&&(m.memberStatus||'Active')==='Active';});
+  if(!mentorIds.length){toast('Add at least one Peer Mentor before randomizing groups.','error');return;}
   const newMembers=nmeGetClass();
-  let csv='Member,Class Year,Progress %,Requirements Completed\n';
-  newMembers.forEach(m=>{
-    const done=requirements.filter(r=>nmeReqDone(m.id,r.id)).length;
-    csv+=`${csvSafe(m.name)},${m.classYear},${nmeProgressPct(m.id)},${done}/${requirements.length}\n`;
-  });
-  downloadCSV('new_member_education_progress.csv',csv);
+  if(!newMembers.length){toast('No new members to assign yet.','error');return;}
+  const ok=await confirmDialog('Randomize Groups',`Shuffle all ${newMembers.length} new member${newMembers.length!==1?'s':''} across the ${mentorIds.length} current Peer Mentor${mentorIds.length!==1?'s':''}? This replaces every existing group assignment.`,'Randomize',false);
+  if(!ok)return;
+  const prevAssignments={...pm.assignments};
+  // Fisher-Yates shuffle of the NEW MEMBERS only — mentors stay exactly as configured. Round-
+  // robin over the shuffled list keeps group sizes as even as possible (at most 1 apart).
+  const shuffled=[...newMembers];
+  for(let i=shuffled.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+  }
+  const assignments={};
+  shuffled.forEach((m,i)=>{ assignments[m.id]=mentorIds[i%mentorIds.length]; });
+  pm.assignments=assignments;
+  try{
+    await saveD('newMemberEducation');
+    nmeRenderPeerMentor();
+    toast('Groups randomized','success');
+  }catch(e){
+    pm.assignments=prevAssignments;
+    nmeRenderPeerMentor();
+    toast('Failed to save randomized groups. Please try again.','error');
+  }
 }

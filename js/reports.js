@@ -89,8 +89,7 @@ function rpTable(heads, rows){
 // items, upcoming events) regardless of the selected semester, same reasoning Health Scorecard
 // was excluded from semester partitioning entirely — this just labels which semester is active.
 function rpWeekly(sem){
-  const tot=D.members.length||1;
-  const avg=Math.round(D.members.reduce((s,m)=>s+aR(m.id),0)/tot);
+  const avg=chapterAvgAttendance();
   const dn=D.tasks.filter(t=>t.status==='done').length;
   const openT=D.tasks.filter(t=>t.status!=='done').length;
   const ovT=D.tasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
@@ -151,7 +150,7 @@ function rpAttendance(sem){
   const rate=m=>aRForSemester(m.id,sem);
   const range=semesterDateRange(sem);
   const tot=D.members.length||1;
-  const avg=Math.round(D.members.reduce((s,m)=>s+rate(m),0)/tot);
+  const avg=chapterAvgAttendanceForSemester(D.members,sem);
   const good=D.members.filter(m=>rate(m)>=85).length;
   const risk=D.members.filter(m=>{const r=rate(m);return r>=65&&r<85;}).length;
   const warn=D.members.filter(m=>rate(m)<65).length;
@@ -184,12 +183,14 @@ function rpAttendance(sem){
     }))
   )+
   rpSection('ti-calendar-check','Mandatory Events in '+sem,
-    mandEvents.length?rpTable(['Event','Date','Present','Unexcused','Rate'],mandEvents.sort((a,b)=>b.date.localeCompare(a.date)).map(ev=>{
-      const att=D.attendance[ev.id]||{};
-      const pres=Object.values(att).filter(v=>v==='present'||v==='excused').length;
-      const abs=Object.values(att).filter(v=>v==='absent').length;
-      const rate=Math.round(pres/tot*100);
-      return[`<strong>${esc(ev.title)}</strong>`,fd(ev.date),pres,abs,`<span style="color:${rate>=85?'var(--gn)':rate>=75?'var(--navy)':'var(--rd)'};font-weight:600">${rate}%</span>`];
+    mandEvents.length?rpTable(['Event','Date','Present','Excused','Unexcused','Rate'],mandEvents.sort((a,b)=>b.date.localeCompare(a.date)).map(ev=>{
+      const vals=Object.values(D.attendance[ev.id]||{});
+      const pres=vals.filter(v=>v==='present').length;
+      const exc=vals.filter(v=>v==='excused').length;
+      const abs=vals.filter(v=>v==='absent').length;
+      // Excused misses are neutral — removed from the rate's denominator, not counted as present.
+      const rate=Math.round(pres/Math.max(1,tot-exc)*100);
+      return[`<strong>${esc(ev.title)}</strong>`,fd(ev.date),pres,exc,abs,`<span style="color:${rate>=85?'var(--gn)':rate>=75?'var(--navy)':'var(--rd)'};font-weight:600">${rate}%</span>`];
     })):(`<div style="color:var(--mt);font-size:12px">No mandatory events marked yet.</div>`)
   );
 }
@@ -290,16 +291,15 @@ function rpAcademics(sem){
     return rpHeader('Academic Standing Report',`Chapter GPA and individual member academic status · ${sem}`,sem)+
     rpSection('ti-chart-bar','Academic Summary (Historical)',rpKpis([
       {label:'Chapter GPA',val:parseFloat(hist.chapterGpa).toFixed(2),color:'var(--navy)'},
-      {label:'Cumulative Chapter GPA',val:hist.cumulativeChapterGpa?parseFloat(hist.cumulativeChapterGpa).toFixed(2):'N/A',color:'var(--bl)'},
       {label:'Members Tracked',val:hist.memberCount,color:'var(--bl)'},
     ]))+
     rpSection('ti-alert-circle','Note',`<div style="color:var(--mt);font-size:12px">Per-member GPA rankings are only available for the current semester. ${esc(sem)} only has a chapter-wide snapshot on record (saved ${fds(hist.date)}).</div>`);
   }
-  const withGpa=D.members.map(m=>{const g=D.academics.gpas[m.id]||{};const cum=g.cumulativeGpa?parseFloat(g.cumulativeGpa):null;const pri=g.priorGpa?parseFloat(g.priorGpa):null;return{m,cum,pri};}).filter(x=>x.cum!==null||x.pri!==null);
-  const gpas=withGpa.map(x=>x.cum??x.pri??0);
+  const withGpa=D.members.map(m=>{const g=D.academics.gpas[m.id]||{};const pri=g.priorGpa?parseFloat(g.priorGpa):null;return{m,pri};}).filter(x=>x.pri!==null);
+  const gpas=withGpa.map(x=>x.pri);
   const avgGpa=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2):'N/A';
-  const deans=withGpa.filter(x=>(x.cum??0)>=3.5).length;
-  const warn=withGpa.filter(x=>(x.cum??x.pri??4)<2.75).length;
+  const deans=withGpa.filter(x=>x.pri>=3.5).length;
+  const warn=withGpa.filter(x=>x.pri<2.75).length;
 
   return rpHeader('Academic Standing Report',`Chapter GPA and individual member academic status · ${sem}`,sem)+
   rpSection('ti-chart-bar','Academic Summary',rpKpis([
@@ -309,20 +309,18 @@ function rpAcademics(sem){
     {label:'Academic Warnings (<2.75)',val:warn,color:warn>0?'var(--rd)':'var(--gn)'},
   ]))+
   (warn>0?rpSection('ti-alert-triangle','Academic Warnings',
-    rpTable(['Member','Class','Cumulative GPA','Last Semester','Status'],withGpa.filter(x=>(x.cum??x.pri??4)<2.75).sort((a,b)=>(a.cum??a.pri??4)-(b.cum??b.pri??4)).map(({m,cum,pri})=>[
+    rpTable(['Member','Class','GPA','Status'],withGpa.filter(x=>x.pri<2.75).sort((a,b)=>a.pri-b.pri).map(({m,pri})=>[
       `<strong>${esc(m.name)}</strong>`,esc(m.classYear),
-      cum!==null?`<span style="color:var(--rd);font-weight:700">${cum.toFixed(2)}</span>`:'N/A',
-      pri!==null?pri.toFixed(2):'N/A',
+      `<span style="color:var(--rd);font-weight:700">${pri.toFixed(2)}</span>`,
       '<span style="color:var(--rd)">Warning</span>'
     ]))
   ):'')+
   rpSection('ti-list','Full Academic Rankings',
-    withGpa.length?rpTable(['Rank','Member','Class','Cumulative GPA','Last Semester','Status'],
-      [...withGpa].sort((a,b)=>(b.cum??b.pri??0)-(a.cum??a.pri??0)).map(({m,cum,pri},i)=>{
-        const g=cum??pri??0;
-        const status=g>=3.5?"Dean's List":g>=3.0?'Good Standing':g>=2.75?'Watch':'Warning';
-        const sc=g>=3.5?'var(--gn)':g>=3.0?'var(--bl)':g>=2.75?'var(--am)':'var(--rd)';
-        return[i+1,esc(m.name),esc(m.classYear),cum!==null?`<span style="font-weight:700;color:${sc}">${cum.toFixed(2)}</span>`:'N/A',pri!==null?pri.toFixed(2):'N/A',`<span style="color:${sc}">${status}</span>`];
+    withGpa.length?rpTable(['Rank','Member','Class','GPA','Status'],
+      [...withGpa].sort((a,b)=>b.pri-a.pri).map(({m,pri},i)=>{
+        const status=pri>=3.5?"Dean's List":pri>=3.0?'Good Standing':pri>=2.75?'Watch':'Warning';
+        const sc=pri>=3.5?'var(--gn)':pri>=3.0?'var(--bl)':pri>=2.75?'var(--am)':'var(--rd)';
+        return[i+1,esc(m.name),esc(m.classYear),`<span style="font-weight:700;color:${sc}">${pri.toFixed(2)}</span>`,`<span style="color:${sc}">${status}</span>`];
       })):`<div style="color:var(--mt);font-size:12px">No GPA data entered yet. Add GPAs in the Academics page.</div>`
   );
 }

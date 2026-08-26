@@ -987,6 +987,14 @@ async function finAddAttendanceFine(memberId, eventId, eventTitle, amount){
 function finHasAttendanceFine(memberId, eventId){
   return (D.finance.fines||[]).some(f=>f.type==='Attendance'&&f.memberId===memberId&&f.eventId===eventId);
 }
+// Is this member fine-eligible for an unexcused miss at all? Freshmen and Sophomores always are.
+// Juniors/Seniors only are if they live in the house -- an out-of-house upperclassman is exempt.
+function finAttendanceFineEligible(memberId){
+  const m=D.members.find(x=>x.id===memberId);
+  if(!m)return false;
+  if(m.classYear==='Freshman'||m.classYear==='Sophomore')return true;
+  return (m.classYear==='Junior'||m.classYear==='Senior')&&m.liveIn;
+}
 
 async function finMarkFinePaid(fineId){
   if(!canWrite()||!finCheckPerms()){toast('Only Treasurer, President, or VP can mark fines paid.','error');return;}
