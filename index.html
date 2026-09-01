@@ -2843,19 +2843,18 @@
 <div class="mo" role="dialog" aria-modal="true" id="m-health-explain" onclick="closeM(event,this)"><div class="md">
   <div class="md-t">How the Health Score is calculated<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-health-explain'))"><i class="ti ti-x"></i></button></div>
   <div style="font-size:12px;line-height:1.6;color:var(--tx)">
-    <p style="margin:0 0 12px">The Health Score is a weighted average of nine areas of chapter operations, each scored 0-100. One number for a quick read on how the chapter is doing overall.</p>
+    <p style="margin:0 0 12px">The Health Score is a weighted average of seven areas of chapter operations, each scored 0-100. One number for a quick read on how the chapter is doing overall.</p>
     <table class="tbl" style="margin-bottom:12px"><thead><tr><th>Area</th><th>Weight</th><th>What it measures</th></tr></thead><tbody>
-      <tr><td>Attendance</td><td>20%</td><td>Average member attendance rate at mandatory events</td></tr>
-      <tr><td>Task Completion</td><td>16%</td><td>Share of chapter tasks marked done</td></tr>
-      <tr><td>Academics</td><td>14%</td><td>Average member GPA, scaled to a 0-100 range</td></tr>
-      <tr><td>Accountability</td><td>12%</td><td>Number of open Judicial Board cases (fewer is better)</td></tr>
-      <tr><td>Finances</td><td>11%</td><td>Share of members who have paid dues in full</td></tr>
-      <tr><td>Recruitment</td><td>8%</td><td>Rushees in the pipeline against the season goal</td></tr>
-      <tr><td>Community Service</td><td>7%</td><td>Hours logged against the chapter's semester goal</td></tr>
-      <tr><td>Social Events</td><td>7%</td><td>Average planning readiness across recent/upcoming events</td></tr>
-      <tr><td>Alumni</td><td>5%</td><td>Number of alumni contacts in the directory</td></tr>
+      <tr><td>Attendance</td><td>23%</td><td>Average member attendance rate at mandatory events</td></tr>
+      <tr><td>Task Completion</td><td>18%</td><td>Share of chapter tasks marked done</td></tr>
+      <tr><td>Academics</td><td>16%</td><td>Average member cumulative GPA, scaled to a 0-100 range</td></tr>
+      <tr><td>Accountability</td><td>14%</td><td>Number of open Judicial Board cases this semester (fewer is better)</td></tr>
+      <tr><td>Finances</td><td>12%</td><td>Share of members who have paid dues in full</td></tr>
+      <tr><td>Recruitment</td><td>9%</td><td>Rushees in the pipeline against the season goal</td></tr>
+      <tr><td>Community Service</td><td>8%</td><td>Hours logged against the chapter's semester goal</td></tr>
     </tbody></table>
     <p style="margin:0 0 10px"><strong>Grades:</strong> 80+ is an A, 65-79 is a B, 50-64 is a C, below 50 is an F. The same thresholds set the score's color everywhere it appears.</p>
+    <p style="margin:0 0 10px"><strong>Targets:</strong> each area has a pass/fail target (the marker on its bar) that a chapter lead can change in Settings &rarr; Chapter Health Score. Targets only move the "hit / miss" line — they never change how an area's raw score is calculated.</p>
     <p style="margin:0 0 10px"><strong>Missing data:</strong> an area with no data yet (for example, no rushees before rush season starts) is left out of the score entirely, not counted as a 0, and the remaining areas' weights are scaled up to fill the gap. It's marked "No data yet" wherever it's shown.</p>
     <p style="margin:0 0 10px"><strong>How often it changes:</strong> the score recalculates instantly from live chapter data every time it's shown, so it reflects the current state of Attendance, Tasks, Academics, and every other area right now, not a periodic snapshot.</p>
     <p style="margin:0">The score, grade, and every area shown come from one calculation, so the Dashboard widget and the full Scorecard page always agree.</p>
