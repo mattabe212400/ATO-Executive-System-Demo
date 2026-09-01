@@ -613,6 +613,11 @@ function loadDemoData(){
 // ══════════════════════════════════════════════
 async function init(){
   loadDemoData();
+  // Finance dues/budget are seeded in the pre-semester-keyed flat shape; production migrates
+  // them the first time renderFinance() runs, but the Health Scorecard (Finances dimension)
+  // and other pages read them before that, so run the migration up front here.
+  if(typeof finEnsureDuesMigrated === 'function') finEnsureDuesMigrated();
+  if(typeof finEnsureBudgetMigrated === 'function') finEnsureBudgetMigrated();
 
   const authLoading = document.getElementById('auth-loading');
   if(authLoading){ authLoading.classList.add('hidden'); setTimeout(()=>authLoading.remove(),400); }
