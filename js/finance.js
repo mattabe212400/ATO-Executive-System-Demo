@@ -104,6 +104,13 @@ function finSemesterChanged(){
   finTab(document.querySelector('.fin-tab[data-tab="'+FIN_ACTIVE_TAB+'"]'),FIN_ACTIVE_TAB);
 }
 
+// Recruitment chairs are exempt from local (semester) dues — they're still billed national dues.
+// Matched on the member's role rather than a per-member flag so it follows whoever currently
+// holds the position. A treasurer can still set an explicit customDues amount to override this.
+function finIsLocalDuesExempt(m){
+  return !!m && /recruit/i.test(m.role||'');
+}
+
 // Dynamic dues — reads from D.settings based on member type (New Member / inHouse / outOfHouse).
 // Member type comes from the explicit m.memberStatus field (Active/New Member), NOT class
 // year — a Freshman can already be an initiated active brother, and a Sophomore/Junior can be
@@ -114,6 +121,7 @@ function getSemDues(memberId,semester){
   // Per-member override takes priority (now semester-scoped, same as the rest of the dues record)
   const override = finDuesRec(memberId,semester)?.customDues;
   if(override) return override;
+  if(finIsLocalDuesExempt(m)) return 0;   // recruitment chairs — national dues only
   // Determine type: New Member = explicit memberStatus, inHouse = liveIn, outOfHouse = !liveIn
   if(m) {
     if((m.memberStatus||'Active')==='New Member') return s.duesPledge||0;
@@ -129,8 +137,29 @@ function finDuesTierLabel(memberId,semester){
   const m = D.members.find(x=>x.id===memberId);
   if(!m) return 'N/A';
   if(finDuesRec(memberId,semester)?.customDues) return 'Custom';
+  if(finIsLocalDuesExempt(m)) return 'Recruitment';
   if((m.memberStatus||'Active')==='New Member') return 'New Member';
   return m.liveIn?'In-House':'Out-of-House';
+}
+
+// Zero out the CURRENT semester's stored local dues for recruitment chairs — almost everything
+// reads the stored semesterDues, not getSemDues(), so a member who already had dues applied (or
+// who becomes a recruitment chair mid-semester) needs the written value corrected. Past semesters
+// are frozen and left alone; a former chair is re-billed via "Apply amounts to all members".
+// Only saves when something actually changed.
+function finNormalizeExemptDues(){
+  const sem=getSemester();
+  if(!D.finance||!D.finance.dues)return;
+  const touched=[];
+  D.members.forEach(m=>{
+    if(!finIsLocalDuesExempt(m))return;
+    const rec=D.finance.dues[m.id]&&D.finance.dues[m.id][sem];
+    if(!rec||rec.customDues||(rec.semesterDues||0)===0)return;
+    rec.semesterDues=0;
+    rec.status='Paid';   // nothing owed
+    touched.push(m.id);
+  });
+  if(touched.length&&typeof saveFinanceDuesMany==='function')saveFinanceDuesMany(touched);
 }
 
 // ── PERMISSION CHECK ──
@@ -173,7 +202,7 @@ function finTab(btn,tabId){
   // Show/hide edit controls based on permission AND whether the selected semester is the
   // current one — past semesters are frozen read-only for everyone, leads included.
   const canEditNow=finCheckPerms()&&isCurrentSemester(FIN_SELECTED_SEM);
-  ['fin-add-payment-btn','fin-add-fine-btn','fin-add-expense-btn','fin-add-plan-btn'].forEach(id=>{
+  ['fin-add-payment-btn','fin-bulk-payment-btn','fin-add-fine-btn','fin-add-expense-btn','fin-add-plan-btn'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.display=canEditNow?'':'none';
   });
@@ -245,6 +274,7 @@ function renderFinance(){
   if(!D.finance.budget)D.finance.budget={};
   finEnsureDuesMigrated();
   finEnsureBudgetMigrated();
+  if(finCheckPerms())finNormalizeExemptDues();
   if(!FIN_SELECTED_SEM)FIN_SELECTED_SEM=getSemester();
   if(CURRENT_USER&&CURRENT_USER.role==='viewer'){finRenderOwnOnly();return;}
   // Reset tabs
@@ -565,7 +595,9 @@ function finDrawBudgetDonut(budget){
   let offset=0,paths='';
   segs.forEach(s=>{
     const dash=(s.amt/total)*CIRC;
-    const off=CIRC-(offset/total*CIRC);
+    // Offset is the NEGATIVE running total — see the matching note in attDrawDonut(). A
+    // positive `CIRC - total` slides each slice to render its complement instead.
+    const off=-(offset/total)*CIRC;
     paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${s.col}" stroke-width="${SW}"
       stroke-dasharray="${dash} ${CIRC}" stroke-dashoffset="${off}"
       style="transform:rotate(-90deg);transform-origin:${CX}px ${CY}px;transition:stroke-dashoffset .7s ease"/>`;
@@ -921,6 +953,163 @@ async function finRecordPayment(){
   }
 }
 
+// ── BULK PAYMENT — record the same payment for many members at once ──
+// Handles both ledgers: 'dues' (semester dues — the in-house / out-of-house / new-member tiers,
+// which are just member attributes, not separate records) and 'national'. The Show filter lets
+// the Treasurer pull up one tier and collect from the whole group in a single action.
+let _finBulkSel = new Set();
+
+function finOpenBulkPayment(scope){
+  if(!canWrite()||!finCheckPerms()){toast('Only Treasurer, President, or VP can record payments.','error');return;}
+  _finBulkSel = new Set();
+  document.getElementById('fbulk-scope').value = scope==='national' ? 'national' : 'dues';
+  document.getElementById('fbulk-tier').value = 'all';
+  document.getElementById('fbulk-amount').value = '';
+  document.getElementById('fbulk-date').value = localDateStr();
+  document.getElementById('fbulk-method').value = 'Venmo';
+  document.getElementById('fbulk-notes').value = '';
+  document.getElementById('fbulk-search').value = '';
+  finBulkRenderList();
+  openM('m-fin-bulk-payment');
+}
+
+function finBulkVisibleMembers(){
+  const tier = document.getElementById('fbulk-tier').value;
+  const q = (document.getElementById('fbulk-search').value||'').toLowerCase();
+  const sem = finSem();
+  return sortedMembers().filter(m=>{
+    if(q && !m.name.toLowerCase().includes(q)) return false;
+    if(tier!=='all' && finDuesTierLabel(m.id,sem)!==tier) return false;
+    return true;
+  });
+}
+
+// Switching to a specific tier pre-selects everyone in it (the "collect in-house dues from the
+// whole house" flow); switching back to All clears the selection.
+function finBulkTierChanged(){
+  const tier = document.getElementById('fbulk-tier').value;
+  _finBulkSel = tier==='all' ? new Set() : new Set(finBulkVisibleMembers().map(m=>m.id));
+  finBulkRenderList();
+}
+
+function finBulkToggle(id){
+  if(_finBulkSel.has(id)) _finBulkSel.delete(id); else _finBulkSel.add(id);
+  finBulkUpdateSummary();
+}
+
+function finBulkSelectAll(on){
+  if(on) finBulkVisibleMembers().forEach(m=>_finBulkSel.add(m.id));
+  else _finBulkSel.clear();   // Clear means all, not just the ones currently visible
+  finBulkRenderList();
+}
+
+function finBulkRenderList(){
+  const scope = document.getElementById('fbulk-scope').value;
+  const sem = finSem();
+  const natAmt = D.settings?.duesNational||0;
+  const methodFld = document.getElementById('fbulk-method-fld');
+  if(methodFld) methodFld.style.display = scope==='national' ? 'none' : '';
+  const list = document.getElementById('fbulk-list');
+  list.innerHTML = finBulkVisibleMembers().map(m=>{
+    let bal;
+    if(scope==='national'){
+      const nd = D.finance.nationalDues?.[m.id]||{paid:0};
+      bal = Math.max(0, natAmt-(nd.paid||0));
+    }else{
+      const d = finDuesRec(m.id,sem)||{semesterDues:getSemDues(m.id,sem),paid:0};
+      bal = d.semesterDues-(d.paid||0);
+    }
+    const checked = _finBulkSel.has(m.id)?'checked':'';
+    return`<label style="display:flex;align-items:center;gap:9px;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:12px" onmouseover="this.style.background='rgba(0,0,0,.03)'" onmouseout="this.style.background=''">
+      <input type="checkbox" ${checked} onchange="finBulkToggle('${m.id}')" style="width:15px;height:15px;flex-shrink:0;accent-color:var(--navy)">
+      <div class="sh-av" style="width:22px;height:22px;font-size:8px;flex-shrink:0">${esc(m.initials)}</div>
+      <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</span>
+      <span style="font-size:10px;color:var(--mt);flex-shrink:0">${finDuesTierLabel(m.id,sem)}</span>
+      <span style="font-size:11px;font-weight:600;flex-shrink:0;min-width:54px;text-align:right;color:${bal>0?'var(--rd)':'var(--gn)'}">$${bal.toLocaleString()}</span>
+    </label>`;
+  }).join('') || `<div style="padding:16px;text-align:center;color:var(--ht);font-size:12px">No members match.</div>`;
+  finBulkUpdateSummary();
+}
+
+function finBulkUpdateSummary(){
+  const el = document.getElementById('fbulk-summary');
+  if(!el) return;
+  const n = _finBulkSel.size;
+  const amt = parseFloat(document.getElementById('fbulk-amount').value);
+  el.textContent = n
+    ? `${n} member${n!==1?'s':''} selected` + (!isNaN(amt)&&amt>0 ? ` · $${(amt*n).toLocaleString()} total` : '')
+    : 'No members selected';
+}
+
+async function finRecordBulkPayment(){
+  if(!canWrite()||!finCheckPerms()){toast('Only Treasurer, President, or VP can record payments.','error');return;}
+  const scope = document.getElementById('fbulk-scope').value;
+  const amount = parseFloat(document.getElementById('fbulk-amount').value);
+  if(isNaN(amount)||amount<=0){toast('Enter an amount greater than 0','error');return;}
+  const ids = D.members.filter(m=>_finBulkSel.has(m.id)).map(m=>m.id);
+  if(!ids.length){toast('Select at least one member','error');return;}
+  if(scope==='dues' && !isCurrentSemester(finSem())){toast('This semester is read-only.','error');return;}
+  const date = document.getElementById('fbulk-date').value||localDateStr();
+  const method = document.getElementById('fbulk-method').value;
+  const notes = document.getElementById('fbulk-notes').value.trim();
+  const by = CURRENT_USER?CURRENT_USER.mid:'m3';
+
+  const ok = await confirmDialog('Record bulk payment',
+    `Record a $${amount} ${scope==='national'?'national dues':'dues'} payment for ${ids.length} member${ids.length!==1?'s':''} — $${(amount*ids.length).toLocaleString()} total?`,
+    'Record', false);
+  if(!ok) return;
+
+  // Snapshot every ledger this touches so a failed save leaves nothing half-recorded.
+  const snap = {
+    payments: [...(D.finance.payments||[])],
+    dues: JSON.parse(JSON.stringify(D.finance.dues||{})),
+    nationalDues: JSON.parse(JSON.stringify(D.finance.nationalDues||{})),
+    nationalPayments: [...(D.finance.nationalPayments||[])],
+  };
+
+  try{
+    if(scope==='national'){
+      const natAmt = D.settings?.duesNational||0;
+      if(!D.finance.nationalDues) D.finance.nationalDues={};
+      if(!D.finance.nationalPayments) D.finance.nationalPayments=[];
+      ids.forEach(mid=>{
+        if(!D.finance.nationalDues[mid]) D.finance.nationalDues[mid]={paid:0,status:'Unpaid',lastPayment:''};
+        const nd = D.finance.nationalDues[mid];
+        nd.paid = (nd.paid||0)+amount;
+        nd.lastPayment = date;
+        nd.status = nd.paid>=natAmt&&natAmt>0 ? 'Paid' : nd.paid>0 ? 'Partial' : 'Unpaid';
+        if(notes) nd.notes = notes;
+        D.finance.nationalPayments.unshift({id:uid(),memberId:mid,amount,date,notes});
+      });
+      await saveFinanceLedger();
+    }else{
+      const sem = getSemester();
+      if(!D.finance.payments) D.finance.payments=[];
+      ids.forEach(mid=>{
+        D.finance.payments.unshift({id:'py'+uid(),memberId:mid,amount,type:'dues',method,date,notes,by});
+        const rec = finEnsureDuesRec(mid,sem);
+        rec.paid = Math.min(rec.semesterDues, rec.paid+amount);
+        rec.lastPayment = date;
+        rec.status = rec.paid>=rec.semesterDues ? 'Paid' : 'Partial';
+      });
+      await Promise.all([saveFinanceLedger(), saveFinanceDuesMany(ids)]);
+    }
+  }catch(e){
+    D.finance.payments = snap.payments;
+    D.finance.dues = snap.dues;
+    D.finance.nationalDues = snap.nationalDues;
+    D.finance.nationalPayments = snap.nationalPayments;
+    toast('Failed to save. Nothing was recorded — please try again.','error');
+    return;
+  }
+
+  closeM(null,document.getElementById('m-fin-bulk-payment'));
+  toast(`$${amount} ${scope==='national'?'national dues ':''}payment recorded for ${ids.length} member${ids.length!==1?'s':''}`,'success');
+  if(scope==='national') finRenderNational();
+  else if(FIN_ACTIVE_TAB==='fin-overview') finRenderOverview();
+  else finRenderDues();
+}
+
 // ── ADD FINE ──
 function finOpenAddFine(){
   const sel=document.getElementById('ffine-member');
@@ -1140,6 +1329,8 @@ function renderSettings(){
   if(typeof seRenderPositions==='function')seRenderPositions();
   // Member approval (general members, viewer role) — shown inside Chapter Settings card
   if(typeof seRenderMemberApproval==='function')seRenderMemberApproval();
+  // Chapter Health Score — weights/scoring explainer + editable per-dimension targets (lead-only)
+  if(typeof seRenderHealthConfig==='function')seRenderHealthConfig();
   // Chapter Achievements — feeds the True Merit Report Assistant's awards_and_achievements
   // section (js/truemerit.js).
   if(typeof tmRenderAchievements==='function')tmRenderAchievements();

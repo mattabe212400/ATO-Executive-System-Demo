@@ -47,22 +47,22 @@ const CH_MEMBER_VISIBLE_EVENT_STATUSES=['scheduled','completed'];
 function renderRitual(){
   chEnsureDevotionalsMigrated();
   const full=chFull();
+  // Anyone who can open this page sees the full planning boards (bible study, devotionals,
+  // brotherhood events, kanban) — read-only unless chFull()/bsFull(). Every add/edit/delete
+  // affordance below is already gated, and only the officer "add" action bar is hidden for the
+  // rest. General members get the same read-only planning visibility as everyone else.
   const fullEl=document.getElementById('ch-full-view');
   const memberEl=document.getElementById('ch-member-view');
   const actionsEl=document.getElementById('ch-full-actions');
-  if(fullEl)fullEl.style.display=full?'':'none';
-  if(memberEl)memberEl.style.display=full?'none':'';
+  if(fullEl)fullEl.style.display='';
+  if(memberEl)memberEl.style.display='none';
   if(actionsEl)actionsEl.style.display=full?'':'none';
-  if(full){
-    initSemesterSelect('ritual-semester-select',chKnownSemesters(),chSemesterChanged,chSem());
-    chRenderKpis();
-    if(typeof bscRenderProgram==='function')bscRenderProgram();
-    chRenderDevotionals();
-    chRenderEvents();
-    chRenderKanban();
-  }else{
-    chRenderMemberView();
-  }
+  initSemesterSelect('ritual-semester-select',chKnownSemesters(),chSemesterChanged,chSem());
+  chRenderKpis();
+  if(typeof bscRenderProgram==='function')bscRenderProgram();
+  chRenderDevotionals();
+  chRenderEvents();
+  chRenderKanban();
 }
 
 // ── DATA HELPERS ──

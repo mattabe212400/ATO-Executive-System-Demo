@@ -115,16 +115,14 @@ function socBudgetTotals(plan){
 let SOC_CURRENT_EVENT_ID = null;
 
 function renderSocial(){
-  const full = canEditSocial() || isLeadUser();
+  // Anyone who can open this page sees the full planning list + event detail views, read-only
+  // unless canEditSocial()/isLeadUser(). Every add/edit/delete control is already gated, so
+  // nothing writable shows for the rest. General members get the same read-only visibility.
   const fullEl = document.getElementById('soc-full-view');
   const memberEl = document.getElementById('soc-member-view');
-  if(fullEl) fullEl.style.display = full ? '' : 'none';
-  if(memberEl) memberEl.style.display = full ? 'none' : '';
-  if(full){
-    socShowList();
-  } else {
-    socRenderMemberView();
-  }
+  if(fullEl) fullEl.style.display = '';
+  if(memberEl) memberEl.style.display = 'none';
+  socShowList();
 }
 
 // ── LIST / OVERVIEW ──

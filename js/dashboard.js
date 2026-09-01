@@ -11,7 +11,9 @@
   const seesJudicial=typeof jbCanAccess==='function'&&jbCanAccess();
 
   const tot=D.members.length||1;
-  const avg=chapterAvgAttendance();
+  // Match the Attendance tab's "Semester avg" exactly (mean of the Event Breakdown bars) rather
+  // than the all-time per-member average, so the two pages never disagree.
+  const avg=chapterEventAvgAttendanceForSemester(getSemester());
   const myTasks=visibleTasksFor(D.tasks);
   const openT=myTasks.filter(t=>t.status!=='done').length;
   const ovT=myTasks.filter(t=>isOv(t.dueDate)&&t.status!=='done').length;
@@ -105,7 +107,8 @@
   const rc=document.getElementById('ring-c');if(rc){rc.style.strokeDasharray=cv;rc.style.strokeDashoffset=cv*(1-avg/100);}
   const rv=document.getElementById('ring-v');if(rv)rv.textContent=avg+'%';
   const rv2=document.getElementById('ring-v2');if(rv2)rv2.textContent=avg+'%';
-  const rs=document.getElementById('ring-s');if(rs)rs.textContent=Math.round(tot*avg/100)+' / '+tot+' members';
+  // A real headcount, not avg×roster (which just restates the % and reads like a fake "144 attended").
+  const rs=document.getElementById('ring-s');if(rs){const atTarget=D.members.filter(m=>aR(m.id)>=ATT_TARGET).length;rs.textContent=atTarget+' of '+tot+' members at '+ATT_TARGET+'%+';}
 
   // ── GOALS ── same position-scoping as the Tasks & Goals page's own renderTasks() (leads see
   // every position, everyone else only their own) — this preview card reads the same D.goals
@@ -154,24 +157,18 @@ function dashBuildQuickActions(isViewer){
 
 // ── CHAPTER HEALTH SCORE ──
 // Sources the exact same score/dimensions as the full Health Scorecard page
-// (js/healthscore.js:computeHealthDims) so the two never disagree — shows a subset of the
-// canonical 8 dimensions (dropped Recruitment/Community Service/Alumni to fit the widget).
+// (js/healthscore.js:computeHealthDims) so the two never disagree — the widget now shows the
+// FULL dimension set, just with shorter labels for the tight layout. Finances is exec-only data
+// (dropped for General Members). Accountability is judicial-derived and judicial is lead-only
+// under the real matrix, so it's dropped for anyone who isn't a lead.
 function dashDrawHealth(isViewer){
   const {score,dims:allDims}=computeHealthDims();
-  const find=k=>allDims.find(d=>d.k===k);
   const seesJudicial=typeof jbCanAccess==='function'&&jbCanAccess();
-  // Shorter labels for the widget's tight layout; values/colors come straight from the
-  // canonical dims so they always match the full Scorecard page. Finances is exec-only data —
-  // dropped for General Members (role:'viewer'). Accountability is judicial-derived (open
-  // J-Board case count) — judicial is lead-only under the real matrix, so this dimension is
-  // dropped for anyone who isn't a lead, not just viewers.
-  const dims=[
-    {...find('Attendance'),k:'Attendance'},
-    {...find('Task Completion'),k:'Tasks'},
-    {...find('Academics'),k:'GPA'},
-    ...(seesJudicial?[{...find('Accountability'),k:'Accountability'}]:[]),
-    ...(isViewer?[]:[{...find('Finances'),k:'Finances'}]),
-  ];
+  const SHORT={'Task Completion':'Tasks','Academics':'GPA','Community Service':'Comm. Service'};
+  const dims=allDims
+    .filter(d=>!(isViewer&&d.k==='Finances'))
+    .filter(d=>seesJudicial||d.k!=='Accountability')
+    .map(d=>({...d,k:SHORT[d.k]||d.k}));
   const scoreColor=score>=80?'var(--gn)':score>=65?'var(--navy)':score>=50?'var(--am)':'var(--rd)';
 
   const valEl=document.getElementById('d-health-val');
@@ -216,16 +213,16 @@ function dashDrawHealth(isViewer){
     }
   }
 
-  // Full Scorecard page isn't in VIEWER_PAGES — hide the deep-link for General Members.
-  const scEl=document.getElementById('d-health-scorecard-link');
-  if(scEl)scEl.style.display=isViewer?'none':'';
-
   const dimsEl=document.getElementById('d-health-dims');
   if(dimsEl){
-    dimsEl.innerHTML=dims.map(d=>`<div class="d2-dim">
+    dimsEl.innerHTML=dims.map(d=>d.excluded?`<div class="d2-dim">
+      <span class="d2-dim-lbl" style="color:var(--ht)">${d.k}</span>
+      <div class="d2-dim-bar"></div>
+      <span class="d2-dim-val" style="color:var(--ht);font-size:9px">No data</span>
+    </div>`:`<div class="d2-dim">
       <span class="d2-dim-lbl">${d.k}</span>
-      <div class="d2-dim-bar"><div class="d2-dim-fill" data-w="${d.v}"></div></div>
-      <span class="d2-dim-val">${d.v}%</span>
+      <div class="d2-dim-bar"><div class="d2-dim-fill" data-w="${healthDimProgress(d)}"${d.v>=d.target?' style="background:var(--gn)"':''}></div></div>
+      <span class="d2-dim-val"${d.v>=d.target?' style="color:var(--gn-tx)"':''}>${d.v}%</span>
     </div>`).join('');
     setTimeout(()=>{dimsEl.querySelectorAll('[data-w]').forEach(b=>{b.style.transform='scaleX('+(b.dataset.w/100)+')';});},100);
   }
@@ -467,7 +464,7 @@ function renderAttendance(){
   const range=semesterDateRange(sem);
   const semEvents=range?D.events.filter(e=>e.date>=range.start&&e.date<=range.end):D.events;
   const semEventIds=new Set(semEvents.map(e=>e.id));
-  const avg=chapterAvgAttendanceForSemester(D.members,sem);
+  const avg=chapterEventAvgAttendanceForSemester(sem);
   const excused=Object.entries(D.attendance||{}).filter(([evId])=>semEventIds.has(evId)).reduce((s,[,ev])=>s+Object.values(ev).filter(v=>v==='excused').length,0);
   const absent=Object.entries(D.attendance||{}).filter(([evId])=>semEventIds.has(evId)).reduce((s,[,ev])=>s+Object.values(ev).filter(v=>v==='absent').length,0);
   const attHd=document.getElementById('att-hd');if(attHd)attHd.textContent='Member Attendance: '+sem;

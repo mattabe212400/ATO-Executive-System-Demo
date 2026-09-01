@@ -32,8 +32,6 @@ function gpaTrend(gpa){
 }
 
 function openUpdateGpa(){
-  const sem=document.getElementById('gpa-semester');
-  if(sem)sem.value=getSemester();
   filterGpaModal();
   openM('m-updategpa');
 }
@@ -41,6 +39,19 @@ function openUpdateGpa(){
 function gpaVal(id,field){
   const rec=D.academics.gpas[id]||{};
   return rec[field]||'';
+}
+
+// A member marked "studied abroad last semester" — their last-semester GPA isn't representative,
+// so it's shown as "Abroad" rather than a number and they're left out of academic-warning
+// flagging. Their cumulative GPA still counts toward rankings and standing.
+function gpaToggleAbroadRow(id){
+  const chk=document.getElementById('gpa-abroad-'+id);
+  const sem=document.getElementById('gpa-semesterGpa-'+id);
+  if(chk&&sem){
+    sem.disabled=chk.checked;
+    sem.style.opacity=chk.checked?'.4':'';
+    if(chk.checked)sem.value='';
+  }
 }
 
 function filterGpaModal(){
@@ -62,9 +73,11 @@ function filterGpaModal(){
   }
 
   list.innerHTML=members.map(m=>{
-    const priV=gpaVal(m.id,'priorGpa');
+    const rec=D.academics.gpas[m.id]||{};
+    const priV=rec.priorGpa||'';
     const isWarn=priV&&parseFloat(priV)<2.75;
-    return`<div style="display:grid;grid-template-columns:1fr 68px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);${isWarn?'background:var(--rd-bg);margin:0 -2px;padding:6px 4px;border-radius:5px;':''}">
+    const abroad=!!rec.studyAbroad;
+    return`<div style="display:grid;grid-template-columns:1fr 68px 68px 74px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);${isWarn?'background:var(--rd-bg);margin:0 -2px;padding:6px 4px;border-radius:5px;':''}">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
         <div class="sh-av" style="width:24px;height:24px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div>
         <div style="min-width:0">
@@ -72,9 +85,14 @@ function filterGpaModal(){
           <div style="font-size:10px;color:var(--mt)">${esc(m.classYear)}</div>
         </div>
       </div>
-      ${inp(m.id,'priorGpa','Last Semester GPA')}
+      ${inp(m.id,'priorGpa','Cumulative GPA')}
+      ${inp(m.id,'semesterGpa','Last Semester GPA')}
+      <label style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--mt);cursor:pointer;justify-self:center" title="Studied abroad last semester — last-semester GPA won't count">
+        <input type="checkbox" id="gpa-abroad-${m.id}" ${abroad?'checked':''} onchange="gpaToggleAbroadRow('${m.id}')" style="width:13px;height:13px;accent-color:var(--navy)"> Abroad
+      </label>
     </div>`;
   }).join('');
+  members.forEach(m=>{ if((D.academics.gpas[m.id]||{}).studyAbroad)gpaToggleAbroadRow(m.id); });
 }
 
 function saveGPAs(){
@@ -91,28 +109,21 @@ function saveGPAs(){
   }
 
   for(const m of members){
+    const abroad=!!(document.getElementById('gpa-abroad-'+m.id)||{}).checked;
     const priV=parseGpa((document.getElementById('gpa-priorGpa-'+m.id)||{value:''}).value);
-    if(priV==='err'){toast('Invalid GPA for '+m.name+': must be 0.00–4.00','error');return;}
+    const semV=parseGpa((document.getElementById('gpa-semesterGpa-'+m.id)||{value:''}).value);
+    if(priV==='err'||semV==='err'){toast('Invalid GPA for '+m.name+': must be 0.00–4.00','error');return;}
     const cur=D.academics.gpas[m.id]||{};
     const updated={
-      semesterGpa:'',
+      semesterGpa: abroad?'':(semV!==null?semV:(cur.semesterGpa||'')),
       priorGpa: priV!==null?priV:(cur.priorGpa||''),
     };
+    if(abroad)updated.studyAbroad=true;
     if(JSON.stringify(cur)!==JSON.stringify(updated)){changed++;D.academics.gpas[m.id]=updated;}
   }
 
-  // Snapshot: chapter GPA = avg of LAST SEMESTER GPAs
-  const priorGpas=members.map(m=>(D.academics.gpas[m.id]||{}).priorGpa).filter(v=>v&&v!=='').map(v=>parseFloat(v)).filter(g=>!isNaN(g));
-  const useGpas=priorGpas;
-
-  if(useGpas.length){
-    const avg=(useGpas.reduce((a,b)=>a+b,0)/useGpas.length).toFixed(3);
-    const sem=(document.getElementById('gpa-semester')||{value:getSemester()}).value||getSemester();
-    const existing=D.academics.history.findIndex(h=>h.semester===sem);
-    const entry={semester:sem,chapterGpa:avg,memberCount:useGpas.length,date:localDateStr()};
-    if(existing>=0)D.academics.history[existing]=entry;
-    else D.academics.history.unshift(entry);
-  }
+  // Chapter GPA History is entered by hand from each semester's official university grade report
+  // (History tab) — it is not derived from these per-member numbers.
 
   saveD('academics');
   closeM(null,document.getElementById('m-updategpa'));
@@ -145,22 +156,25 @@ function renderAcademics(){
   if(!D.academics)D.academics={gpas:{},history:[]};
   if(!D.academics.gradeChecks)D.academics.gradeChecks=[];
   if(!D.academics.nmCheckins)D.academics.nmCheckins={};
+  acEnsureHistory();
   // Restore to active tab (or default to overview on first load)
   document.querySelectorAll('.ac-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===AC_ACTIVE_TAB));
   document.querySelectorAll('#ac-content div[id^="ac-pane-"]').forEach(d=>{d.style.display=d.id===AC_ACTIVE_TAB?'block':'none';});
 
-  // Build member GPA objects
+  // Build member GPA objects. NOTE: the stored field is still keyed `priorGpa` for backward
+  // compatibility, but it now holds each member's CUMULATIVE GPA — that's the single number the
+  // chapter enters, ranks by, and shows on the roster.
   function getMemberGpas(m){
     const rec=D.academics.gpas[m.id]||{};
-    const pri=rec.priorGpa&&rec.priorGpa!==''?parseFloat(rec.priorGpa):null;
-    return{m,pri,hasAny:pri!==null};
+    const pri=rec.priorGpa&&rec.priorGpa!==''?parseFloat(rec.priorGpa):null;      // cumulative
+    const sem=rec.semesterGpa&&rec.semesterGpa!==''?parseFloat(rec.semesterGpa):null; // last semester
+    return{m,pri,sem,abroad:!!rec.studyAbroad,hasAny:pri!==null};
   }
   const allMemberGpas=sortedMembers().map(getMemberGpas);
   const withAny=allMemberGpas.filter(x=>x.hasAny);
 
-  // Chapter GPA = prior semester avg (per spec)
-  const hist=D.academics.history;
-  const latestHist=hist[0]||null;
+  // Chapter GPA = the latest official semester report entered on the History tab (not computed).
+  const latestHist=acSortedHistory()[0]||null;
   const chapterGpaDisplay=latestHist?parseFloat(latestHist.chapterGpa).toFixed(2):null;
 
   const deansList=withAny.filter(x=>x.pri>=3.5).length;
@@ -169,10 +183,10 @@ function renderAcademics(){
 
   // KPIs
   document.getElementById('ac-kpi').innerHTML=
-    statStrip('Chapter GPA',chapterGpaDisplay||'N/A',latestHist?'Prior semester · '+latestHist.semester+(latestHist.semester&&latestHist.semester.toLowerCase().startsWith('spring')?' · Excludes Spring graduates':''):'No history yet, save GPAs to record','neutral')+
-    statStrip("Dean's List",deansList,'3.50 and above','neutral')+
-    statStrip('Good Standing',goodStand,'3.00 – 3.49','neutral')+
-    statStrip('Academic Warnings',warnMembers.length,'Below 2.75',warnMembers.length>0?'down':'neutral');
+    statStrip('Chapter GPA',chapterGpaDisplay||'N/A',latestHist?'Official report · '+latestHist.semester:'Add a report in the History tab','neutral')+
+    statStrip("Dean's List",deansList,'Cumulative GPA 3.50+','neutral')+
+    statStrip('Good Standing',goodStand,'Cumulative GPA 3.00 – 3.49','neutral')+
+    statStrip('Academic Warnings',warnMembers.length,'Cumulative GPA below 2.75',warnMembers.length>0?'down':'neutral');
 
   // Sort by GPA descending for ranking
   const ranked=[...withAny].sort((a,b)=>b.pri-a.pri);
@@ -181,7 +195,8 @@ function renderAcademics(){
   // Main table
   document.getElementById('ac-table').innerHTML=`<thead><tr>
     <th>#</th><th>Member</th><th>Class</th>
-    <th style="text-align:center">Last Semester GPA</th>
+    <th style="text-align:center">Cumulative GPA</th>
+    <th style="text-align:center">Last Sem.</th>
     <th>Status</th>
   </tr></thead><tbody>${[
     ...ranked.map((x,i)=>({...x,rank:i+1})),
@@ -195,6 +210,7 @@ function renderAcademics(){
       </div></td>
       <td style="color:var(--mt)">${row.m.classYear}</td>
       <td style="text-align:center"><span class="gpa-badge ${gpaColor(row.pri)}">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span></td>
+      <td style="text-align:center">${row.abroad?'<span class="badge bb2" style="font-size:9px">Abroad</span>':`<span class="gpa-badge ${gpaColor(row.sem)}">${row.sem!==null?row.sem.toFixed(2):'N/A'}</span>`}</td>
       <td>${gpaTrend(row.pri)}</td>
     </tr>`;
   }).join('')}</tbody>`;
@@ -210,9 +226,9 @@ function renderAcademics(){
           <div style="font-size:11px;color:var(--mt)">${row.m.classYear}${row.rank?' · Rank #'+row.rank:''}</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span class="gpa-badge ${gpaColor(row.pri)}" style="font-size:13px">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span>
-        <span style="font-size:10px;color:var(--mt)">Last Semester GPA</span>
+      <div style="display:flex;gap:16px;margin-bottom:6px">
+        <div><span class="gpa-badge ${gpaColor(row.pri)}" style="font-size:13px">${row.pri!==null?row.pri.toFixed(2):'N/A'}</span><div style="font-size:10px;color:var(--mt);margin-top:2px">Cumulative</div></div>
+        <div>${row.abroad?'<span class="badge bb2" style="font-size:11px">Abroad</span>':`<span class="gpa-badge ${gpaColor(row.sem)}" style="font-size:13px">${row.sem!==null?row.sem.toFixed(2):'N/A'}</span>`}<div style="font-size:10px;color:var(--mt);margin-top:2px">Last Sem.</div></div>
       </div>
       <div>${gpaTrend(row.pri)}</div>
     </div>`;
@@ -248,7 +264,7 @@ function renderAcademics(){
       </div>`).join('');
   } else {
     warnEmpty.style.display='block';
-    warnEmpty.innerHTML=es('ti-circle-check','green','All in good standing','No members below the 2.75 GPA threshold.','');
+    warnEmpty.innerHTML=es('ti-circle-check','green','All in good standing','No members below the 2.75 cumulative GPA threshold.','');
     warnEl.innerHTML='';
   }
 
@@ -271,39 +287,100 @@ function renderAcademics(){
     </div>`;
   }).join('');
 
-  // History table
+  // History table — hand-entered official chapter GPA from each semester's university grade report
   const histEl=document.getElementById('ac-history');
   const histEmpty=document.getElementById('ac-history-empty');
-  if(hist.length){
+  const canEditAc=acCanAccess();
+  const histAddBtn=document.getElementById('ac-history-add-btn');
+  if(histAddBtn)histAddBtn.style.display=canEditAc?'':'none';
+  const sortedHist=acSortedHistory();
+  if(sortedHist.length){
     histEmpty.style.display='none';
     histEl.innerHTML=`<div class="tw"><table class="tbl">
       <thead><tr>
         <th>Semester</th>
-        <th style="text-align:center">Last-Semester GPA<br><span style="font-weight:400;font-size:9px;color:var(--ht)">avg of each member's grade for that one term</span></th>
-        <th>Updated</th><th>vs Prior</th>
+        <th style="text-align:center">Official Chapter GPA</th>
+        <th>Notes</th>
+        <th>vs Prior</th>
+        ${canEditAc?'<th></th>':''}
       </tr></thead>
-      <tbody>${hist.map((h,i)=>{
-        const prior=hist[i+1];
-        let delta='';
-        if(prior){const d=(parseFloat(h.chapterGpa)-parseFloat(prior.chapterGpa));delta=`<span style="color:${d>=0?'var(--gn)':'var(--rd)'}">${d>=0?'↑':'↓'}${Math.abs(d).toFixed(3)}</span>`;}
+      <tbody>${sortedHist.map((h,i)=>{
+        const prior=sortedHist[i+1];
+        let delta='<span style="color:var(--ht)">N/A</span>';
+        if(prior&&!isNaN(parseFloat(h.chapterGpa))&&!isNaN(parseFloat(prior.chapterGpa))){
+          const d=parseFloat(h.chapterGpa)-parseFloat(prior.chapterGpa);
+          delta=`<span style="color:${d>=0?'var(--gn)':'var(--rd)'}">${d>=0?'↑':'↓'}${Math.abs(d).toFixed(2)}</span>`;
+        }
         return`<tr>
-          <td style="font-weight:500">${h.semester}</td>
-          <td style="text-align:center">
-            <span class="gpa-badge ${gpaColor(h.chapterGpa)}">${parseFloat(h.chapterGpa).toFixed(2)}</span>
-            <div style="font-size:9px;color:var(--ht);margin-top:2px">${h.memberCount} member${h.memberCount!==1?'s':''} reporting</div>
-          </td>
-          <td style="color:var(--ht)">${fds(h.date)}</td>
-          <td>${delta||'<span style="color:var(--ht)">N/A</span>'}</td>
+          <td style="font-weight:500">${esc(h.semester)}</td>
+          <td style="text-align:center"><span class="gpa-badge ${gpaColor(h.chapterGpa)}">${parseFloat(h.chapterGpa).toFixed(2)}</span></td>
+          <td style="color:var(--mt);font-size:11px">${esc(h.notes||'')||'—'}</td>
+          <td>${delta}</td>
+          ${canEditAc?`<td style="white-space:nowrap"><button class="btn" style="height:22px;font-size:10px;padding:0 7px;margin-right:3px" onclick="acOpenHistory('${h.id}')" aria-label="Edit ${esc(h.semester)}"><i class="ti ti-pencil"></i></button><button class="btn btn-d" style="height:22px;font-size:10px;padding:0 7px" onclick="acDeleteHistory('${h.id}')" aria-label="Delete ${esc(h.semester)}"><i class="ti ti-trash"></i></button></td>`:''}
         </tr>`;
       }).join('')}</tbody>
     </table></div>`;
   } else {
     histEmpty.style.display='block';
-    histEmpty.innerHTML=es('ti-chart-line','blue','No GPA history yet','Use "Update GPAs" each semester to build a historical record of chapter academic performance.','');
+    histEmpty.innerHTML=es('ti-chart-line','blue','No grade reports yet',canEditAc?'Add your chapter\'s official GPA from each semester\'s university grade report.':'Officers will post the official semester GPA reports here.','');
     histEl.innerHTML='';
   }
 
   renderGradeChecks();
+}
+
+// ── CHAPTER GPA HISTORY (manual — one row per semester's official university grade report) ──
+function acEnsureHistory(){
+  if(!D.academics)D.academics={gpas:{},history:[]};
+  if(!D.academics.history)D.academics.history=[];
+  D.academics.history.forEach(h=>{ if(h&&!h.id)h.id='h'+uid(); });
+}
+function acSortedHistory(){
+  acEnsureHistory();
+  return [...D.academics.history].sort((a,b)=>{
+    const ra=semesterDateRange(a.semester), rb=semesterDateRange(b.semester);
+    return (rb?rb.start:(b.date||'')).localeCompare(ra?ra.start:(a.date||''));
+  });
+}
+function acOpenHistory(id){
+  if(!acCanAccess()){toast('Only officers with Academics edit access can edit GPA history.','error');return;}
+  acEnsureHistory();
+  const h=id?D.academics.history.find(x=>x.id===id):null;
+  document.getElementById('ach-id').value=h?h.id:'';
+  document.getElementById('ach-title').textContent=h?'Edit Semester Grade Report':'Add Semester Grade Report';
+  document.getElementById('ach-sem').value=h?h.semester:'';
+  document.getElementById('ach-gpa').value=h?h.chapterGpa:'';
+  document.getElementById('ach-notes').value=h?(h.notes||''):'';
+  openM('m-ac-history');
+}
+function acSaveHistory(){
+  if(!acCanAccess()){toast('No permission to edit GPA history.','error');return;}
+  acEnsureHistory();
+  const id=document.getElementById('ach-id').value;
+  const sem=document.getElementById('ach-sem').value.trim();
+  const gpa=parseFloat(document.getElementById('ach-gpa').value);
+  if(!sem){toast('Semester is required','error');return;}
+  if(isNaN(gpa)||gpa<0||gpa>4){toast('Enter an official GPA between 0.00 and 4.00','error');return;}
+  const notes=document.getElementById('ach-notes').value.trim();
+  const chapterGpa=(Math.round(gpa*100)/100).toString();
+  let idx=id?D.academics.history.findIndex(h=>h.id===id):-1;
+  if(idx<0&&!id)idx=D.academics.history.findIndex(h=>(h.semester||'').toLowerCase()===sem.toLowerCase());
+  if(idx>=0)D.academics.history[idx]={...D.academics.history[idx],semester:sem,chapterGpa,notes,date:localDateStr()};
+  else D.academics.history.push({id:'h'+uid(),semester:sem,chapterGpa,notes,date:localDateStr()});
+  saveD('academics');
+  closeM(null,document.getElementById('m-ac-history'));
+  renderAcademics();
+  toast('Grade report saved','success');
+}
+async function acDeleteHistory(id){
+  if(!acCanAccess())return;
+  const h=(D.academics.history||[]).find(x=>x.id===id);
+  const ok=await confirmDialog('Delete grade report',`Delete the ${h?h.semester:'selected'} chapter GPA entry? This can't be undone.`,'Delete',true);
+  if(!ok)return;
+  D.academics.history=(D.academics.history||[]).filter(x=>x.id!==id);
+  saveD('academics');
+  renderAcademics();
+  toast('Grade report deleted','info');
 }
 
 // ── GRADE CHECKS ──

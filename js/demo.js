@@ -219,16 +219,18 @@ function loadDemoData(){
   };
 
   // ── ACADEMICS ──
+  // priorGpa = cumulative GPA (drives rankings + the roster). semesterGpa = last-semester GPA
+  // (display only). studyAbroad members show "Abroad" for last semester and don't carry one.
   const gpas = {
-    m01:{priorGpa:'3.81',semesterGpa:''}, m02:{priorGpa:'3.50',semesterGpa:''},
-    m03:{priorGpa:'3.92',semesterGpa:''}, m04:{priorGpa:'3.18',semesterGpa:''},
-    m05:{priorGpa:'2.98',semesterGpa:''}, m06:{priorGpa:'2.75',semesterGpa:''},
-    m07:{priorGpa:'3.90',semesterGpa:''}, m08:{priorGpa:'3.40',semesterGpa:''},
-    m09:{priorGpa:'2.65',semesterGpa:''}, m10:{priorGpa:'2.60',semesterGpa:''},
-    m11:{priorGpa:'3.05',semesterGpa:''}, m12:{priorGpa:'3.62',semesterGpa:''},
-    m13:{priorGpa:'2.40',semesterGpa:''}, m14:{priorGpa:'3.48',semesterGpa:''},
-    m15:{priorGpa:'3.00',semesterGpa:''}, m16:{priorGpa:'3.82',semesterGpa:''},
-    m17:{priorGpa:'3.10',semesterGpa:''}, m18:{priorGpa:'3.35',semesterGpa:''},
+    m01:{priorGpa:'3.81',semesterGpa:'3.88'}, m02:{priorGpa:'3.50',semesterGpa:'3.42'},
+    m03:{priorGpa:'3.92',semesterGpa:'4.00'}, m04:{priorGpa:'3.18',semesterGpa:'3.05'},
+    m05:{priorGpa:'2.98',semesterGpa:'3.20'}, m06:{priorGpa:'2.75',semesterGpa:'2.60'},
+    m07:{priorGpa:'3.90',semesterGpa:'3.85'}, m08:{priorGpa:'3.40',semesterGpa:'3.55'},
+    m09:{priorGpa:'2.65',semesterGpa:'2.48'}, m10:{priorGpa:'2.60',semesterGpa:'2.90'},
+    m11:{priorGpa:'3.05',semesterGpa:'',studyAbroad:true}, m12:{priorGpa:'3.62',semesterGpa:'3.70'},
+    m13:{priorGpa:'2.40',semesterGpa:'2.15'}, m14:{priorGpa:'3.48',semesterGpa:'3.50'},
+    m15:{priorGpa:'3.00',semesterGpa:'3.12'}, m16:{priorGpa:'3.82',semesterGpa:'3.79'},
+    m17:{priorGpa:'3.10',semesterGpa:'2.95'}, m18:{priorGpa:'3.35',semesterGpa:'3.44'},
   };
 
   // ── FINANCE ──

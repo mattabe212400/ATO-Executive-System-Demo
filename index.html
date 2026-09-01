@@ -276,9 +276,8 @@
             <div id="d-health-dims" class="d2-hero-dims"></div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
           <button class="card-a" style="font-size:10.5px" onclick="openM('m-health-explain')"><i class="ti ti-info-circle"></i> How this is calculated</button>
-          <button class="card-a d2-hero-link" id="d-health-scorecard-link" onclick="rbacNav('healthscore',null)">Full scorecard →</button>
         </div>
       </div>
 
@@ -754,6 +753,7 @@
           <span class="card-t"><i class="ti ti-home-check" style="margin-right:6px;color:var(--navy)"></i>Chore Assignments</span>
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:11px;color:var(--ht)">Due every Tuesday and Thursday night, check off when complete</span>
+            <button class="btn" id="kc-randomize-btn" style="height:26px;font-size:11px" onclick="kcRandomizeChores()"><i class="ti ti-arrows-shuffle"></i>Randomize</button>
             <button class="btn" style="height:26px;font-size:11px" onclick="kcPrintChores()"><i class="ti ti-printer"></i>Print</button>
           </div>
         </div>
@@ -987,12 +987,12 @@
             <div id="ac-top" style="display:flex;flex-direction:column;gap:6px"></div>
           </div>
           <div class="card">
-            <div class="card-hd"><span class="card-t" style="color:var(--rd-tx)"><i class="ti ti-alert-triangle" style="font-size:12px;color:var(--rd);margin-right:4px"></i>Academic Warnings</span></div>
+            <div class="card-hd"><span class="card-t" style="color:var(--rd-tx)"><i class="ti ti-alert-triangle" style="font-size:12px;color:var(--rd);margin-right:4px"></i>Academic Warnings</span><span style="font-size:9.5px;color:var(--mt)">By cumulative GPA</span></div>
             <div id="ac-warn" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="ac-warn-empty" style="display:none"></div>
           </div>
           <div class="card">
-            <div class="card-hd"><span class="card-t">GPA Distribution</span></div>
+            <div class="card-hd"><span class="card-t">GPA Distribution</span><span style="font-size:9.5px;color:var(--mt)">By cumulative GPA</span></div>
             <div id="ac-dist" style="display:flex;flex-direction:column;gap:5px"></div>
           </div>
         </div>
@@ -1030,7 +1030,11 @@
       <!-- History Tab -->
       <div id="ac-pane-history" style="display:none">
         <div class="card">
-          <div class="card-hd"><span class="card-t">Chapter GPA History</span></div>
+          <div class="card-hd">
+            <span class="card-t">Chapter GPA History</span>
+            <button class="btn btn-p" id="ac-history-add-btn" style="height:26px;font-size:11px" onclick="acOpenHistory()"><i class="ti ti-plus"></i>Add Semester Report</button>
+          </div>
+          <div style="font-size:11px;color:var(--mt);margin-bottom:10px">The official chapter GPA from each semester's university grade report. Entered by hand — not calculated from member GPAs.</div>
           <div id="ac-history" style="display:flex;flex-direction:column;gap:6px"></div>
           <div id="ac-history-empty" style="display:none"></div>
         </div>
@@ -1113,6 +1117,7 @@
           </select>
           <div class="list-toolbar-actions">
             <button class="btn" onclick="finExport()"><i class="ti ti-download"></i>Export CSV</button>
+            <button class="btn" id="fin-bulk-payment-btn" onclick="finOpenBulkPayment('dues')"><i class="ti ti-users-group"></i>Bulk Payment</button>
             <button class="btn btn-p" id="fin-add-payment-btn" onclick="finOpenPayment()"><i class="ti ti-plus"></i>Record Payment</button>
           </div>
         </div>
@@ -1135,6 +1140,7 @@
             <option value="Partial">Partial</option>
           </select>
           <div class="list-toolbar-actions">
+            <button class="btn" id="fin-natl-bulk-btn" onclick="finOpenBulkPayment('national')"><i class="ti ti-users-group"></i>Bulk Payment</button>
             <button class="btn btn-p" id="fin-natl-pay-btn" onclick="finOpenNationalPayment()"><i class="ti ti-plus"></i>Record Payment</button>
           </div>
         </div>
@@ -1267,7 +1273,7 @@
               </div>
             </div>
 
-            <div style="font-size:11px;color:var(--mt);margin-bottom:11px;margin-top:4px">National dues are tracked separately in the National Dues tab.</div>
+            <div style="font-size:11px;color:var(--mt);margin-bottom:11px;margin-top:4px">National dues are tracked separately in the National Dues tab. Recruitment chairs are automatically exempt from local (semester) dues — they're still billed national dues.</div>
 
             <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
               <button class="btn btn-p" onclick="finSaveDuesSettings()"><i class="ti ti-device-floppy"></i>Save Dues Settings</button>
@@ -2421,6 +2427,13 @@
         </div>
       </div>
 
+      <!-- Chapter Health Score targets — full width so each dimension's "how it's scored"
+           explanation has room to read as a sentence rather than wrapping to five lines. -->
+      <div class="card" style="margin-top:13px">
+        <div class="card-hd"><span class="card-t"><i class="ti ti-heartbeat" style="margin-right:5px;color:var(--rd-tx)"></i>Chapter Health Score</span><span style="font-size:11px;color:var(--mt)">Weights, scoring method, and per-dimension targets</span></div>
+        <div id="se-health-config"></div>
+      </div>
+
       <!-- Full page width, not confined to the .g2 right column — the position/2nd-title
            dropdown pair needs room to breathe horizontally, and this list only grows as the
            chapter adds officers, so it's one of the tallest cards on the page. Keeping it out of
@@ -2628,6 +2641,44 @@
   <div class="fr c2"><div class="fld"><label for="fpay-type">Type</label><select id="fpay-type"><option value="dues">Dues Payment</option><option value="fine">Fine Payment</option><option value="plan">Payment Plan Installment</option><option value="other">Other</option></select></div><div class="fld"><label for="fpay-method">Method</label><select id="fpay-method"><option value="Venmo">Venmo</option><option value="Cash">Cash</option><option value="Check">Check</option><option value="Zelle">Zelle</option></select></div></div>
   <div class="fr"><div class="fld"><label for="fpay-notes">Notes</label><input id="fpay-notes" placeholder="Optional note..."></div></div>
   <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-fin-payment'))">Cancel</button><button class="btn btn-p" onclick="finRecordPayment()"><i class="ti ti-check"></i>Record Payment</button></div>
+</div></div>
+
+<!-- ── BULK PAYMENT MODAL ── -->
+<div class="mo" role="dialog" aria-modal="true" id="m-fin-bulk-payment" onclick="closeM(event,this)"><div class="md" style="width:560px;max-height:90vh">
+  <div class="md-t">Record Payment for Multiple Members<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-fin-bulk-payment'))"><i class="ti ti-x"></i></button></div>
+  <div class="fr c2">
+    <div class="fld"><label for="fbulk-scope">Applies to</label><select id="fbulk-scope" onchange="finBulkRenderList()">
+      <option value="dues">Semester Dues (in-house / out-of-house / new member)</option>
+      <option value="national">National Dues</option>
+    </select></div>
+    <div class="fld"><label for="fbulk-tier">Show</label><select id="fbulk-tier" onchange="finBulkTierChanged()">
+      <option value="all">All members</option>
+      <option value="In-House">In-House only</option>
+      <option value="Out-of-House">Out-of-House only</option>
+      <option value="New Member">New Members only</option>
+    </select></div>
+  </div>
+  <div class="fr c2">
+    <div class="fld"><label for="fbulk-amount">Amount per member ($) *</label><input id="fbulk-amount" type="number" min="0" step="0.01" placeholder="0.00" oninput="finBulkUpdateSummary()"></div>
+    <div class="fld"><label for="fbulk-date">Date</label><input id="fbulk-date" type="date"></div>
+  </div>
+  <div class="fr c2">
+    <div class="fld" id="fbulk-method-fld"><label for="fbulk-method">Method</label><select id="fbulk-method"><option value="Venmo">Venmo</option><option value="Cash">Cash</option><option value="Check">Check</option><option value="Zelle">Zelle</option></select></div>
+    <div class="fld"><label for="fbulk-notes">Notes</label><input id="fbulk-notes" placeholder="Optional note..."></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px">
+    <div class="sbar" style="flex:1;margin-bottom:0"><i class="ti ti-search"></i><input id="fbulk-search" placeholder="Search member..." aria-label="Search member" oninput="finBulkRenderList()"></div>
+    <button class="btn" type="button" style="height:29px;font-size:11px" onclick="finBulkSelectAll(true)">Select all</button>
+    <button class="btn" type="button" style="height:29px;font-size:11px" onclick="finBulkSelectAll(false)">Clear</button>
+  </div>
+  <div id="fbulk-list" style="display:flex;flex-direction:column;gap:1px;max-height:300px;overflow-y:auto;border:1px solid var(--bdr);border-radius:8px;padding:4px 5px"></div>
+  <div style="display:flex;gap:9px;justify-content:space-between;align-items:center;margin-top:11px">
+    <span id="fbulk-summary" style="font-size:11.5px;color:var(--mt)"></span>
+    <div style="display:flex;gap:7px">
+      <button class="btn" onclick="closeM(null,document.getElementById('m-fin-bulk-payment'))">Cancel</button>
+      <button class="btn btn-p" id="fbulk-submit" onclick="finRecordBulkPayment()"><i class="ti ti-check"></i>Record Payments</button>
+    </div>
+  </div>
 </div></div>
 
 <!-- ── ADD FINE MODAL ── -->
@@ -2894,12 +2945,14 @@
 <!-- ── UPDATE GPA MODAL ── -->
 <div class="mo" role="dialog" aria-modal="true" id="m-updategpa" onclick="closeM(event,this)"><div class="md" style="width:700px;max-height:88vh">
   <div class="md-t">Update Member GPAs<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-updategpa'))"><i class="ti ti-x"></i></button></div>
-  <div style="font-size:11.5px;color:var(--mt);margin-bottom:11px">Enter each member's Last Semester GPA. Leave blank to keep unchanged. Chapter GPA is the average of Last Semester GPAs.</div>
+  <div style="font-size:11.5px;color:var(--mt);margin-bottom:11px">Enter each member's cumulative and last-semester GPA. Leave a field blank to keep it unchanged. Rankings and the roster use the cumulative GPA. Check <strong>Abroad</strong> for anyone who studied abroad last semester — their last-semester GPA won't count.</div>
 
   <!-- Column legend -->
-  <div style="display:grid;grid-template-columns:1fr 68px;gap:8px;align-items:center;padding:6px 9px;background:#f5f5f3;border-radius:7px;margin-bottom:9px;font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em">
+  <div style="display:grid;grid-template-columns:1fr 68px 68px 74px;gap:8px;align-items:center;padding:6px 9px;background:#f5f5f3;border-radius:7px;margin-bottom:9px;font-size:10px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em">
     <span>Member</span>
-    <span style="text-align:center">Last Semester</span>
+    <span style="text-align:center">Cumulative</span>
+    <span style="text-align:center">Last Sem.</span>
+    <span style="text-align:center">Abroad</span>
   </div>
 
   <div style="display:flex;gap:7px;margin-bottom:9px">
@@ -2915,16 +2968,23 @@
 
   <div id="gpa-modal-list" style="display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;padding-right:3px"></div>
 
-  <div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--bdr)">
-    <div class="fld">
-      <label for="gpa-semester">Semester label (for history)</label>
-      <input id="gpa-semester" placeholder="e.g. Fall 2026" style="height:29px;padding:0 9px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx);outline:none;width:200px" onfocus="if(!this.value)this.value=getSemester()">
-    </div>
-  </div>
-  <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:9px">
+  <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:11px">
     <button class="btn" onclick="closeM(null,document.getElementById('m-updategpa'))">Cancel</button>
     <button class="btn btn-p" onclick="saveGPAs()"><i class="ti ti-device-floppy"></i>Save GPAs</button>
   </div>
+</div></div>
+
+<!-- ── CHAPTER GPA HISTORY ENTRY MODAL ── -->
+<div class="mo" role="dialog" aria-modal="true" id="m-ac-history" onclick="closeM(event,this)"><div class="md" style="width:460px">
+  <div class="md-t"><span id="ach-title">Add Semester Grade Report</span><button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-ac-history'))"><i class="ti ti-x"></i></button></div>
+  <input type="hidden" id="ach-id">
+  <div style="font-size:11.5px;color:var(--mt);margin-bottom:11px">Enter the official chapter GPA exactly as it appears on the university's grade report for that semester.</div>
+  <div class="fr c2">
+    <div class="fld"><label for="ach-sem">Semester *</label><input id="ach-sem" placeholder="e.g. Spring 2026"></div>
+    <div class="fld"><label for="ach-gpa">Official Chapter GPA *</label><input id="ach-gpa" type="number" step="0.01" min="0" max="4" placeholder="e.g. 3.14"></div>
+  </div>
+  <div class="fr"><div class="fld"><label for="ach-notes">Notes</label><input id="ach-notes" placeholder="Optional — e.g. rank among chapters, all-fraternity average"></div></div>
+  <div style="display:flex;gap:7px;justify-content:flex-end"><button class="btn" onclick="closeM(null,document.getElementById('m-ac-history'))">Cancel</button><button class="btn btn-p" onclick="acSaveHistory()"><i class="ti ti-device-floppy"></i>Save</button></div>
 </div></div>
 
 <!-- ── MEMBERSHIP REVIEW REFERRAL MODAL ── -->
@@ -3212,6 +3272,7 @@
 <script src="js/import.js"></script>
 <script src="js/truemerit.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/drafts.js"></script>
 
 <!-- Demo bootstrap — seeds fictional data, auto-signs in, and stands in for the real Firebase
      backend. Loaded last so nothing above it needs to know it's running in demo mode. -->

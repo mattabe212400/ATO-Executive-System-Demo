@@ -128,12 +128,19 @@ function mNameCompare(a,b){return mLastName(a.name).localeCompare(mLastName(b.na
 // this (not D.members directly), so ordering never leaks import/insertion order (which can
 // look "grouped by class year" after a bulk CSV import) instead of a real A-Z-by-surname roster.
 function sortedMembers(){return [...D.members].sort(mNameCompare);}
-function fd(d){if(!d)return'N/A';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch{return'N/A';}}
-function fds(d){if(!d)return'N/A';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch{return'N/A';}}
-function dom(d){if(!d)return'';try{return new Date(d+'T12:00:00').getDate();}catch{return'';}}
-function mos(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short'});}catch{return'';}}
-function isOv(d){if(!d)return false;try{return new Date(d+'T12:00:00')<new Date();}catch{return false;}}
-function isUp(d){if(!d)return false;try{return new Date(d+'T12:00:00')>=new Date();}catch{return false;}}
+// Date cells are stored as 'YYYY-MM-DD', but some carry a time too (e.g. a Bible-study session
+// scheduled as 'YYYY-MM-DDTHH:MM'). Take just the date part so appending 'T12:00:00' below still
+// parses to a valid local-noon Date instead of "Invalid Date". Also guards against a truly
+// unparseable value — toLocaleDateString() on an Invalid Date returns the string "Invalid Date"
+// rather than throwing, so the try/catch alone never caught it.
+function _dstr(d){return String(d).slice(0,10);}
+function _dparse(d){const dt=new Date(_dstr(d)+'T12:00:00');return isNaN(dt.getTime())?null:dt;}
+function fd(d){if(!d)return'N/A';const dt=_dparse(d);return dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'N/A';}
+function fds(d){if(!d)return'N/A';const dt=_dparse(d);return dt?dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'N/A';}
+function dom(d){if(!d)return'';const dt=_dparse(d);return dt?dt.getDate():'';}
+function mos(d){if(!d)return'';const dt=_dparse(d);return dt?dt.toLocaleDateString('en-US',{month:'short'}):'';}
+function isOv(d){if(!d)return false;const dt=_dparse(d);return dt?dt<new Date():false;}
+function isUp(d){if(!d)return false;const dt=_dparse(d);return dt?dt>=new Date():false;}
 // "HH:MM" 24-hour (as from <input type="time">) -> 12-hour with AM/PM for display.
 function to12h(t){if(!t)return'';const[h,m]=t.split(':').map(Number);if(isNaN(h)||isNaN(m))return t;const p=h>=12?'PM':'AM';return(h%12||12)+':'+String(m).padStart(2,'0')+' '+p;}
 function pc(c,t){return t?Math.round(c/t*100):0;}
@@ -201,24 +208,53 @@ function _aREligible(memberId,mandEvents){
   const allExcused=eligible.every(e=>(D.attendance[e.id]||{})[memberId]==='excused');
   return !allExcused;
 }
-// Chapter-wide average attendance rate, all-time — the single source every dashboard/health/
-// report widget should call instead of independently reducing D.members over aR(). Pass any
-// member subset (e.g. one class year); defaults to the whole roster.
+// Chapter-wide attendance rate — the single source every dashboard/health/report/analytics
+// widget calls instead of independently reducing D.members over aR(). A no-arg / whole-roster
+// call returns the SAME number the Attendance tab shows (chapterEventAvgAttendanceForSemester
+// — the mean of the Event Breakdown bars), so every page agrees with that one. Passing a real
+// member subset (e.g. one class year) still returns a per-member average for that group, since
+// the per-event turnout formula has no notion of "this slice of the roster".
 function chapterAvgAttendance(members){
-  members=members||D.members;
+  if(!members||members===D.members) return chapterEventAvgAttendanceForSemester(getSemester());
   const mandEvents=D.events.filter(e=>e.mandatory&&!isUp(e.date));
   const eligible=members.filter(m=>_aREligible(m.id,mandEvents));
   if(!eligible.length)return 100;
   return Math.round(eligible.reduce((s,m)=>s+aR(m.id),0)/eligible.length);
 }
-// Same as chapterAvgAttendance(), scoped to one semester — the Attendance page's own average.
+// Semester-scoped variant. Whole roster → the Attendance tab's number for that semester; a
+// subset → per-member average for the group (used by the class-year breakdowns).
 function chapterAvgAttendanceForSemester(members,semesterLabel){
-  members=members||D.members;
+  if(!members||members===D.members) return chapterEventAvgAttendanceForSemester(semesterLabel);
   const range=semesterDateRange(semesterLabel);
   const mandEvents=D.events.filter(e=>e.mandatory&&!isUp(e.date)&&(!range||(e.date>=range.start&&e.date<=range.end)));
   const eligible=members.filter(m=>_aREligible(m.id,mandEvents));
   if(!eligible.length)return 100;
   return Math.round(eligible.reduce((s,m)=>s+aRForSemester(m.id,semesterLabel),0)/eligible.length);
+}
+
+// Per-EVENT turnout average — the mean of what the Analytics tab's "Event Breakdown" bars show:
+// for each mandatory past event in the semester, present ÷ (full roster − excused), then the
+// average across events. This is the number the Attendance page's "Semester avg" KPI reports,
+// so the headline stat and the bars beneath it always agree. Deliberately different from the
+// per-member chapterAvgAttendanceForSemester() above (no join-date scoping, no eligibility
+// filter, events weighted equally rather than members).
+function chapterEventAvgAttendanceForSemester(semesterLabel){
+  const range=semesterDateRange(semesterLabel);
+  // Mirror attDrawEventBars() exactly (same events, same order, same 10-event cap, same
+  // per-event rounding) so this KPI is literally the mean of the bars shown on the tab.
+  const mandEvents=D.events
+    .filter(e=>e.mandatory&&!isUp(e.date)&&(!range||(e.date>=range.start&&e.date<=range.end)))
+    .sort((a,b)=>b.date.localeCompare(a.date))
+    .slice(0,10);
+  const roster=D.members.length;
+  if(!mandEvents.length||!roster)return 100;
+  const rates=mandEvents.map(ev=>{
+    const vals=Object.values(D.attendance[ev.id]||{});
+    const present=vals.filter(v=>v==='present').length;
+    const excused=vals.filter(v=>v==='excused').length;
+    return Math.round(present/Math.max(1,roster-excused)*100);
+  });
+  return Math.round(rates.reduce((s,r)=>s+r,0)/rates.length);
 }
 
 // Tasks "owned" by a member = tasks whose Position matches their roster role — NOT
@@ -554,8 +590,8 @@ function xport(type){
     fn='dues.csv';
   }
   else if(type==='academics'){
-    data='Member,Class,Last Semester GPA\n';
-    sortedMembers().forEach(m=>{const g=D.academics.gpas[m.id]||{};data+=`"${csvSafe(m.name)}",${m.classYear},${g.priorGpa||''}\n`;});
+    data='Member,Class,Cumulative GPA,Last Semester GPA,Studied Abroad\n';
+    sortedMembers().forEach(m=>{const g=D.academics.gpas[m.id]||{};data+=`"${csvSafe(m.name)}",${m.classYear},${g.priorGpa||''},${g.studyAbroad?'':(g.semesterGpa||'')},${g.studyAbroad?'Yes':''}\n`;});
     fn='academics.csv';
   }
   else if(type==='communityservice'){

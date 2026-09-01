@@ -43,7 +43,7 @@ function openImportModal(type) {
   const titles = { members: 'Import Members', grades: 'Import Grades', positionGoals: 'Import Goal Sheet', bylaws: 'Import Bylaws', committeeProgram: 'Import Committee Program', bibleStudyProgram: 'Import Bible Study Program', bibleStudyChapters: 'Import Bible Study Program', alumni: 'Import Alumni Directory', peerMentorProgram: 'Import Peer Mentor Program' };
   const instructions = {
     members: `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <em>Grad Year</em>, <em>Class Year</em>, <em>Role</em>, <em>Live In</em>, <em>Major</em>, <em>Email</em>, <em>Phone</em>, <em>Hometown</em><br><span style="color:var(--ht)">Toggle "Update existing members" below to overwrite info for names already in the roster.</span>`,
-    grades:  `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <strong>GPA</strong> (required)<br><span style="color:var(--ht)">Members must already exist in the roster. Unmatched names are skipped.</span>`,
+    grades:  `Upload a CSV with these columns (header row required):<br><strong>Name</strong> (required), <strong>Cumulative GPA</strong>, <strong>Last Semester GPA</strong> (at least one GPA value per row)<br><span style="color:var(--ht)">Members must already exist in the roster. Unmatched names are skipped. Cumulative GPA is what the roster and rankings use; a blank GPA column leaves that value unchanged.</span>`,
     positionGoals: `Upload a CSV with these columns (header row required):<br><strong>Position</strong> (required, must match one of this chapter's officer titles), <strong>Goal</strong> (required — the full goal statement, e.g. "Raise at least $5,000 for the national philanthropy this semester")<br><span style="color:var(--ht)">One row per semester goal — the same position can appear on multiple rows to give it multiple goals. Rows with a Position that doesn't match a configured chapter position are skipped. Legacy 5-column files (<strong>Position, Title, Target, Current, Unit</strong>) are still accepted — Title is used as the goal statement and the progress columns are ignored.</span>`,
     bylaws:  `Upload a CSV with these columns (header row required):<br><strong>Article</strong> (required), <em>Section</em>, <strong>Content</strong> (required, HTML supported e.g. &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;)<br><span style="color:var(--ht)">One row per section. Rows sharing the same Article are combined into one bylaw article, in the order they appear. This replaces your chapter's entire Bylaws section.</span>`,
     committeeProgram: `Upload a CSV with these columns (header row required):<br><strong>Week</strong>, <strong>Topic</strong> (required), <em>Notes</em><br><span style="color:var(--ht)">One row per week/session of this committee's program. This replaces this committee's entire program. Other committees are unaffected.</span>`,
@@ -253,25 +253,28 @@ function impBuildGradeRows(rows, previewEl) {
   const membersByName = {};
   D.members.forEach(m => { membersByName[m.name.toLowerCase().trim()] = m; });
 
+  // -> "3.2" string (matches saveGPAs' storage format), or null if blank/out of range.
+  const parseG = v => { const g = v ? parseFloat(v) : NaN; return (isNaN(g) || g < 0 || g > 4) ? null : (Math.round(g * 100) / 100).toString(); };
+
   rows.forEach(row => {
     const name = impCol(row, 'name', 'full name', 'member name', 'member');
     if (!name) { skipped.push('(blank name)'); return; }
     const member = membersByName[name.toLowerCase().trim()];
     if (!member) { skipped.push(name + ': not in roster'); return; }
-    const gpaRaw = impCol(row, 'gpa', 'semester gpa', 'semester', 'sem gpa', 'prior gpa', 'term gpa', 'last semester', 'sgpa', 'cumulative gpa', 'cumulative', 'cum gpa', 'overall gpa', 'cgpa');
-    const gpa = gpaRaw ? parseFloat(gpaRaw) : NaN;
-    if (isNaN(gpa)) { skipped.push(name + ': no valid GPA value'); return; }
-    toUpdate.push({ member, gpa });
+    const cumGpa = parseG(impCol(row, 'cumulative gpa', 'cumulative', 'cum gpa', 'cgpa', 'overall gpa', 'gpa'));
+    const semGpa = parseG(impCol(row, 'last semester gpa', 'last semester', 'semester gpa', 'sem gpa', 'sgpa', 'prior gpa', 'term gpa'));
+    if (cumGpa === null && semGpa === null) { skipped.push(name + ': no valid GPA value'); return; }
+    toUpdate.push({ member, cumGpa, semGpa });
   });
 
   let html = '';
   if (toUpdate.length) {
     html += `<div style="font-size:12px;font-weight:600;color:var(--gn);margin-bottom:6px">${toUpdate.length} member${toUpdate.length !== 1 ? 's' : ''} to update:</div>`;
     html += `<div style="max-height:180px;overflow-y:auto;border:1px solid var(--bdr);border-radius:7px"><table style="width:100%;border-collapse:collapse;font-size:11.5px">`;
-    html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Name</th><th style="padding:5px 8px;text-align:left">GPA</th></tr></thead><tbody>`;
+    html += `<thead><tr style="background:var(--surf2)"><th style="padding:5px 8px;text-align:left">Name</th><th style="padding:5px 8px;text-align:left">Cumulative</th><th style="padding:5px 8px;text-align:left">Last Semester</th></tr></thead><tbody>`;
     toUpdate.forEach((u, i) => {
       const bg = i % 2 === 0 ? 'var(--surf)' : 'var(--surf2)';
-      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(u.member.name)}</td><td style="padding:5px 8px">${u.gpa.toFixed(2)}</td></tr>`;
+      html += `<tr style="background:${bg}"><td style="padding:5px 8px">${esc(u.member.name)}</td><td style="padding:5px 8px">${u.cumGpa !== null ? parseFloat(u.cumGpa).toFixed(2) : '—'}</td><td style="padding:5px 8px">${u.semGpa !== null ? parseFloat(u.semGpa).toFixed(2) : '—'}</td></tr>`;
     });
     html += `</tbody></table></div>`;
   }
@@ -616,7 +619,8 @@ async function doImport() {
       if (!D.academics.gpas) D.academics.gpas = {};
       _importRows.forEach(u => {
         const existing = D.academics.gpas[u.member.id] || {};
-        existing.priorGpa = u.gpa;
+        if (u.cumGpa != null) existing.priorGpa = u.cumGpa;      // cumulative — drives rankings/roster
+        if (u.semGpa != null) existing.semesterGpa = u.semGpa;   // last-semester — shown in Academics
         D.academics.gpas[u.member.id] = existing;
       });
       await saveD('academics');
@@ -691,7 +695,7 @@ function impDownloadTemplate(type) {
       + '5,Open Check-In,Open-ended -- surface any concerns before initiation';
     filename = 'peer_mentor_program_template.csv';
   } else {
-    csv = 'Name,GPA\nJohn Smith,3.20\nJane Doe,3.10';
+    csv = 'Name,Cumulative GPA,Last Semester GPA\nJohn Smith,3.42,3.20\nJane Doe,3.15,3.10';
     filename = 'grades_template.csv';
   }
   downloadCSV(filename, csv);

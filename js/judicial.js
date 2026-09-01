@@ -404,7 +404,7 @@ function renderMembers(){
   const newMemberCount=D.members.filter(m=>(m.memberStatus||'Active')==='New Member').length;
   document.getElementById('m-kpi').innerHTML=statStrip('Total Members',D.members.length,getSemester(),'neutral')+statStrip('Live-in',D.members.filter(m=>m.liveIn).length,'Chapter house','neutral')+statStrip('New Members',newMemberCount,'This semester','neutral')+statStrip('Graduating',D.members.filter(m=>m.year===2027).length,'Class of 2027','neutral');
   const editCol=canEdit?'<th></th>':'';
-  const colCount=9+(canEdit?1:0);
+  const colCount=8+(canEdit?1:0);
   const q=(document.getElementById('m-search')||{value:''}).value.toLowerCase();
   const statusFlt=(document.getElementById('m-filter-status')||{value:''}).value;
   const filtered=q||statusFlt;
@@ -414,16 +414,13 @@ function renderMembers(){
     return true;
   }).sort(mNameCompare);
 
-  // Column order leads with what an officer scans a roster for — who, their standing, then
-  // reference detail (major/hometown) last. Attendance and the old "Engagement" dot-column both
-  // rendered the exact same aR(m.id) value as two separate columns; merged into one value+bar
-  // cell here (same pattern the mobile card already used) rather than showing one number twice.
+  // Column order leads with who + their standing, then reference detail (major/hometown) last.
+  // Attendance and GPA are intentionally NOT shown here — they each live only on their own
+  // access-controlled page (Attendance tab, Academics tab), not on the general roster.
   const emptyRow=filtered
     ? `<tr><td colspan="${colCount}" style="text-align:center;color:var(--mt);padding:22px;font-size:12px">No members match your search or filter.</td></tr>`
     : `<tr><td colspan="${colCount}" style="padding:0">${es('ti-users','slate','No members yet',canEdit?'Add your first member to start the roster.':'Members will appear here once added.',canEdit?`<button class="btn btn-p" onclick="openM('m-addmember')"><i class="ti ti-plus"></i>Add Member</button>`:'')}</td></tr>`;
-  document.getElementById('m-table').innerHTML=`<thead><tr><th>Member</th><th>Status</th><th>Role</th><th>Class</th><th>Grad Year</th><th>Attendance</th><th>Live-in</th><th>Major</th><th>Hometown</th>${editCol}</tr></thead><tbody>${sortedMembers.map(m=>{
-    const r=aR(m.id);
-    const tierColor=r>=85?'var(--gn)':r>=75?'var(--navy)':r>=65?'var(--am)':'var(--rd)';
+  document.getElementById('m-table').innerHTML=`<thead><tr><th>Member</th><th>Status</th><th>Role</th><th>Class</th><th>Grad Year</th><th>Live-in</th><th>Major</th><th>Hometown</th>${editCol}</tr></thead><tbody>${sortedMembers.map(m=>{
     const status=m.memberStatus||'Active';
     const editCell=canEdit?`<td><button class="btn" style="height:23px;font-size:10.5px" onclick="openEditMember('${m.id}')" aria-label="Edit ${esc(m.name)}"><i class="ti ti-pencil"></i></button></td>`:'';
     return`<tr>
@@ -432,7 +429,6 @@ function renderMembers(){
       <td><span class="badge ${m.role!=='Member'?'bb2':'bm2'}">${esc(m.role)}</span></td>
       <td style="color:var(--mt);font-size:11.5px">${esc(m.classYear)}</td>
       <td style="color:var(--mt);font-size:11.5px">${m.year}</td>
-      <td><div style="display:flex;align-items:center;gap:7px"><span style="font-weight:600;font-size:12px;color:${tierColor};min-width:30px">${r}%</span><div style="width:50px;height:5px;background:var(--surf2);border-radius:99px;overflow:hidden;flex-shrink:0"><div style="height:100%;width:${r}%;background:${tierColor};border-radius:99px"></div></div></div></td>
       <td style="color:var(--mt);font-size:11.5px">${m.liveIn?'Yes':'N/A'}</td>
       <td style="color:var(--mt);font-size:11.5px">${esc(m.major||'N/A')}</td>
       <td style="color:var(--mt);font-size:11.5px">${esc(m.hometown||'N/A')}</td>
@@ -443,8 +439,6 @@ function renderMembers(){
   const mob=document.getElementById('m-mobile-cards');
   if(mob){
     mob.innerHTML=sortedMembers.map(m=>{
-      const r=aR(m.id);
-      const rc=r>=85?'var(--gn)':r>=75?'var(--navy)':r>=65?'var(--am)':'var(--rd)';
       const status=m.memberStatus||'Active';
       const cardClick=canEdit?`tabindex="0" role="button" aria-label="Edit ${esc(m.name)}" onclick="openEditMember('${m.id}')"`:'' ;
       return`<div class="m-mob-card card" ${cardClick}>
@@ -459,11 +453,7 @@ function renderMembers(){
           <span class="badge ${m.role!=='Member'?'bb2':'bm2'}" style="font-size:9.5px;white-space:nowrap">${esc(m.role)}</span>
           ${status==='New Member'?`<span class="badge bb2" style="font-size:9.5px;white-space:nowrap">New Member</span>`:''}
         </div>
-        <div style="font-size:11.5px;color:var(--mt);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.major||'N/A')}</div>
-        <div style="display:flex;align-items:center;gap:7px">
-          <div style="flex:1;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden"><div style="height:100%;width:100%;transform-origin:left;transform:scaleX(${r/100});background:${rc};border-radius:2px;transition:transform .3s"></div></div>
-          <span style="font-size:11px;font-weight:600;color:${rc};min-width:32px;text-align:right">${r}%</span>
-        </div>
+        <div style="font-size:11.5px;color:var(--mt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.major||'N/A')}</div>
       </div>`;
     }).join('')||`<div style="grid-column:1/-1">${es('ti-users','slate',filtered?'No matches':'No members yet',filtered?'Try a different search or filter.':(canEdit?'Add your first member to start the roster.':'Members will appear here once added.'),(!filtered&&canEdit)?`<button class="btn btn-p" onclick="openM('m-addmember')"><i class="ti ti-plus"></i>Add Member</button>`:'')}</div>`;
   }

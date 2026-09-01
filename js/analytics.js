@@ -201,7 +201,11 @@ function attDrawDonut(){
   let paths=segs.length===0?`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#F1F3F6" stroke-width="${SW}"/>`:'';
   segs.forEach(s=>{
     const dash=(s.n/tot)*CIRC;
-    const off=CIRC-(offset/tot*CIRC);
+    // Stacked-ring donut: each segment is a full circle whose visible arc is `dash` long,
+    // slid to start where the previous segment ended. The offset must be the NEGATIVE running
+    // total — `CIRC - total` (a single-ring trick) is wrong here because the gap is a full
+    // CIRC, and rendered the complement of each segment (a 144/166 slice showed as ~13%).
+    const off=-(offset/tot)*CIRC;
     paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${s.c}" stroke-width="${SW}"
       stroke-dasharray="${dash} ${CIRC}" stroke-dashoffset="${off}"
       style="transform:rotate(-90deg);transform-origin:${CX}px ${CY}px;transition:stroke-dashoffset .7s ease"/>`;
@@ -221,9 +225,13 @@ function attDrawDonut(){
 
 function attDrawEventBars(){
   const el=document.getElementById('att-events-chart');if(!el)return;
-  const mandPast=D.events.filter(e=>e.mandatory&&!isUp(e.date)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  // Scoped to the semester picked in the KPI row above, so the mean of these bars is exactly
+  // the "Semester avg" KPI (chapterEventAvgAttendanceForSemester in helpers.js).
+  const sem=ATT_SELECTED_SEM||getSemester();
+  const range=semesterDateRange(sem);
+  const mandPast=D.events.filter(e=>e.mandatory&&!isUp(e.date)&&(!range||(e.date>=range.start&&e.date<=range.end))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
   if(!mandPast.length){
-    el.innerHTML=`<div style="padding:24px;text-align:center;color:var(--ht);font-size:12px">No past mandatory events yet.</div>`;return;
+    el.innerHTML=`<div style="padding:24px;text-align:center;color:var(--ht);font-size:12px">No past mandatory events this semester yet.</div>`;return;
   }
   const totAll=D.members.length||1;
   el.innerHTML=mandPast.map(ev=>{
@@ -482,8 +490,11 @@ function ciRenderAttendanceTab(){
 function ciRenderAcademicsTab(){
   const trendEl=document.getElementById('ci-ac-trend');
   if(trendEl){
-    const hist=D.academics?.history||[];
-    trendEl.innerHTML = hist.length ? hist.map(h=>`<div class="pr"><span class="pl" style="width:110px">${esc(h.semester)}</span><div class="pb"><div class="pf" style="width:${Math.min(100,parseFloat(h.chapterGpa)/4*100)}%;background:var(--bl)"></div></div><span class="pv">${h.chapterGpa}</span></div>`).join('') : `<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No semester GPA snapshots yet (created when officers save GPAs in Academics).</div>`;
+    const hist=(D.academics?.history||[]).slice().sort((a,b)=>{
+      const ra=semesterDateRange(a.semester), rb=semesterDateRange(b.semester);
+      return (ra?ra.start:(a.date||'')).localeCompare(rb?rb.start:(b.date||''));
+    });
+    trendEl.innerHTML = hist.length ? hist.map(h=>`<div class="pr"><span class="pl" style="width:110px">${esc(h.semester)}</span><div class="pb"><div class="pf" style="width:${Math.min(100,parseFloat(h.chapterGpa)/4*100)}%;background:var(--bl)"></div></div><span class="pv">${h.chapterGpa}</span></div>`).join('') : `<div style="color:var(--ht);font-size:11.5px;padding:10px 0">No official semester GPA reports entered yet (added on the Academics → History tab).</div>`;
   }
   const members=ciFilterMembers();
   const gpaOf=m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.priorGpa||'';return v?parseFloat(v):null;};
@@ -501,7 +512,7 @@ function ciRenderAcademicsTab(){
   const tableEl=document.getElementById('ci-ac-table');
   if(tableEl){
     const withGpa=[...members].sort(mNameCompare).map(m=>({m,pri:D.academics?.gpas?.[m.id]?.priorGpa||''}));
-    tableEl.innerHTML = withGpa.length ? `<thead><tr><th>Member</th><th>Class</th><th>Last Semester GPA</th></tr></thead><tbody>${
+    tableEl.innerHTML = withGpa.length ? `<thead><tr><th>Member</th><th>Class</th><th>Cumulative GPA</th></tr></thead><tbody>${
       withGpa.map(({m,pri})=>`<tr><td style="font-weight:500">${esc(m.name)}</td><td>${esc(m.classYear)}</td><td>${esc(pri)||'N/A'}</td></tr>`).join('')
     }</tbody>` : `<tbody><tr><td colspan="3" style="text-align:center;color:var(--ht);padding:14px">No members in this filter.</td></tr></tbody>`;
   }

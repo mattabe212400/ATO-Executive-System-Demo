@@ -108,6 +108,8 @@ function renderKcrew(){
 
   const roBar=document.getElementById('kc-ro-bar');
   if(roBar)roBar.style.display=canEditKcrew()?'none':'flex';
+  const randBtn=document.getElementById('kc-randomize-btn');
+  if(randBtn)randBtn.style.display=canEditKcrew()?'':'none';
 
   renderKcSchedule();
   renderKcChores(wk);
@@ -413,6 +415,34 @@ function kcResetChores(){
   saveD('chores');
   renderKcrew();
   toast('Chores reset to defaults','success');
+}
+
+// Randomly deal every chore to a live-in member. Fisher-Yates on both the roster and the chore
+// order, then round-robin over the shuffled roster so the load is even (member counts at most 1
+// apart) and which members catch the remainder is itself random. Live-in only — a member who
+// doesn't live in the house has no chore, same rule the assignment picker already enforces.
+async function kcRandomizeChores(){
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can assign chores.','error');return;}
+  kcEnsureDefaults();
+  const list=D.chores.list||[];
+  if(!list.length){toast('No chores to assign yet.','error');return;}
+  const pool=sortedMembers().filter(m=>m.liveIn).map(m=>m.id);
+  if(!pool.length){toast('No live-in members to assign — set the Live-in field on the Members tab first.','error');return;}
+  const ok=await confirmDialog('Randomize Chores',`Randomly reassign all ${list.length} chore${list.length!==1?'s':''} across the ${pool.length} live-in member${pool.length!==1?'s':''}? This replaces every current chore assignment.`,'Randomize',false);
+  if(!ok)return;
+  const prev=list.map(c=>[...(c.memberIds||[])]);
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const people=shuffle([...pool]);
+  shuffle(list.map((_,i)=>i)).forEach((choreIdx,k)=>{ list[choreIdx].memberIds=[people[k%people.length]]; });
+  try{
+    await saveD('chores');
+    renderKcrew();
+    toast('Chores randomly assigned to live-in members','success');
+  }catch(e){
+    list.forEach((c,i)=>{ c.memberIds=prev[i]; });
+    renderKcrew();
+    toast('Failed to save the new chore assignments. Please try again.','error');
+  }
 }
 
 function kcUpdateKpiOnly(){

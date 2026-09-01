@@ -4,19 +4,59 @@
 // Single source of truth for the chapter health score — both the full Health Scorecard page
 // (below) and the Dashboard's mini health widget (js/dashboard.js:dashDrawHealth) call this,
 // so the two can never show different numbers for the same underlying data again.
+
+// Plain-language "how this dimension is scored" text, shown in Settings → Chapter Health Score.
+const HEALTH_DIM_HOW={
+  'Attendance':"Chapter-wide attendance rate — the average turnout across this semester's mandatory events (the same number the Attendance tab shows).",
+  'Task Completion':"Share of all chapter tasks marked done. Not counted toward the score until at least one task exists.",
+  'Academics':"Chapter average cumulative GPA, scaled to 100 (GPA ÷ 4 × 100). Not counted until member GPAs are entered.",
+  'Accountability':"Starts at 100 and drops 18 points for each unresolved J-Board case this semester (floors at 0).",
+  'Finances':"Share of members whose dues are marked fully Paid this semester. Not counted until dues amounts are configured.",
+  'Recruitment':"Rushees tracked ÷ the recruitment season goal. Not counted until rushees are added.",
+  'Community Service':"Service hours logged ÷ the community-service hours goal. Not counted until hours are logged.",
+};
+// Built-in default targets (0–100). A chapter can override any of these in Settings; the
+// override lives in D.settings.healthTargets and only changes the "hit / miss" line and the
+// marker on each dimension bar, never how the raw dimension value is calculated.
+const HEALTH_DIM_DEFAULT_TARGET={
+  'Attendance':85,'Task Completion':80,'Academics':90,'Accountability':90,'Finances':85,
+  'Recruitment':80,'Community Service':75,
+};
+function healthTarget(k){
+  const t=D.settings?.healthTargets?.[k];
+  return (typeof t==='number'&&t>=0&&t<=100)?t:(HEALTH_DIM_DEFAULT_TARGET[k]??85);
+}
+// How full a dimension's progress bar should be: progress toward that dimension's target,
+// capped at 100. Hitting or beating the target fills the bar completely; the raw score is
+// still shown as the number beside it. Keeps "I met my goal" from looking half-finished.
+function healthDimProgress(d){
+  if(!d.target||d.target<=0)return 100;
+  return Math.min(100,Math.round((d.v/d.target)*100));
+}
+
 function computeHealthDims(){
   const avg=chapterAvgAttendance();
+  const sem=typeof getSemester==='function'?getSemester():null;
   const openT=D.tasks.filter(t=>t.status!=='done').length;
   const doneT=D.tasks.filter(t=>t.status==='done').length;
   const taskPct=D.tasks.length?Math.round(doneT/D.tasks.length*100):50;
-  const openCases=D.cases.filter(c=>!['resolved','dismissed'].includes(c.status)).length;
+  // Match the J-Board page's own view (js/judicial.js:jbVisibleCases) — count only this
+  // semester's unresolved cases, not every case left open since the chapter started.
+  const openCases=(D.cases||[]).filter(c=>!['resolved','dismissed'].includes(c.status)&&(!c.semester||c.semester===sem)).length;
   const caseScore=Math.max(0,100-openCases*18);
   const gpas=D.members.map(m=>{const rec=D.academics?.gpas?.[m.id]||{};const v=rec.priorGpa||'';return v?parseFloat(v):null;}).filter(g=>g!==null&&!isNaN(g));
   const avgGpa=gpas.length?(gpas.reduce((a,b)=>a+b,0)/gpas.length):0;
   const gpaScore=avgGpa?Math.round((avgGpa/4)*100):50;
-  const finDues=D.finance?.dues||{};
+  // Dues are semester-keyed now ({memberId:{[sem]:{status,...}}}) — reading D.finance.dues[id].status
+  // directly always came back undefined, which pinned this dimension at 0 for every chapter.
+  // finDuesMapForSemester() flattens it to {memberId:rec} for the current semester.
+  const finDues=typeof finDuesMapForSemester==='function'?finDuesMapForSemester(sem):(D.finance?.dues||{});
   const paidCount=D.members.filter(m=>(finDues[m.id]?.status||'Partial')==='Paid').length;
   const finScore=D.members.length?Math.round(paidCount/D.members.length*100):50;
+  // "No dues set up for the semester yet" is not "failing finances" — exclude it like the other
+  // data-gated dimensions rather than scoring a hard 0.
+  const s=D.settings||{};
+  const finConfigured=!!(s.duesInHouse||s.duesOutOfHouse||s.duesPledge)&&Object.values(finDues).some(r=>r);
   const rushees=D.recruitment?.rushees||[];
   // Reuse each module's own configurable goal (Recruitment's Season Goal, Community Service's
   // Total Hours goal) instead of a second, hardcoded target that can silently disagree with it.
@@ -25,45 +65,28 @@ function computeHealthDims(){
   const csHrs=D.communityService?.hours?.reduce((s,h)=>s+parseFloat(h.hours||0),0)||0;
   const csGoal=D.communityService?.goals?.totalHrs||500;
   const csScore=Math.min(100,Math.round((csHrs/csGoal)*100));
-  const alumCount=D.alumni?.contacts?.length||0;
-  const alumScore=Math.min(100,Math.round((alumCount/20)*100));
-  // Social Events (uses Milestone 1's real data — js/social.js) — average readiness across
-  // non-cancelled events in the current/upcoming window. Reuses socReadiness()/socEvents()
-  // directly rather than reimplementing the math.
-  let socialScore=null, socialDesc='No social events yet';
-  if(typeof socEvents==='function'){
-    const now=localDateStr();
-    const relevant=socEvents().filter(e=>{const p=socPlan(e.id);return p.status!=='cancelled'&&(e.date>=localDateStr(new Date(Date.now()-30*86400000)));});
-    if(relevant.length){
-      const scores=relevant.map(e=>socReadiness(socPlan(e.id)).score);
-      socialScore=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
-      socialDesc=relevant.length+' event'+(relevant.length!==1?'s':'')+', avg readiness';
-    }
-  }
 
   // Each dim can be marked `excluded` (no real data yet) — excluded dims are dropped from the
   // weighted average and the remaining weights are renormalized, rather than scoring 0, since
   // "no data yet" (e.g. no rushees before rush season starts) is not the same as "failing."
   const dims=[
-    {k:'Attendance',icon:'ti-users',v:avg,w:.20,desc:'Average member attendance rate',target:85,color:'var(--navy)'},
-    {k:'Task Completion',icon:'ti-checkbox',v:taskPct,w:.16,desc:doneT+' of '+D.tasks.length+' tasks done',target:80,color:'var(--gn)',excluded:!D.tasks.length},
-    {k:'Academics',icon:'ti-school',v:gpaScore,w:.14,desc:avgGpa?('Avg GPA '+avgGpa.toFixed(2)):'No GPA data yet',target:90,color:'var(--bl)',excluded:!gpas.length},
-    {k:'Accountability',icon:'ti-scale',v:caseScore,w:.12,desc:openCases+' open J-Board case'+(openCases!==1?'s':''),target:90,color:caseScore>=80?'var(--gn)':'var(--rd)'},
-    {k:'Finances',icon:'ti-cash',v:finScore,w:.11,desc:paidCount+' / '+D.members.length+' members paid',target:85,color:'var(--am)'},
-    {k:'Recruitment',icon:'ti-user-plus',v:recruitScore,w:.08,desc:rushees.length+' rushees tracked',target:80,color:'#7c5cfc',excluded:!rushees.length},
-    {k:'Community Service',icon:'ti-heart',v:csScore,w:.07,desc:csHrs.toFixed(0)+' service hours logged',target:75,color:'#e05fa0',excluded:csHrs===0},
-    {k:'Social Events',icon:'ti-confetti',v:socialScore??0,w:.07,desc:socialDesc,target:80,color:'#c0345a',excluded:socialScore===null},
-    {k:'Alumni',icon:'ti-users-group',v:alumScore,w:.05,desc:alumCount+' alumni in directory',target:70,color:'#0ea5a0',excluded:alumCount===0},
+    {k:'Attendance',icon:'ti-users',v:avg,w:.23,desc:'Average member attendance rate',target:healthTarget('Attendance'),color:'var(--navy)'},
+    {k:'Task Completion',icon:'ti-checkbox',v:taskPct,w:.18,desc:doneT+' of '+D.tasks.length+' tasks done',target:healthTarget('Task Completion'),color:'var(--gn)',excluded:!D.tasks.length},
+    {k:'Academics',icon:'ti-school',v:gpaScore,w:.16,desc:avgGpa?('Avg GPA '+avgGpa.toFixed(2)):'No GPA data yet',target:healthTarget('Academics'),color:'var(--bl)',excluded:!gpas.length},
+    {k:'Accountability',icon:'ti-scale',v:caseScore,w:.14,desc:openCases+' open J-Board case'+(openCases!==1?'s':''),target:healthTarget('Accountability'),color:caseScore>=80?'var(--gn)':'var(--rd)'},
+    {k:'Finances',icon:'ti-cash',v:finScore,w:.12,desc:finConfigured?paidCount+' / '+D.members.length+' members paid':'Dues not set up yet',target:healthTarget('Finances'),color:'var(--am)',excluded:!finConfigured},
+    {k:'Recruitment',icon:'ti-user-plus',v:recruitScore,w:.09,desc:rushees.length+' rushees tracked',target:healthTarget('Recruitment'),color:'#7c5cfc',excluded:!rushees.length},
+    {k:'Community Service',icon:'ti-heart',v:csScore,w:.08,desc:csHrs.toFixed(0)+' service hours logged',target:healthTarget('Community Service'),color:'#e05fa0',excluded:csHrs===0},
   ];
   const included=dims.filter(d=>!d.excluded);
   const totalW=included.reduce((s,d)=>s+d.w,0)||1;
   const score=Math.round(included.reduce((s,d)=>s+d.v*(d.w/totalW),0));
-  return {score,dims,raw:{avg,doneT,taskPct,openCases,paidCount,finScore,csHrs,alumCount}};
+  return {score,dims,raw:{avg,doneT,taskPct,openCases,paidCount,finScore,finConfigured,csHrs}};
 }
 
 function renderHealthScore(){
   const {score,dims:allDims,raw}=computeHealthDims();
-  const {avg,doneT,taskPct,openCases,paidCount,finScore,csHrs,alumCount}=raw;
+  const {avg,doneT,taskPct,openCases,paidCount,finScore,finConfigured,csHrs}=raw;
   // Judicial data is lead-only under the real permission matrix (jbCanAccess()==isLeadUser()) —
   // the Accountability dimension is case-count-derived, so it's dropped from the visible
   // breakdown (and its own KPI stat) for anyone who isn't a lead, same as the Dashboard's mini
@@ -129,8 +152,8 @@ function renderHealthScore(){
   if(heroDimsEl){
     heroDimsEl.innerHTML=dims.filter(d=>!d.excluded).map(d=>`<div class="d2-dim">
       <span class="d2-dim-lbl">${d.k}</span>
-      <div class="d2-dim-bar"><div class="d2-dim-fill" data-w="${d.v}" style="background:${d.color}"></div></div>
-      <span class="d2-dim-val">${d.v}%</span>
+      <div class="d2-dim-bar"><div class="d2-dim-fill" data-w="${healthDimProgress(d)}" style="background:${d.color}"></div></div>
+      <span class="d2-dim-val"${d.v>=d.target?' style="color:var(--gn-tx)"':''}>${d.v}%</span>
     </div>`).join('');
     setTimeout(()=>{heroDimsEl.querySelectorAll('[data-w]').forEach(b=>{b.style.transform='scaleX('+(b.dataset.w/100)+')';});},120);
   }
@@ -147,15 +170,14 @@ function renderHealthScore(){
         <div style="height:6px;background:var(--surf2);border-radius:99px"></div>
       </div>`;
     }
-    const p=d.v;const hit=p>=d.target;
+    const p=d.v;const hit=p>=d.target;const prog=healthDimProgress(d);
     return`<div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div style="display:flex;align-items:center;gap:6px"><i class="ti ${d.icon}" style="font-size:12px;color:${d.color}"></i><span style="font-size:12px;font-weight:500">${d.k}</span><span style="font-size:9.5px;color:var(--ht)">${d.desc}</span></div>
-        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0"><span style="font-size:11.5px;font-weight:700;color:${hit?'var(--gn)':'var(--rd)'}">${p}%</span><span style="font-size:9px;color:var(--ht)">/ ${d.target}%</span></div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0"><span style="font-size:11.5px;font-weight:700;color:${hit?'var(--gn)':'var(--rd)'}">${p}%${hit?' <i class="ti ti-check" style="font-size:10px"></i>':''}</span><span style="font-size:9px;color:var(--ht)">/ ${d.target}% goal</span></div>
       </div>
-      <div style="height:6px;background:var(--surf2);border-radius:99px;overflow:hidden;position:relative">
-        <div style="height:100%;border-radius:99px;background:${d.color};width:100%;transform-origin:left;transform:scaleX(${p/100});transition:transform .7s ease"></div>
-        <div style="position:absolute;top:0;bottom:0;left:${d.target}%;width:2px;background:var(--ht);border-radius:1px"></div>
+      <div style="height:6px;background:var(--surf2);border-radius:99px;overflow:hidden">
+        <div style="height:100%;border-radius:99px;background:${hit?'var(--gn)':d.color};width:100%;transform-origin:left;transform:scaleX(${prog/100});transition:transform .7s ease"></div>
       </div>
     </div>`;
   }).join('');
@@ -170,9 +192,8 @@ function renderHealthScore(){
   if(avg<85)actions.push({icon:'ti-users',txt:'Mark attendance for recent mandatory events to improve tracking accuracy.'});
   if(taskPct<75)actions.push({icon:'ti-checkbox',txt:'Review overdue tasks with officers. Consider reassigning stalled items.'});
   if(openCases>2)actions.push({icon:'ti-scale',txt:'Schedule J-Board hearings for the '+openCases+' open cases.'});
-  if(finScore<70)actions.push({icon:'ti-cash',txt:'Send dues reminder to '+((D.members.length)-paidCount)+' members with outstanding balances.'});
+  if(finConfigured&&finScore<70)actions.push({icon:'ti-cash',txt:'Send dues reminder to '+((D.members.length)-paidCount)+' members with outstanding balances.'});
   if(csHrs<200)actions.push({icon:'ti-heart',txt:'Schedule a service event. Chapter is behind on service hour goals.'});
-  if(alumCount<10)actions.push({icon:'ti-users-group',txt:'Reach out to known alumni and add them to the directory.'});
   if(!actions.length)actions.push({icon:'ti-sparkles',txt:'Chapter is in strong shape! Focus on maintaining momentum into finals.'});
   document.getElementById('hs-actions').innerHTML=actions.map(a=>`<div class="al-row"><div class="al-ic" style="background:var(--bl-bg);color:var(--bl-tx)"><i class="ti ${a.icon}"></i></div><div style="font-size:11.5px;line-height:1.5">${a.txt}</div></div>`).join('');
 
@@ -208,4 +229,80 @@ function hsRenderHistory(){
   const mx=Math.max(...data,1);
   document.getElementById('hs-history-chart').innerHTML=data.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="font-size:9px;color:var(--mt)">${v}</div><div style="flex:1;width:100%;background:${i===data.length-1?'var(--gold)':v>=80?'var(--gn)':v>=65?'var(--sky)':'var(--rd)'};border-radius:3px 3px 0 0;min-height:4px;height:${Math.round(v/mx*100)}%" title="${labels[i]}: ${v}"></div></div>`).join('');
   document.getElementById('hs-history-labels').innerHTML=labels.map(l=>`<span style="color:var(--ht)">${l}</span>`).join('');
+}
+
+// ── SETTINGS: CHAPTER HEALTH SCORE ── (Settings page card, chapter-lead editable)
+// Shows every dimension's weight and how it's scored, with an editable target. Targets only
+// move the "hit / miss" line — they never change how a dimension's raw value is computed.
+function seRenderHealthConfig(){
+  const el=document.getElementById('se-health-config');
+  if(!el)return;
+  const canEdit=typeof isLeadUser==='function'&&isLeadUser();
+  const {dims}=computeHealthDims();
+  const ro=canEdit?'':' disabled style="opacity:.55;cursor:not-allowed"';
+  const rows=dims.map(d=>{
+    const tgtId='se-ht-'+d.k.replace(/[^a-z]/gi,'');
+    const now=d.excluded?'<span style="color:var(--ht)">no data</span>':`<span style="font-weight:600;color:${d.v>=d.target?'var(--gn)':'var(--rd)'}">${d.v}%</span>`;
+    return`<div style="padding:10px 0;border-bottom:1px solid var(--bdr)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:3px">
+        <span style="font-size:12.5px;font-weight:600"><i class="ti ${d.icon}" style="font-size:12px;color:${d.color};margin-right:5px"></i>${esc(d.k)}</span>
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mt);background:var(--surf2);padding:2px 7px;border-radius:99px;flex-shrink:0">${Math.round(d.w*100)}% weight</span>
+      </div>
+      <div style="font-size:11px;color:var(--mt);line-height:1.5;margin-bottom:7px">${esc(HEALTH_DIM_HOW[d.k]||'')}</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:11.5px">
+        <span style="color:var(--mt)">Current: ${now}</span>
+        <span style="color:var(--bdr)">·</span>
+        <label for="${tgtId}" style="color:var(--mt)">Target</label>
+        <input id="${tgtId}" data-dim="${esc(d.k)}" type="number" min="0" max="100" value="${d.target}"${ro}
+          style="width:64px;height:26px;padding:0 7px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-family:inherit;text-align:center;outline:none">
+        <span style="color:var(--mt)">%</span>
+        ${d.target!==(HEALTH_DIM_DEFAULT_TARGET[d.k])?`<span style="font-size:10px;color:var(--ht)">(default ${HEALTH_DIM_DEFAULT_TARGET[d.k]})</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  const totalW=Math.round(dims.reduce((s,d)=>s+d.w,0)*100);
+  const totalLine=`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0 2px;font-size:11.5px;font-weight:600">
+    <span style="color:var(--mt)">Total weight</span>
+    <span style="color:${totalW===100?'var(--gn-tx)':'var(--rd-tx)'}">${totalW}%${totalW===100?'':' — should be 100%'}</span>
+  </div>`;
+  el.innerHTML=`
+    <div style="font-size:11px;color:var(--mt);line-height:1.55;margin-bottom:6px">
+      The score is the <strong>weighted average</strong> of the dimensions below that currently have data.
+      Dimensions with no data yet are dropped and the remaining weights are re-scaled, so "no rushees before
+      rush" never counts as failing. Targets set the pass/fail line and the marker on each bar — they don't
+      change the underlying numbers.
+    </div>
+    ${rows}
+    ${totalLine}
+    ${canEdit
+      ? `<div style="display:flex;gap:7px;margin-top:11px"><button class="btn btn-p" onclick="saveHealthTargets()"><i class="ti ti-device-floppy"></i>Save Targets</button><button class="btn" onclick="resetHealthTargets()">Reset to defaults</button></div>`
+      : `<div style="font-size:11.5px;color:var(--mt);margin-top:9px"><i class="ti ti-lock" style="font-size:12px;margin-right:4px"></i>Only a chapter lead can edit health-score targets.</div>`}
+  `;
+}
+
+function saveHealthTargets(){
+  if(!(typeof isLeadUser==='function'&&isLeadUser())){toast('Only a chapter lead can edit health-score targets.','error');return;}
+  if(!D.settings)D.settings={};
+  const targets={};
+  document.querySelectorAll('#se-health-config input[data-dim]').forEach(inp=>{
+    const n=parseInt(inp.value,10);
+    if(!isNaN(n)&&n>=0&&n<=100)targets[inp.dataset.dim]=n;
+  });
+  D.settings.healthTargets=targets;
+  saveD('settings');
+  seRenderHealthConfig();
+  if(typeof renderHealthScore==='function')renderHealthScore();
+  if(typeof renderDash==='function')renderDash();
+  toast('Health-score targets saved','success');
+}
+
+function resetHealthTargets(){
+  if(!(typeof isLeadUser==='function'&&isLeadUser())){toast('Only a chapter lead can edit health-score targets.','error');return;}
+  if(!D.settings)D.settings={};
+  D.settings.healthTargets={};   // empty -> healthTarget() falls back to the built-in default for every dimension
+  saveD('settings');
+  seRenderHealthConfig();
+  if(typeof renderHealthScore==='function')renderHealthScore();
+  if(typeof renderDash==='function')renderDash();
+  toast('Health-score targets reset to defaults','success');
 }

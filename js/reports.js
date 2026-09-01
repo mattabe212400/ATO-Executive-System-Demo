@@ -290,10 +290,11 @@ function rpAcademics(sem){
     }
     return rpHeader('Academic Standing Report',`Chapter GPA and individual member academic status · ${sem}`,sem)+
     rpSection('ti-chart-bar','Academic Summary (Historical)',rpKpis([
-      {label:'Chapter GPA',val:parseFloat(hist.chapterGpa).toFixed(2),color:'var(--navy)'},
-      {label:'Members Tracked',val:hist.memberCount,color:'var(--bl)'},
+      {label:'Official Chapter GPA',val:parseFloat(hist.chapterGpa).toFixed(2),color:'var(--navy)'},
+      {label:'Recorded',val:hist.date?fds(hist.date):'N/A',color:'var(--bl)'},
     ]))+
-    rpSection('ti-alert-circle','Note',`<div style="color:var(--mt);font-size:12px">Per-member GPA rankings are only available for the current semester. ${esc(sem)} only has a chapter-wide snapshot on record (saved ${fds(hist.date)}).</div>`);
+    (hist.notes?rpSection('ti-note','Notes',`<div style="color:var(--mt);font-size:12px">${esc(hist.notes)}</div>`):'')+
+    rpSection('ti-alert-circle','Note',`<div style="color:var(--mt);font-size:12px">Per-member GPA rankings are only available for the current semester. For ${esc(sem)} only the chapter's official grade-report GPA is on record.</div>`);
   }
   const withGpa=D.members.map(m=>{const g=D.academics.gpas[m.id]||{};const pri=g.priorGpa?parseFloat(g.priorGpa):null;return{m,pri};}).filter(x=>x.pri!==null);
   const gpas=withGpa.map(x=>x.pri);
