@@ -3018,9 +3018,10 @@
 </div></div>
 
 <!-- ── CHECK-IN HISTORY MODAL ── -->
-<div class="mo" role="dialog" aria-modal="true" id="m-checkin-history" onclick="closeM(event,this)"><div class="md" style="width:480px"><div class="md-t">Check-In History<button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-checkin-history'))"><i class="ti ti-x"></i></button></div>
+<div class="mo" role="dialog" aria-modal="true" id="m-checkin-history" onclick="closeM(event,this)"><div class="md" style="width:480px"><div class="md-t"><span id="cih-title">Check-In History</span><button class="md-x" aria-label="Close" onclick="closeM(null,document.getElementById('m-checkin-history'))"><i class="ti ti-x"></i></button></div>
   <div style="font-size:13px;font-weight:600;margin-bottom:3px" id="cih-name"></div>
   <div style="font-size:11px;color:var(--mt);margin-bottom:13px" id="cih-target"></div>
+  <div id="cih-detail" style="display:none;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:13px;font-size:11.5px;line-height:1.55"></div>
   <div id="cih-list" style="max-height:360px;overflow-y:auto"></div>
   <div style="display:flex;justify-content:flex-end;margin-top:11px"><button class="btn" onclick="closeM(null,document.getElementById('m-checkin-history'))">Close</button></div>
 </div></div>

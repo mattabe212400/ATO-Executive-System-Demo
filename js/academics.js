@@ -430,12 +430,13 @@ function renderGradeChecks(){
     const lastGpa=last?parseFloat(last.gpa):null;
     const target=parseFloat(r.targetGpa)||GC_NM_TARGET;
     const below=lastGpa!==null&&lastGpa<target;
+    const hasNotes=!!(r.notes||'').trim();
     return`<tr>
       <td style="min-width:140px">
         <div style="display:flex;align-items:center;gap:7px">
           <div class="sh-av" style="width:22px;height:22px;font-size:8px">${m.initials}</div>
-          <div><div style="font-weight:500;font-size:12px">${esc(displayName)}</div>
-          <div style="font-size:10px;color:var(--mt);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.reason||'')}">${esc(r.reason||'N/A')}</div></div>
+          <div style="min-width:0"><div style="font-weight:500;font-size:12px">${esc(displayName)}</div>
+          <div role="button" tabindex="0" onclick="openCheckinHistory('${r.memberId}','mr','${r.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCheckinHistory('${r.memberId}','mr','${r.id}')}" title="View full referral details" style="font-size:10px;color:var(--navy);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px">${esc(r.reason||'View details')}${hasNotes?' <i class="ti ti-note" style="font-size:9px;color:var(--mt)" title="Has an action plan"></i>':''}</div></div>
         </div>
       </td>
       <td style="text-align:center">${lastGpa!==null?`<span class="gpa-badge ${gpaColor(lastGpa)}">${lastGpa.toFixed(2)}</span>`:'<span style="color:var(--ht)">N/A</span>'}</td>
@@ -445,7 +446,7 @@ function renderGradeChecks(){
       <td style="font-size:10.5px;color:var(--mt)">${r.freq||'Weekly'}</td>
       <td style="white-space:nowrap">
         ${acCanAccess()?`<button class="btn btn-p" style="height:23px;font-size:10px;padding:0 8px;margin-right:3px" onclick="openLogCheckin('${r.memberId}','mr','${r.id}')"><i class="ti ti-check"></i>Log</button>`:''}
-        <button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openCheckinHistory('${r.memberId}','mr','${r.id}')" title="View history" aria-label="View check-in history for ${esc(displayName)}"><i class="ti ti-history"></i></button>
+        <button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openCheckinHistory('${r.memberId}','mr','${r.id}')" title="Referral details & check-in history" aria-label="View referral details and check-in history for ${esc(displayName)}"><i class="ti ti-history"></i></button>
         ${acCanAccess()?`<button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openAddGradeCheck('${r.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button>
         <button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteGradeCheck('${r.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}
       </td>
@@ -457,7 +458,7 @@ function renderGradeChecks(){
       <div class="card-hd">
         <div>
           <div class="card-t">Membership Review Referrals</div>
-          <div style="font-size:11px;color:var(--mt);margin-top:1px">Standards Board referrals · End-goal GPA target · Sorted by least recent check-in</div>
+          <div style="font-size:11px;color:var(--mt);margin-top:1px">Standards Board referrals · End-goal GPA target · Click a member's reason for the full write-up</div>
         </div>
         <button class="btn btn-p" style="height:26px;font-size:11px" onclick="openAddGradeCheck()"><i class="ti ti-plus"></i>Add Referral</button>
       </div>
@@ -588,18 +589,33 @@ function openCheckinHistory(memberId, type, refId){
   const m=mB(memberId);
   let checkins=[];
   let targetLabel='Minimum: '+GC_NM_TARGET.toFixed(2)+' GPA';
+  let ref=null;
   if(type==='nm'){
     checkins=(D.academics.nmCheckins||{})[memberId]||[];
     targetLabel='New Member · Minimum '+GC_NM_TARGET.toFixed(2)+' GPA · Weekly';
   } else {
-    const r=D.academics.gradeChecks.find(x=>x.id===refId);
-    if(r){checkins=r.checkins||[];targetLabel='Target: '+parseFloat(r.targetGpa).toFixed(2)+' GPA · '+(r.freq||'Weekly')+(r.reason?' · '+r.reason:'');}
+    ref=D.academics.gradeChecks.find(x=>x.id===refId);
+    if(ref){checkins=ref.checkins||[];targetLabel='End goal '+parseFloat(ref.targetGpa).toFixed(2)+' GPA · '+(ref.freq||'Weekly')+' check-ins'+(ref.startDate?' · since '+fds(ref.startDate):'');}
   }
   const sorted=[...checkins].sort((a,b)=>b.date.localeCompare(a.date));
   const canEdit=type==='nm'?(acCanAccess()||canEditNewMemberEducation()):acCanAccess();
   const target=type==='nm'?GC_NM_TARGET:parseFloat((D.academics.gradeChecks.find(x=>x.id===refId)||{}).targetGpa||GC_NM_TARGET);
+  const titleEl=document.getElementById('cih-title');if(titleEl)titleEl.textContent=type==='mr'?'Referral Details & Check-Ins':'Check-In History';
   document.getElementById('cih-name').textContent=m.name;
   document.getElementById('cih-target').textContent=targetLabel;
+  // Full referral write-up — the reason line in the table is truncated, so this is where the
+  // Standards Board reason and any action plan are actually readable, for editors and non-editors alike.
+  const detailEl=document.getElementById('cih-detail');
+  if(detailEl){
+    if(type==='mr'&&ref&&((ref.reason||'').trim()||(ref.notes||'').trim())){
+      detailEl.innerHTML=
+        ((ref.reason||'').trim()?`<div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:2px">Reason / referred by</div><div style="white-space:pre-wrap;margin-bottom:${(ref.notes||'').trim()?'9px':'0'}">${esc(ref.reason)}</div>`:'')+
+        ((ref.notes||'').trim()?`<div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:2px">Notes / action plan</div><div style="white-space:pre-wrap">${esc(ref.notes)}</div>`:'');
+      detailEl.style.display='';
+    }else{
+      detailEl.style.display='none';
+    }
+  }
   document.getElementById('cih-list').innerHTML=sorted.length
     ?sorted.map((c,i)=>{
       const g=parseFloat(c.gpa);

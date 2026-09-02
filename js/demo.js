@@ -445,6 +445,24 @@ function loadDemoData(){
     academics: { gpas, history: [
       {semester:'Spring 2026',chapterGpa:'3.22',memberCount:17,date:past(210)},
       {semester:'Fall 2026',chapterGpa:'3.28',memberCount:18,date:past(20)},
+    ], gradeChecks: [
+      {id:'gc01',memberId:'m13',memberName:'Owen Reed',reason:'Standards Board: cumulative GPA below 2.5 for two consecutive semesters',
+        startDate:past(35),targetGpa:'2.75',freq:'weekly',createdAt:past(35),
+        notes:'Weekly check-in with the Scholarship Chair. Must attend two study-table hours per week and meet with an academic advisor by midterms. Referral clears at a 2.75 cumulative GPA.',
+        checkins:[
+          {id:'ck01',date:past(28),gpa:'2.41',notes:'Baseline. Committed to study tables.'},
+          {id:'ck02',date:past(21),gpa:'2.55',notes:'Attended both study hours. Advisor meeting scheduled.'},
+          {id:'ck03',date:past(7),gpa:'2.63',notes:'On track — one missing assignment turned in.'},
+        ]},
+      {id:'gc02',memberId:'m10',memberName:'Ethan Cole',reason:'Membership Review referral — failed to meet the chapter 2.0 minimum in Spring',
+        startDate:past(20),targetGpa:'2.50',freq:'biweekly',createdAt:past(20),
+        notes:'Bi-weekly grade check through the semester. Peer tutor assigned for two courses. Social event participation paused until the first check-in shows improvement.',
+        checkins:[
+          {id:'ck04',date:past(14),gpa:'1.92',notes:'Below target. Tutor sessions starting this week.'},
+        ]},
+      {id:'gc03',memberId:'m17',memberName:'Hunter James',reason:'Self-referred after a difficult exam block; wants accountability',
+        startDate:past(10),targetGpa:'3.00',freq:'weekly',createdAt:past(10),notes:'',
+        checkins:[]},
     ] },
     finance: {
       dues, fines, expenses, plans: [],
