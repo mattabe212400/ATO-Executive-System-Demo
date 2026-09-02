@@ -445,9 +445,8 @@ function renderGradeChecks(){
       <td style="font-size:11px"><div style="color:var(--mt)">${last?fds(last.date):'Never'}</div>${days!==null?`<div style="font-size:10px;color:${days>14?'var(--rd)':'var(--ht)'}">${days}d ago</div>`:''}</td>
       <td style="font-size:10.5px;color:var(--mt)">${r.freq||'Weekly'}</td>
       <td style="white-space:nowrap">
-        ${acCanAccess()?`<button class="btn btn-p" style="height:23px;font-size:10px;padding:0 8px;margin-right:3px" onclick="openLogCheckin('${r.memberId}','mr','${r.id}')"><i class="ti ti-check"></i>Log</button>`:''}
-        <button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openCheckinHistory('${r.memberId}','mr','${r.id}')" title="Referral details & check-in history" aria-label="View referral details and check-in history for ${esc(displayName)}"><i class="ti ti-history"></i></button>
-        ${acCanAccess()?`<button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openAddGradeCheck('${r.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button>
+        ${acCanAccess()?`<button class="btn btn-p" style="height:23px;font-size:10px;padding:0 8px;margin-right:3px" onclick="openLogCheckin('${r.memberId}','mr','${r.id}')"><i class="ti ti-check"></i>Log</button>
+        <button class="btn" style="height:23px;font-size:10px;padding:0 7px;margin-right:3px" onclick="openAddGradeCheck('${r.id}')" aria-label="Edit"><i class="ti ti-pencil"></i></button>
         <button class="btn btn-d" style="height:23px;font-size:10px;padding:0 7px" onclick="deleteGradeCheck('${r.id}')" aria-label="Delete"><i class="ti ti-trash"></i></button>`:''}
       </td>
     </tr>`;
