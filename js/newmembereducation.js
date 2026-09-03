@@ -271,26 +271,48 @@ function nmeRenderPeerMentor(){
       if(mentorId&&byMentor[mentorId])byMentor[mentorId].push(m);
       else unassigned.push(m);
     });
-    const moveSelect=(memberId,currentMentorId)=>canEdit?`<select style="height:24px;max-width:105px;flex-shrink:0;font-size:10.5px;padding:0 4px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);color:var(--tx)" onchange="nmeMoveNewMember('${memberId}',this.value)" aria-label="Move to group">
-      <option value="" ${!currentMentorId?'selected':''}>Unassigned</option>
+    const moveSelect=(memberId,currentMentorId)=>canEdit?`<select style="height:26px;width:100%;margin-top:5px;font-size:10.5px;padding:0 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--surf);color:var(--tx);font-family:inherit" onchange="nmeMoveNewMember('${memberId}',this.value)" aria-label="Move ${esc(mB(memberId).name)} to a different group">
+      <option value="" ${!currentMentorId?'selected':''}>— Unassigned</option>
       ${mentorIds.map(id=>`<option value="${id}" ${id===currentMentorId?'selected':''}>${esc(mB(id).name)}</option>`).join('')}
     </select>`:'';
+    // One mentee = full name on its own line, then class · major · hometown beneath it (whatever
+    // is on file), then the move control. Nothing truncated except an over-long meta line.
+    const menteeRow=(m,mentorId)=>{
+      const meta=[m.classYear,m.major,m.hometown].map(x=>(x||'').trim()).filter(Boolean).join('  ·  ');
+      return`<div style="padding:8px 0;border-top:1px solid var(--bdr)">
+        <div style="display:flex;align-items:flex-start;gap:8px">
+          <div class="sh-av" style="width:22px;height:22px;font-size:8px;flex-shrink:0;margin-top:1px">${esc(m.initials)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:500;line-height:1.35">${esc(m.name)}</div>
+            <div style="font-size:10.5px;color:var(--mt);line-height:1.35;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(meta)||'No profile details on file'}</div>
+            ${moveSelect(m.id,mentorId)}
+          </div>
+        </div>
+      </div>`;
+    };
     if(!mentorIds.length){
       groupsEl.innerHTML=`<div style="color:var(--ht);font-size:12px;padding:8px 0">Add at least one Peer Mentor above to start forming groups.</div>`;
     }else{
       const mentorCards=mentorIds.map(id=>{
         const mentor=mB(id);
         const group=byMentor[id]||[];
-        return`<div class="card" style="margin:0">
-          <div class="card-hd" style="padding:8px 10px"><span class="card-t" style="font-size:12px">${esc(mentor.name)}</span><span class="badge bm2">${group.length}</span></div>
-          <div style="padding:0 10px 8px">${group.length?group.map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;font-size:11.5px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span>${moveSelect(m.id,id)}</div>`).join(''):`<div style="color:var(--ht);font-size:11px;padding:6px 0">No new members yet.</div>`}</div>
+        return`<div class="card" style="margin:0;padding:12px 14px 14px">
+          <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--bdr)">
+            <div class="sh-av" style="width:26px;height:26px;font-size:9px;flex-shrink:0">${esc(mentor.initials)}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:9.5px;font-weight:600;color:var(--mt);text-transform:uppercase;letter-spacing:.06em">Mentor</div><div style="font-size:13px;font-weight:600;line-height:1.2">${esc(mentor.name)}</div></div>
+            <span class="badge bm2" style="flex-shrink:0">${group.length} mentee${group.length!==1?'s':''}</span>
+          </div>
+          ${group.length?group.map(m=>menteeRow(m,id)).join(''):`<div style="color:var(--ht);font-size:11.5px;padding:10px 0 2px">No new members in this group yet.</div>`}
         </div>`;
       }).join('');
-      const unassignedCard=unassigned.length?`<div class="card" style="margin:0;border-style:dashed">
-        <div class="card-hd" style="padding:8px 10px"><span class="card-t" style="font-size:12px;color:var(--ht)">Unassigned</span><span class="badge br2">${unassigned.length}</span></div>
-        <div style="padding:0 10px 8px">${unassigned.map(m=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 0;font-size:11.5px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span>${moveSelect(m.id,'')}</div>`).join('')}</div>
+      const unassignedCard=unassigned.length?`<div class="card" style="margin:0;padding:12px 14px 14px;border-style:dashed">
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--bdr)">
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ht)">Unassigned</div></div>
+          <span class="badge br2" style="flex-shrink:0">${unassigned.length}</span>
+        </div>
+        ${unassigned.map(m=>menteeRow(m,'')).join('')}
       </div>`:'';
-      groupsEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">${mentorCards}${unassignedCard}</div>`;
+      groupsEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px">${mentorCards}${unassignedCard}</div>`;
     }
   }
 
