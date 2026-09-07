@@ -110,9 +110,12 @@ function renderKcrew(){
   if(roBar)roBar.style.display=canEditKcrew()?'none':'flex';
   const randBtn=document.getElementById('kc-randomize-btn');
   if(randBtn)randBtn.style.display=canEditKcrew()?'':'none';
+  const reqWrap=document.getElementById('kc-required-wrap');
+  if(reqWrap)reqWrap.style.display=canEditKcrew()?'block':'none';
 
   renderKcSchedule();
   renderKcChores(wk);
+  kcRenderRequiredPanel();
   kcRenderChoreManager();
 }
 
@@ -202,6 +205,74 @@ function kcLiveInMembers(existingIds){
   const ids=new Set(liveIn.map(m=>m.id));
   const extra=(existingIds||[]).map(id=>D.members.find(m=>m.id===id)).filter(m=>m&&!ids.has(m.id));
   return [...liveIn,...extra];
+}
+
+// ── CHORE ROSTER ──
+// D.chores.requiredMemberIds is the House Manager's explicit "these people are on chore
+// rotation" list. Absent (never touched) === everyone who lives in the house, so a fresh
+// chapter behaves exactly as before. Once the House Manager checks/unchecks anyone it becomes
+// an explicit array. Randomize only ever deals chores to members in this pool who still live
+// in the house — a member who moved out drops off automatically.
+function kcRequiredSet(){
+  return Array.isArray(D.chores&&D.chores.requiredMemberIds)?new Set(D.chores.requiredMemberIds):null;
+}
+function kcChorePool(){
+  const req=kcRequiredSet();
+  return sortedMembers().filter(m=>m.liveIn&&(!req||req.has(m.id)));
+}
+
+function kcRenderRequiredPanel(){
+  const el=document.getElementById('kc-required-panel');
+  if(!el)return;
+  if(!canEditKcrew())return;
+  kcEnsureDefaults();
+  const liveIn=sortedMembers().filter(m=>m.liveIn);
+  const req=kcRequiredSet();
+  const inPool=m=>!req||req.has(m.id);
+  const poolCount=liveIn.filter(inPool).length;
+
+  if(!liveIn.length){
+    el.innerHTML=`<div style="font-size:12px;color:var(--ht);padding:6px 4px">No live-in members yet — set the <strong>Live-in</strong> field on the Members tab and they'll show up here.</div>`;
+    return;
+  }
+
+  const chips=liveIn.map(m=>{
+    const on=inPool(m);
+    return`<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--bdr);border-radius:7px;cursor:pointer;font-size:12px;background:${on?'rgba(59,170,90,.07)':'var(--surf)'}">
+      <input type="checkbox" ${on?'checked':''} onchange="kcToggleRequired('${m.id}',this.checked)" style="accent-color:var(--sky);width:14px;height:14px;flex-shrink:0">
+      <span style="color:${on?'var(--tx)':'var(--mt)'}">${esc(m.name)}</span>
+    </label>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">
+      <span style="font-size:11.5px;color:var(--mt)"><strong style="color:var(--tx)">${poolCount}</strong> of ${liveIn.length} live-in member${liveIn.length!==1?'s':''} on chore rotation</span>
+      <button class="btn" onclick="kcSetAllRequired(true)" style="height:24px;font-size:10.5px;margin-left:auto">Select all</button>
+      <button class="btn" onclick="kcSetAllRequired(false)" style="height:24px;font-size:10.5px">Clear all</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px">${chips}</div>
+    <div style="font-size:10.5px;color:var(--ht);margin-top:9px">New live-in members are on rotation by default until you clear anyone here; after that, add them manually.</div>`;
+}
+
+function kcToggleRequired(memberId,checked){
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit the chore roster.','error');return;}
+  kcEnsureDefaults();
+  let req=Array.isArray(D.chores.requiredMemberIds)
+    ?D.chores.requiredMemberIds.slice()
+    :sortedMembers().filter(m=>m.liveIn).map(m=>m.id);
+  if(checked){if(!req.includes(memberId))req.push(memberId);}
+  else{req=req.filter(id=>id!==memberId);}
+  D.chores.requiredMemberIds=req;
+  saveD('chores');
+  kcRenderRequiredPanel();
+}
+
+function kcSetAllRequired(all){
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit the chore roster.','error');return;}
+  kcEnsureDefaults();
+  D.chores.requiredMemberIds=all?sortedMembers().filter(m=>m.liveIn).map(m=>m.id):[];
+  saveD('chores');
+  kcRenderRequiredPanel();
 }
 
 function renderKcChores(wk){
@@ -417,18 +488,19 @@ function kcResetChores(){
   toast('Chores reset to defaults','success');
 }
 
-// Randomly deal every chore to a live-in member. Fisher-Yates on both the roster and the chore
-// order, then round-robin over the shuffled roster so the load is even (member counts at most 1
-// apart) and which members catch the remainder is itself random. Live-in only — a member who
-// doesn't live in the house has no chore, same rule the assignment picker already enforces.
+// Randomly deal every chore to a member on the chore roster. Fisher-Yates on both the roster and
+// the chore order, then round-robin over the shuffled roster so the load is even (member counts
+// at most 1 apart) and which members catch the remainder is itself random. The pool is the
+// live-in members the House Manager has checked in the Chore Roster panel (defaults to all
+// live-in members until they narrow it).
 async function kcRandomizeChores(){
   if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can assign chores.','error');return;}
   kcEnsureDefaults();
   const list=D.chores.list||[];
   if(!list.length){toast('No chores to assign yet.','error');return;}
-  const pool=sortedMembers().filter(m=>m.liveIn).map(m=>m.id);
-  if(!pool.length){toast('No live-in members to assign — set the Live-in field on the Members tab first.','error');return;}
-  const ok=await confirmDialog('Randomize Chores',`Randomly reassign all ${list.length} chore${list.length!==1?'s':''} across the ${pool.length} live-in member${pool.length!==1?'s':''}? This replaces every current chore assignment.`,'Randomize',false);
+  const pool=kcChorePool().map(m=>m.id);
+  if(!pool.length){toast('No members on the chore roster — check at least one live-in member in the Chore Roster panel above.','error');return;}
+  const ok=await confirmDialog('Randomize Chores',`Randomly reassign all ${list.length} chore${list.length!==1?'s':''} across the ${pool.length} member${pool.length!==1?'s':''} on the chore roster? This replaces every current chore assignment.`,'Randomize',false);
   if(!ok)return;
   const prev=list.map(c=>[...(c.memberIds||[])]);
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
