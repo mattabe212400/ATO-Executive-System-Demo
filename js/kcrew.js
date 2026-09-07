@@ -17,11 +17,11 @@ const KC_DEFAULT_CHORES = [
   {id:'c2f-tolH',  area:'2nd Floor',        chore:'Clean toilets and urinals (Thursday)',      notes:'', day:'thursday'},
   {id:'c2f-sink',  area:'2nd Floor',        chore:'Sinks, counters, and mirrors',              notes:'', day:'both'},
   {id:'c2f-garb',  area:'2nd Floor',        chore:'Take out and re-bag garbage',               notes:'Once a day', day:'daily'},
-  // Stairwells
-  {id:'cfsT',      area:'Stairwells',       chore:'Sweep and mop front stairwell (Tuesday)',   notes:'Wipe down handrails', day:'tuesday'},
-  {id:'cfsH',      area:'Stairwells',       chore:'Sweep and mop front stairwell (Thursday)',  notes:'Wipe down handrails', day:'thursday'},
-  {id:'cbsT',      area:'Stairwells',       chore:'Sweep and mop back stairwell (Tuesday)',    notes:'Wipe down handrails', day:'tuesday'},
-  {id:'cbsH',      area:'Stairwells',       chore:'Sweep and mop back stairwell (Thursday)',   notes:'Wipe down handrails', day:'thursday'},
+  // Stairwells — two people each
+  {id:'cfsT',      area:'Stairwells',       chore:'Sweep and mop front stairwell (Tuesday)',   notes:'Wipe down handrails', day:'tuesday',  slots:2},
+  {id:'cfsH',      area:'Stairwells',       chore:'Sweep and mop front stairwell (Thursday)',  notes:'Wipe down handrails', day:'thursday', slots:2},
+  {id:'cbsT',      area:'Stairwells',       chore:'Sweep and mop back stairwell (Tuesday)',    notes:'Wipe down handrails', day:'tuesday',  slots:2},
+  {id:'cbsH',      area:'Stairwells',       chore:'Sweep and mop back stairwell (Thursday)',   notes:'Wipe down handrails', day:'thursday', slots:2},
   // Common Areas & Outside
   {id:'cfoy',      area:'Common Areas',     chore:'Front entryway',                            notes:'Sweep or vacuum and mop', day:'both'},
   {id:'cbfoy',     area:'Common Areas',     chore:'Back entryway',                             notes:'Sweep or vacuum and mop', day:'both'},
@@ -67,7 +67,7 @@ function kcEnsureDefaults(){
 
   if(!D.chores)D.chores={};
   if(!D.chores.list||D.chores.list.length===0){
-    D.chores.list=KC_DEFAULT_CHORES.map(c=>({...c,memberIds:[]}));
+    D.chores.list=KC_DEFAULT_CHORES.map(c=>({...c,memberIds:[],slots:c.slots||1}));
   }else{
     // Migrate old single memberId to memberIds array
     D.chores.list.forEach(c=>{
@@ -75,10 +75,16 @@ function kcEnsureDefaults(){
         c.memberIds=c.memberId?[c.memberId]:[];
         delete c.memberId;
       }
+      // How many people a chore needs (stairwells default to 2). Older docs have no
+      // slots field — seed it from the matching default, else 1.
+      if(!c.slots){
+        const def=KC_DEFAULT_CHORES.find(d=>d.id===c.id);
+        c.slots=(def&&def.slots)||1;
+      }
     });
     KC_DEFAULT_CHORES.forEach(def=>{
       if(!D.chores.list.find(x=>x.id===def.id)){
-        D.chores.list.push({...def,memberIds:[]});
+        D.chores.list.push({...def,memberIds:[],slots:def.slots||1});
       }
     });
   }
@@ -309,6 +315,8 @@ function renderKcChores(wk){
       const showThu=c.day==='both'||c.day==='thursday'||c.day==='daily';
       const allDone=(!showTue||tueOk)&&(!showThu||thuOk);
       const lbl=kcChoreLabel(c.memberIds);
+      const need=Math.max(1,c.slots||1);
+      const slotHint=need>1?` <span style="display:inline-block;font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:var(--surf);border:1px solid var(--bdr);color:var(--mt);vertical-align:middle;white-space:nowrap">${need} people</span>`:'';
 
       let assignCell;
       if(ro){
@@ -334,7 +342,7 @@ function renderKcChores(wk){
       }
 
       html+=`<tr style="border-bottom:1px solid var(--bdr)${allDone?';background:rgba(59,170,90,.05)':''}">
-        <td style="padding:7px 8px;font-size:12px;font-weight:500">${esc(c.chore)}</td>
+        <td style="padding:7px 8px;font-size:12px;font-weight:500">${esc(c.chore)}${slotHint}</td>
         <td style="padding:7px 8px;font-size:11px;color:var(--mt);line-height:1.4">${esc(c.notes)}</td>
         <td style="padding:7px 8px;text-align:center">${dayBadge[c.day]||dayBadge.both}</td>
         <td style="padding:4px 8px;position:relative">${assignCell}</td>
@@ -416,11 +424,12 @@ function kcRenderChoreManager(){
   const areas=[...new Set(list.map(c=>c.area))].filter(Boolean);
   el.innerHTML=`
     <datalist id="kc-area-list">${areas.map(a=>`<option value="${esc(a)}">`).join('')}</datalist>
-    <div class="kc-chore-header" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:5px;align-items:center;margin-bottom:5px;padding:0 4px">
+    <div class="kc-chore-header" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:5px;align-items:center;margin-bottom:5px;padding:0 4px">
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Area</span>
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Chore</span>
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Notes</span>
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht)">Day</span>
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--ht);text-align:center" title="How many people this chore needs">People</span>
       <span></span>
     </div>
     <div id="kc-chore-rows" style="display:flex;flex-direction:column;gap:4px">
@@ -435,12 +444,14 @@ function kcRenderChoreManager(){
 
 function kcChoreRow(c,i){
   const inp=`style="width:100%;height:28px;padding:0 6px;border:1px solid var(--bdr);border-radius:5px;font-size:11px;font-family:inherit;color:var(--tx);background:var(--surf);outline:none"`;
+  const numStyle=`style="width:52px;height:28px;padding:0 4px;border:1px solid var(--bdr);border-radius:5px;font-size:11px;font-family:inherit;color:var(--tx);background:var(--surf);outline:none;text-align:center;flex-shrink:0"`;
   const dayOpts=KC_DAY_OPTS.map(d=>`<option value="${d}"${c.day===d?' selected':''}>${d.charAt(0).toUpperCase()+d.slice(1)}</option>`).join('');
-  return`<div class="kc-chore-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--bdr)">
+  return`<div class="kc-chore-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--bdr)">
     <input class="kc-cr-area" value="${esc(c.area||'')}" placeholder="Area (e.g. 2nd Floor)" list="kc-area-list" ${inp}>
     <input class="kc-cr-chore" value="${esc(c.chore||'')}" placeholder="Chore description" ${inp}>
     <input class="kc-cr-notes" value="${esc(c.notes||'')}" placeholder="Notes (optional)" ${inp}>
     <select class="kc-cr-day" ${inp} style="width:90px;flex-shrink:0">${dayOpts}</select>
+    <input class="kc-cr-slots" type="number" min="1" max="6" step="1" value="${Math.max(1,Math.round(c.slots||1))}" aria-label="People assigned" ${numStyle}>
     <button onclick="kcDeleteChoreRow(this)" class="btn btn-d" style="padding:0 6px;height:26px;font-size:11px;flex-shrink:0" aria-label="Delete chore"><i class="ti ti-trash"></i></button>
   </div>`;
 }
@@ -449,7 +460,7 @@ function kcAddChoreRow(){
   const rows=document.getElementById('kc-chore-rows');
   if(!rows)return;
   const div=document.createElement('div');
-  div.innerHTML=kcChoreRow({area:'',chore:'',notes:'',day:'both'},0);
+  div.innerHTML=kcChoreRow({area:'',chore:'',notes:'',day:'both',slots:1},0);
   rows.appendChild(div.firstElementChild);
   rows.querySelector('.kc-chore-row:last-child .kc-cr-chore')?.focus();
 }
@@ -468,8 +479,9 @@ function kcSaveChores(){
     const area=(row.querySelector('.kc-cr-area')?.value||'').trim()||'General';
     const notes=(row.querySelector('.kc-cr-notes')?.value||'').trim();
     const day=row.querySelector('.kc-cr-day')?.value||'both';
+    const slots=Math.min(6,Math.max(1,Math.round(parseFloat(row.querySelector('.kc-cr-slots')?.value)||1)));
     const existing=D.chores.list.find(c=>c.chore===chore&&c.area===area);
-    list.push({id:existing?.id||('c'+uid()),area,chore,notes,day,memberIds:existing?.memberIds||[]});
+    list.push({id:existing?.id||('c'+uid()),area,chore,notes,day,slots,memberIds:existing?.memberIds||[]});
   });
   if(!list.length){toast('Add at least one chore','error');return;}
   D.chores.list=list;
@@ -481,7 +493,7 @@ function kcSaveChores(){
 function kcResetChores(){
   if(!canEditKcrew())return;
   if(!confirm('Reset all chores to defaults? Existing assignments will be cleared.'))return;
-  D.chores.list=KC_DEFAULT_CHORES.map(c=>({...c,memberIds:[]}));
+  D.chores.list=KC_DEFAULT_CHORES.map(c=>({...c,memberIds:[],slots:c.slots||1}));
   D.chores.checks={};
   saveD('chores');
   renderKcrew();
@@ -490,9 +502,10 @@ function kcResetChores(){
 
 // Randomly deal every chore to a member on the chore roster. Fisher-Yates on both the roster and
 // the chore order, then round-robin over the shuffled roster so the load is even (member counts
-// at most 1 apart) and which members catch the remainder is itself random. The pool is the
-// live-in members the House Manager has checked in the Chore Roster panel (defaults to all
-// live-in members until they narrow it).
+// at most 1 apart) and which members catch the remainder is itself random. Chores needing more
+// than one person (c.slots — the stairwells default to 2) draw that many distinct people from
+// the same rotation. The pool is the live-in members the House Manager has checked in the Chore
+// Roster panel (defaults to all live-in members until they narrow it).
 async function kcRandomizeChores(){
   if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can assign chores.','error');return;}
   kcEnsureDefaults();
@@ -505,7 +518,16 @@ async function kcRandomizeChores(){
   const prev=list.map(c=>[...(c.memberIds||[])]);
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   const people=shuffle([...pool]);
-  shuffle(list.map((_,i)=>i)).forEach((choreIdx,k)=>{ list[choreIdx].memberIds=[people[k%people.length]]; });
+  let cursor=0;
+  shuffle(list.map((_,i)=>i)).forEach(choreIdx=>{
+    const need=Math.min(Math.max(1,Math.round(list[choreIdx].slots||1)),people.length);
+    const picks=[];
+    for(let guard=0;picks.length<need&&guard<people.length*2;guard++){
+      const p=people[cursor++%people.length];
+      if(!picks.includes(p))picks.push(p);
+    }
+    list[choreIdx].memberIds=picks;
+  });
   try{
     await saveD('chores');
     renderKcrew();
@@ -553,8 +575,9 @@ function kcPrintChores(){
         <tbody>${areaChores.map(c=>{
           const showTue=c.day==='both'||c.day==='tuesday'||c.day==='daily';
           const showThu=c.day==='both'||c.day==='thursday'||c.day==='daily';
+          const need=Math.max(1,c.slots||1);
           return`<tr>
-            <td class="chore">${esc(c.chore)}</td>
+            <td class="chore">${esc(c.chore)}${need>1?` <span style="font-weight:400;color:#888">(${need} people)</span>`:''}</td>
             <td class="notes">${esc(c.notes)||''}</td>
             <td class="day">${dayLabel[c.day]||dayLabel.both}</td>
             <td class="assigned">${kcChoreLabel(c.memberIds)}</td>

@@ -207,10 +207,11 @@
   /* ── ACADEMICS PANES: table content scroll ── */
   #ac-pane-members,#ac-pane-history,#ac-pane-checks{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
-  /* ── HOUSE MANAGEMENT: Chore Manager's 5-column row (3 text inputs + day select + delete)
-     has no room to shrink on a phone — scroll it instead of squeezing every input to ~40px. ── */
+  /* ── HOUSE MANAGEMENT: Chore Manager's 6-column row (3 text inputs + day select + people
+     count + delete) has no room to shrink on a phone — scroll it instead of squeezing every
+     input to ~40px. ── */
   #kc-chore-manager{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .kc-chore-header,.kc-chore-row{min-width:520px}
+  .kc-chore-header,.kc-chore-row{min-width:580px}
 
   /* ── MEETING NOTES: officer-report grid — 2 columns of textareas is unreadably narrow on a
      phone, stack them instead. ── */
