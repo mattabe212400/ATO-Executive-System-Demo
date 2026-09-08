@@ -12,19 +12,52 @@ let RC_ACTIVE_TAB='rc-overview';
 let RC_SELECTED_SEM=null;
 function rcSem(){ return RC_SELECTED_SEM||getSemester(); }
 
+// ── PLAN-AHEAD WINDOW ──
+// Recruitment can be worked one semester in advance so a chapter can build next term's pledge
+// class — rushees, the goal, and rush events — before that semester begins. The current semester
+// and the one immediately after it (nextSemester()) are both editable here; everything older
+// stays frozen read-only, same as before.
+function rcPlanningSemester(){ return nextSemester(); }
+function rcSemesterEditable(sem){ return isCurrentSemester(sem) || sem===rcPlanningSemester(); }
+
 // Rushees have no natural date field (no "date added to pipeline" — see rcAddRushee, which now
 // stamps one), so known semesters come purely from whatever .semester values already exist plus
 // the goal's own semester keys — unlike Attendance/Community Service, which can derive from real
 // event/log dates instead.
 function rcKnownSemesters(){
-  return unionKnownSemesters([...(D.recruitment.rushees||[]).map(r=>r.semester),...Object.keys(D.recruitment.goal||{})].filter(Boolean));
+  // nextSemester() is always offered so a chapter can start planning ahead before any rushee or
+  // goal exists for it yet.
+  return unionKnownSemesters([nextSemester(),...(D.recruitment.rushees||[]).map(r=>r.semester),...Object.keys(D.recruitment.goal||{})].filter(Boolean));
 }
 function rcSemesterChanged(){
   RC_SELECTED_SEM=document.getElementById('rc-semester-select').value;
+  rcRenderPlanBanner();
+  const canEdit=canEditPage('recruitment')&&rcSemesterEditable(RC_SELECTED_SEM);
+  ['rc-add-btn','rc-add-btn-2','rc-event-add-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=canEdit?'':'none';});
   if(RC_ACTIVE_TAB==='rc-overview')rcRenderOverview();
   else if(RC_ACTIVE_TAB==='rc-rushees')rcRenderTable();
   else if(RC_ACTIVE_TAB==='rc-pipeline')rcRenderKanban();
   else if(RC_ACTIVE_TAB==='rc-events')rcRenderEvents();
+}
+
+// Context strip above the tabs: a planning cue when the selected semester is the upcoming one,
+// a lock note when it's a frozen past semester, nothing for the current semester.
+function rcRenderPlanBanner(){
+  const el=document.getElementById('rc-plan-banner');
+  if(!el)return;
+  const sem=rcSem();
+  if(sem===rcPlanningSemester()){
+    const startsMonth=sem.startsWith('Fall')?'June':'January';
+    el.style.display='flex';
+    el.className='bnr info';
+    el.innerHTML=`<i class="ti ti-calendar-plus"></i><span>Planning ahead for <strong>${esc(sem)}</strong> — build the pipeline, set the goal, and schedule rush events now. It becomes your active semester in ${startsMonth}.</span>`;
+  }else if(!isCurrentSemester(sem)){
+    el.style.display='flex';
+    el.className='bnr neutral';
+    el.innerHTML=`<i class="ti ti-lock"></i><span><strong>${esc(sem)}</strong> is a past semester — view only.</span>`;
+  }else{
+    el.style.display='none';
+  }
 }
 // Rushees created before this feature shipped have no .semester at all — treated as belonging
 // to whichever semester is currently selected (never hidden), same "don't vanish" fallback used
@@ -51,7 +84,7 @@ function rcOpenGoalEdit(){
 }
 function rcSaveGoal(){
   if(!canEditPage('recruitment')){toast('You do not have permission to edit the recruitment goal.','error');return;}
-  if(!isCurrentSemester(rcSem())){toast('This semester is read-only.','error');return;}
+  if(!rcSemesterEditable(rcSem())){toast('This semester is read-only.','error');return;}
   const target=parseInt(document.getElementById('rcg-target').value);
   const label=document.getElementById('rcg-label').value.trim()||'New Members This Semester';
   if(!target||target<1){toast('Enter a valid target','error');return;}
@@ -102,15 +135,16 @@ async function renderRecruitment(){
   // Reset to overview tab
   document.querySelectorAll('.rc-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
   document.querySelectorAll('#page-recruitment > div[id^="rc-"]').forEach(d=>{
-    if(d.id==='rc-tabs-bar')return;
+    if(d.id==='rc-tabs-bar'||d.id==='rc-plan-banner')return;
     d.style.display=d.id==='rc-overview'?'block':'none';
   });
   RC_ACTIVE_TAB='rc-overview';
-  // "Add Rushee"/"Add Rush Event" only make sense for editors on the CURRENT semester — a
-  // view-only grant (e.g. Treasurer, who can see the CRM but not touch it), or a past semester
-  // being viewed, would otherwise show a fully clickable button that just errors on save, which
-  // reads as broken rather than as "no access."
-  const canEdit=canEditPage('recruitment')&&isCurrentSemester(RC_SELECTED_SEM);
+  rcRenderPlanBanner();
+  // "Add Rushee"/"Add Rush Event" only make sense for editors on the current or upcoming
+  // semester — a view-only grant (e.g. Treasurer, who can see the CRM but not touch it), or a
+  // frozen past semester being viewed, would otherwise show a fully clickable button that just
+  // errors on save, which reads as broken rather than as "no access."
+  const canEdit=canEditPage('recruitment')&&rcSemesterEditable(RC_SELECTED_SEM);
   ['rc-add-btn','rc-add-btn-2','rc-event-add-btn'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display=canEdit?'':'none';
   });
@@ -286,7 +320,7 @@ function rcDrawQuality(rushees){
 function rcDrawGoal(rushees, RCG){
   const el=document.getElementById('rc-goal-panel');if(!el)return;
   const editBtn=document.getElementById('rc-goal-edit-btn');
-  if(editBtn)editBtn.style.display=(canEditPage('recruitment')&&isCurrentSemester(rcSem()))?'':'none';
+  if(editBtn)editBtn.style.display=(canEditPage('recruitment')&&rcSemesterEditable(rcSem()))?'':'none';
   const bidExt=rushees.filter(r=>r.stage==='Bid Extended').length;
   const bidReady=rcBidReady(rushees).length;
   const goal=rcGoalProgress(rushees,RCG);
@@ -407,7 +441,7 @@ function rcRenderKanban(){
           const recruiterChip=r.recruiter
             ?`<span class="sh-av" style="width:14px;height:14px;font-size:6px;flex-shrink:0">${esc(mB(r.recruiter).initials)}</span><span>${esc(mB(r.recruiter).name.split(' ')[0])}</span>`
             :`<i class="ti ti-user-question" style="font-size:10px;color:var(--am-tx)"></i><span style="color:var(--am-tx)">Unassigned</span>`;
-          return`<div class="rc-card" draggable="${canEditPage('recruitment')&&isCurrentSemester(rcSem())}" id="kc-${r.id}" tabindex="0" role="button" aria-label="Open ${esc(r.name)}"
+          return`<div class="rc-card" draggable="${canEditPage('recruitment')&&rcSemesterEditable(rcSem())}" id="kc-${r.id}" tabindex="0" role="button" aria-label="Open ${esc(r.name)}"
           ondragstart="rcDragStart('${r.id}')"
           ondragend="document.querySelectorAll('.rc-col-drop').forEach(c=>c.classList.remove('drag-over'))"
           onclick="rcOpenProfile('${r.id}')">
@@ -438,7 +472,7 @@ function rcDrop(event,stage){
   event.preventDefault();
   event.currentTarget.classList.remove('drag-over');
   if(!canEditPage('recruitment')){toast('You do not have permission to move rushees.','error');return;}
-  if(!isCurrentSemester(rcSem())){toast('This semester is read-only.','error');return;}
+  if(!rcSemesterEditable(rcSem())){toast('This semester is read-only.','error');return;}
   if(!RC_DRAG_ID)return;
   const r=D.recruitment.rushees.find(x=>x.id===RC_DRAG_ID);
   if(r&&r.stage!==stage){
@@ -469,7 +503,7 @@ function rcRenderEvents(){
   // Dinner' previously used gold/navy with no brand/primary-action reason; reassigned to keep
   // gold reserved for primary actions per the Two-Accent Rule.
   const typeColors={'Open House':'var(--bl)','Brotherhood Event':'var(--gn)','Invite Only':'var(--mt)','Philanthropy':'var(--rd)','Athletics':'var(--am)','Study Event':'var(--mt)','Rush Dinner':'var(--bl)','IFC Event':'var(--mt)'};
-  const canEdit=canEditPage('recruitment')&&isCurrentSemester(sem);
+  const canEdit=canEditPage('recruitment')&&rcSemesterEditable(sem);
   document.getElementById('rc-events-table').innerHTML=`<thead><tr><th>Event</th><th>Type</th><th>Date</th><th>Time</th><th>Location</th><th></th></tr></thead><tbody>${events.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<tr><td style="font-weight:500">${esc(e.title)}</td><td><span class="badge" style="background:${typeColors[e.rcEventType]||'#F1F3F6'}22;color:${typeColors[e.rcEventType]||'var(--mt)'}">${esc(e.rcEventType||'N/A')}</span></td><td>${fd(e.date)}</td><td style="color:var(--mt)">${to12h(e.start)}</td><td style="color:var(--mt)">${esc(e.location)||'N/A'}</td><td style="white-space:nowrap">${canEdit?`<button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(e.title)}" onclick="rcOpenEditEvent('${e.id}')"><i class="ti ti-pencil"></i></button> <button class="btn btn-d" style="height:23px;font-size:10.5px" aria-label="Delete ${esc(e.title)}" onclick="rcDeleteEvent('${e.id}')"><i class="ti ti-trash"></i></button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:22px;color:var(--mt)">No events yet</td></tr>'}</tbody>`;
 }
 
@@ -550,7 +584,7 @@ function rcUpdateStage(id,stage){
   if(!canEditPage('recruitment')){toast('You do not have permission to update rushee stage.','error');return;}
   const r=D.recruitment.rushees.find(x=>x.id===id);
   if(!r)return;
-  if(r.semester&&!isCurrentSemester(r.semester)){toast('This semester is read-only.','error');return;}
+  if(r.semester&&!rcSemesterEditable(r.semester)){toast('This semester is read-only.','error');return;}
   r.stage=stage;r.lastContact=localDateStr();
   saveD('recruitment');
   // Update badge in modal header
@@ -574,7 +608,7 @@ function rcSaveNote(){
   if(!text){toast('Note text is required','error');return;}
   const r=D.recruitment.rushees.find(x=>x.id===rusheeId);
   if(!r)return;
-  if(r.semester&&!isCurrentSemester(r.semester)){toast('This semester is read-only.','error');return;}
+  if(r.semester&&!rcSemesterEditable(r.semester)){toast('This semester is read-only.','error');return;}
   if(!r.notes)r.notes=[];
   r.notes.push({text,by:CURRENT_USER?CURRENT_USER.mid:null,date:localDateStr()});
   r.lastContact=localDateStr();
@@ -597,7 +631,7 @@ function rcSaveTag(){
   const tag=document.getElementById('rct-tag').value;
   const r=D.recruitment.rushees.find(x=>x.id===rusheeId);
   if(!r||!tag)return;
-  if(r.semester&&!isCurrentSemester(r.semester)){toast('This semester is read-only.','error');return;}
+  if(r.semester&&!rcSemesterEditable(r.semester)){toast('This semester is read-only.','error');return;}
   if(!r.tags)r.tags=[];
   r.tags.push(tag);saveD('recruitment');closeM(null,document.getElementById('m-rc-tag'));rcOpenProfile(rusheeId);
 }
@@ -612,7 +646,7 @@ function rcOpenAdd(){
 
 function rcAddRushee(){
   if(!canEditPage('recruitment')){toast('Only officers with Recruitment access can add rushees.','error');return;}
-  if(!isCurrentSemester(rcSem())){toast('This semester is read-only.','error');return;}
+  if(!rcSemesterEditable(rcSem())){toast('This semester is read-only.','error');return;}
   const name=document.getElementById('rca-name').value.trim();
   if(!name){toast('Name is required','error');return;}
   const tags=[...document.getElementById('rca-tags').querySelectorAll('.rc-tag.active')].map(t=>t.dataset.tag);
@@ -621,7 +655,7 @@ function rcAddRushee(){
   const scoreMap={'New Lead':10,'Contacted':25,'Attended Event':45,'Active Rush':60,'Interviewed':72,'Bid Ready':82,'Bid Extended':88,'Accepted':92};
   // semester is stamped once at creation and never recomputed later — rushees have no other date
   // field to derive it from, matching how Tasks & Goals treats "semester" as an immutable snapshot.
-  D.recruitment.rushees.push({id:'r'+uid(),name,firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),initials:ini,year:document.getElementById('rca-year').value,major:document.getElementById('rca-major').value,hometown:document.getElementById('rca-home').value,stage,recruiter:'',eventsAttended:0,bidScore:scoreMap[stage]||10,lastContact:'',notes:document.getElementById('rca-notes').value.trim()?[{text:document.getElementById('rca-notes').value.trim(),by:CURRENT_USER?CURRENT_USER.mid:null,date:localDateStr()}]:[],tags,interests:'',semester:getSemester()});
+  D.recruitment.rushees.push({id:'r'+uid(),name,firstName:name.split(' ')[0],lastName:name.split(' ').slice(1).join(' '),initials:ini,year:document.getElementById('rca-year').value,major:document.getElementById('rca-major').value,hometown:document.getElementById('rca-home').value,stage,recruiter:'',eventsAttended:0,bidScore:scoreMap[stage]||10,lastContact:'',notes:document.getElementById('rca-notes').value.trim()?[{text:document.getElementById('rca-notes').value.trim(),by:CURRENT_USER?CURRENT_USER.mid:null,date:localDateStr()}]:[],tags,interests:'',semester:rcSem()});
   saveD('recruitment');closeM(null,document.getElementById('m-rc-add'));
   if(RC_ACTIVE_TAB==='rc-rushees')rcRenderTable();
   else if(RC_ACTIVE_TAB==='rc-pipeline')rcRenderKanban();
@@ -633,7 +667,13 @@ function rcAddRushee(){
 function rcOpenAddEvent(){
   document.getElementById('rce-id').value='';
   document.getElementById('rce-type').value='Open House';
-  const dateEl=document.getElementById('rce-date');if(dateEl)dateEl.value=localDateStr();
+  // When planning the upcoming semester, seed the date to that term's first day rather than
+  // today — a today-dated rush event would land back in the current semester.
+  const dateEl=document.getElementById('rce-date');
+  if(dateEl){
+    const range=(rcSem()===rcPlanningSemester())?semesterDateRange(rcSem()):null;
+    dateEl.value=range?range.start:localDateStr();
+  }
   ['rce-name','rce-time','rce-loc','rce-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   openM('m-rc-event');
 }
@@ -641,7 +681,7 @@ function rcOpenAddEvent(){
 function rcOpenEditEvent(id){
   if(!canEditPage('recruitment')){toast('Only officers with Recruitment access can edit rush events.','error');return;}
   const e=rcEvents().find(x=>x.id===id);if(!e)return;
-  if(!isCurrentSemester(semesterLabelForDate(e.date))){toast('This event is in a past semester and is read-only.','error');return;}
+  if(!rcSemesterEditable(semesterLabelForDate(e.date))){toast('That event is outside the editable window (current or upcoming semester only).','error');return;}
   document.getElementById('rce-id').value=e.id;
   document.getElementById('rce-name').value=e.title||'';
   document.getElementById('rce-type').value=e.rcEventType||'Open House';
@@ -663,7 +703,7 @@ async function rcSaveEvent(){
   if(id){
     const ev=D.events.find(x=>x.id===id);
     if(!ev)return;
-    if(!isCurrentSemester(semesterLabelForDate(ev.date))){toast('This event is in a past semester and is read-only.','error');return;}
+    if(!rcSemesterEditable(semesterLabelForDate(ev.date))){toast('That event is outside the editable window (current or upcoming semester only).','error');return;}
     prev={...ev};Object.assign(ev,fields);
   }else{
     D.events.push({id:uid(),mandatory:false,...fields});
@@ -685,7 +725,7 @@ async function rcSaveEvent(){
 async function rcDeleteEvent(id){
   if(!canEditPage('recruitment')){toast('Only officers with Recruitment access can delete rush events.','error');return;}
   const target=D.events.find(x=>x.id===id);
-  if(!isCurrentSemester(semesterLabelForDate(target?.date))){toast('This event is in a past semester and is read-only.','error');return;}
+  if(!rcSemesterEditable(semesterLabelForDate(target?.date))){toast('That event is outside the editable window (current or upcoming semester only).','error');return;}
   const ok=await confirmDialog('Delete Rush Event','Delete this rush event? This cannot be undone.');
   if(!ok)return;
   const removed=D.events.find(x=>x.id===id);

@@ -98,6 +98,10 @@ function getRoleAccess(role, title, secondaryTitle){
   const secondary = _positionForTitle(positions, secondaryTitle);
   if(primary?.permLevel==='lead' || secondary?.permLevel==='lead') return intersect(ALL_PAGES);
   const granted = new Set([...Object.keys(primary?.pages||{}), ...Object.keys(secondary?.pages||{})]);
+  // Peer Mentor — an exec flagged isPeerMentor (Settings → Exec Users' "Peer Mentor" checkbox)
+  // gets New Member Education on top of their position's own grants, view+edit (see
+  // canEditPage()'s matching override), exactly like the General Member version does above.
+  if(CURRENT_USER?.isPeerMentor) granted.add('newMemberEducation');
   return intersect([...granted]);
 }
 
@@ -107,6 +111,9 @@ function canEditPage(page){
   // Peer Mentor exception — see getRoleAccess()'s matching viewer-branch comment. Every other
   // page stays read-only-or-nothing for a viewer; this is the one deliberate carve-out.
   if(CURRENT_USER.role==='viewer') return !!CURRENT_USER.isPeerMentor && page==='newMemberEducation';
+  // Same Peer Mentor carve-out for an exec whose position doesn't already grant New Member
+  // Education — the one page a non-lead exec can edit outside their configured page grants.
+  if(CURRENT_USER.isPeerMentor && page==='newMemberEducation') return true;
   const positions = CURRENT_CHAPTER?.positions || {};
   const primary = _positionForTitle(positions, CURRENT_USER.title);
   const secondary = _positionForTitle(positions, CURRENT_USER.secondaryTitle);
@@ -221,6 +228,16 @@ function lgTimeOfDay(){
 function getSemester(){
   const m=new Date().getMonth();
   return m>=5?'Fall '+new Date().getFullYear():'Spring '+new Date().getFullYear();
+}
+
+// The semester immediately after the current one, same label style. Spring N → Fall N;
+// Fall N → Spring N+1. Recruitment uses this for its "plan ahead" window (build next term's
+// pledge class before that semester starts); nothing else treats a future semester as writable.
+function nextSemester(){
+  const m=/^(Spring|Fall)\s+(\d+)$/.exec(getSemester());
+  if(!m)return getSemester();
+  const year=parseInt(m[2],10);
+  return m[1]==='Spring' ? 'Fall '+year : 'Spring '+(year+1);
 }
 
 // ── SEMESTER PARTITIONING (shared across Attendance/Finance/Tasks/Recruitment/Community Service) ──

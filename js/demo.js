@@ -756,40 +756,43 @@ function seRenderUsers(){
 // ══════════════════════════════════════════════
 function switchDemoRole(role){
   if(!CURRENT_USER || !role) return;
-  // 'Peer Mentor' isn't a real position (peer mentors are just Active members flagged
-  // isPeerMentor via Settings) — it's a viewer like General Member, plus that one flag, so
-  // visitors can preview the New Member Education carve-out from getRoleAccess()/canEditPage()
-  // (js/auth.js) without it being a selectable DEFAULT_POSITIONS title.
+  // 'Peer Mentor' / 'Peer Mentor (Exec)' aren't real positions — peer mentors are just members
+  // flagged isPeerMentor in Settings. Both previews set that flag so a visitor can see the New
+  // Member Education carve-out from getRoleAccess()/canEditPage() (js/auth.js): the first layered
+  // on a plain General Member, the second on an exec (shown as Treasurer) whose own position
+  // grants no New Member Education access.
   const isPeerMentorPreview = role === 'Peer Mentor';
+  const isPeerMentorExecPreview = role === 'Peer Mentor (Exec)';
+  const effectiveRole = isPeerMentorExecPreview ? 'Treasurer' : role;
   const isViewer = role === 'General Member' || isPeerMentorPreview;
-  const person = isViewer ? null : D.members.find(m => m.role === role);
+  const person = isViewer ? null : D.members.find(m => m.role === effectiveRole);
 
   CURRENT_USER.role = isViewer ? 'viewer' : 'exec';
-  CURRENT_USER.title = isViewer ? 'General Member' : role;
+  CURRENT_USER.title = isViewer ? 'General Member' : effectiveRole;
   CURRENT_USER.secondaryTitle = null;
-  CURRENT_USER.isPeerMentor = isPeerMentorPreview;
-  CURRENT_USER.name = person ? person.name : (isPeerMentorPreview ? 'Guest Member (Peer Mentor)' : isViewer ? 'Guest Member' : role);
+  CURRENT_USER.isPeerMentor = isPeerMentorPreview || isPeerMentorExecPreview;
+  CURRENT_USER.name = person ? person.name : (isPeerMentorPreview ? 'Guest Member (Peer Mentor)' : isViewer ? 'Guest Member' : effectiveRole);
   CURRENT_USER.mid = person ? person.id : null;
   CURRENT_USER.email = person
     ? person.name.toLowerCase().replace(/[^a-z]+/g,'.').replace(/^\.|\.$/g,'') + '@ato-demo.example'
-    : (isPeerMentorPreview ? 'guest.mentor@ato-demo.example' : isViewer ? 'guest.member@ato-demo.example' : role.toLowerCase().replace(/[^a-z]+/g,'-') + '@ato-demo.example');
+    : (isPeerMentorPreview ? 'guest.mentor@ato-demo.example' : isViewer ? 'guest.member@ato-demo.example' : effectiveRole.toLowerCase().replace(/[^a-z]+/g,'-') + '@ato-demo.example');
 
-  const av = person ? person.initials : (isViewer ? 'GM' : role.slice(0,2).toUpperCase());
+  const av = person ? person.initials : (isViewer ? 'GM' : effectiveRole.slice(0,2).toUpperCase());
   document.getElementById('u-av').textContent = av;
   document.getElementById('u-name').textContent = CURRENT_USER.name;
-  document.getElementById('u-role').textContent = isPeerMentorPreview ? 'General Member · Peer Mentor' : isViewer ? 'General Member' : role;
+  document.getElementById('u-role').textContent = isPeerMentorExecPreview ? 'Treasurer · Peer Mentor' : isPeerMentorPreview ? 'General Member · Peer Mentor' : isViewer ? 'General Member' : role;
   document.getElementById('tb-av').textContent = av;
 
   rbacApplySidebar();
   const label = document.getElementById('demo-role-label');
-  if(label) label.textContent = isPeerMentorPreview ? 'General Member (Peer Mentor)' : isViewer ? 'General Member' : role;
+  if(label) label.textContent = isPeerMentorExecPreview ? 'Treasurer (Peer Mentor)' : isPeerMentorPreview ? 'General Member (Peer Mentor)' : isViewer ? 'General Member' : role;
   const sel = document.getElementById('demo-role-switcher');
   if(sel) sel.selectedIndex = 0;
   rbacNav(isViewer ? 'calendar' : 'dashboard', null);
   // Re-render on-demand pages that read CURRENT_USER but aren't necessarily the page being
   // navigated to above, so their identity references don't go stale until next manually opened.
   if(document.getElementById('page-settings')?.classList.contains('active') && typeof renderSettings==='function')renderSettings();
-  toast(`Now viewing as ${isPeerMentorPreview ? 'a General Member with Peer Mentor access' : isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
+  toast(`Now viewing as ${isPeerMentorExecPreview ? 'a Treasurer with Peer Mentor access' : isPeerMentorPreview ? 'a General Member with Peer Mentor access' : isViewer ? 'a General Member' : role}, sidebar and edit controls reflect this role`, 'info', 3500);
 }
 
 // ══════════════════════════════════════════════

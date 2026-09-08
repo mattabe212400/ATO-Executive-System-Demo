@@ -35,10 +35,10 @@ function renderNewMemberEducation(){
   // The curriculum/progress-tracking on this page names and ranks every new member's standing,
   // which isn't general-member-visible (same reasoning renderAttendanceOwnOnly() uses to hide
   // Risk Stratification from viewers) — enforced by leaving 'newMemberEducation' out of
-  // VIEWER_PAGES (js/auth.js). The one exception is a General Member individually flagged
-  // isPeerMentor (Settings → General Member Users), who gets this whole page — Peer Mentor
-  // Program included, moved back here from Committees — via getRoleAccess()'s viewer-branch
-  // override, not a change to VIEWER_PAGES itself.
+  // VIEWER_PAGES (js/auth.js). The one exception is any member individually flagged isPeerMentor
+  // (Settings → General Member Users, or Exec Users for an officer whose position doesn't already
+  // grant this page), who gets this whole page — Peer Mentor Program included — via the
+  // isPeerMentor overrides in getRoleAccess()/canEditPage(), not a change to any position config.
   const editActions=document.getElementById('nme-edit-actions');
   if(editActions)editActions.style.display=canEditNewMemberEducation()?'':'none';
   initSemesterSelect('nme-semester-select',nmeKnownSemesters(),nmeSemesterChanged,nmeSem());

@@ -68,6 +68,7 @@
       <option value="Public Relations" style="color:#1e293b;background:#fff">Public Relations: chapter-wide view access</option>
       <option value="General Member" style="color:#1e293b;background:#fff">General Member: personal and shared chapter access</option>
       <option value="Peer Mentor" style="color:#1e293b;background:#fff">General Member (Peer Mentor): adds New Member Education</option>
+      <option value="Peer Mentor (Exec)" style="color:#1e293b;background:#fff">Treasurer (Peer Mentor): exec + New Member Education edit</option>
     </select>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
@@ -1322,6 +1323,8 @@
       <div style="display:flex;justify-content:flex-end;margin-bottom:9px">
         <select id="rc-semester-select" style="height:30px;padding:0 8px;border:1px solid var(--bdr);border-radius:var(--r);font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx)"></select>
       </div>
+      <!-- Plan-ahead / past-semester context strip (js/recruitment.js rcRenderPlanBanner) -->
+      <div id="rc-plan-banner" class="bnr info" style="display:none;margin-bottom:11px"></div>
       <div id="rc-tabs-bar" style="display:flex;gap:0;border-bottom:2px solid var(--bdr);margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
         <button class="rc-tab active" data-tab="rc-overview" onclick="rcTab(this,'rc-overview')">Overview</button>
         <button class="rc-tab" data-tab="rc-rushees" onclick="rcTab(this,'rc-rushees')">Rushee Database</button>
@@ -2053,8 +2056,9 @@
       <!-- Peer Mentor Program — Peer Mentors are Active members, not new members; new members
            get assigned INTO a mentor's rotating group rather than the mentors being assigned to
            them. A Peer Mentor's own account can be granted view+edit on this page specifically
-           (Settings → General Member Users' "Peer Mentor" checkbox) without becoming a full
-           officer. -->
+           (Settings → General Member Users, or Exec Users for an officer whose position doesn't
+           already grant this page — "Peer Mentor" checkbox on either) without changing their
+           position. -->
       <div class="card collapsible" data-collapse-key="nme:pm" data-collapse-mobile style="margin-top:13px">
         <div class="card-hd">
           <span class="card-t">Peer Mentor Program</span>
