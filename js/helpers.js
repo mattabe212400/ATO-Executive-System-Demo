@@ -341,7 +341,8 @@ function nav(page,el){
   const read=()=>{try{return JSON.parse(localStorage.getItem(LS)||'{}')||{};}catch(e){return{};}};
   const write=s=>{try{localStorage.setItem(LS,JSON.stringify(s));}catch(e){}};
   const store=read();
-  const narrow=window.matchMedia('(max-width:768px)');
+  // matchMedia is absent in the vm-based test harness — fall back to "not narrow".
+  const narrow=(typeof window.matchMedia==='function')?window.matchMedia('(max-width:768px)'):{matches:false};
   function wanted(card){
     const k=card.getAttribute('data-collapse-key');
     if(k&&Object.prototype.hasOwnProperty.call(store,k))return !!store[k];
