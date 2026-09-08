@@ -741,7 +741,7 @@
       </div>
       <div class="d2-stats" id="kc-kpi" style="margin-bottom:13px"></div>
       <div id="kc-ro-bar" class="bnr info" style="display:none;margin-bottom:13px"><i class="ti ti-eye"></i><span>View only. Only the President, Vice President, House Manager, and House Manager Assistant can edit Meal Duties and chore assignments.</span></div>
-      <div class="card" style="margin-bottom:13px">
+      <div class="card collapsible" data-collapse-key="kcrew:schedule" style="margin-bottom:13px">
         <div class="card-hd">
           <span class="card-t"><i class="ti ti-tools-kitchen-2" style="margin-right:6px;color:var(--navy)"></i>Meal Duties Schedule</span>
           <span style="font-size:11px;color:var(--ht)">Select who is on Meal Duties (auto-saves)</span>
@@ -750,7 +750,7 @@
       </div>
       <!-- Chore Roster — who gets dealt chores by Randomize; only visible to editors -->
       <div id="kc-required-wrap" style="display:none;margin-bottom:13px">
-        <div class="card">
+        <div class="card collapsible" data-collapse-key="kcrew:roster" data-collapse-default>
           <div class="card-hd">
             <span class="card-t"><i class="ti ti-users-group" style="margin-right:6px;color:var(--navy)"></i>Chore Roster</span>
             <span style="font-size:11px;color:var(--mt)">Live-in members checked here are the only ones dealt chores when you hit Randomize</span>
@@ -759,7 +759,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card collapsible" data-collapse-key="kcrew:assign">
         <div class="card-hd">
           <span class="card-t"><i class="ti ti-home-check" style="margin-right:6px;color:var(--navy)"></i>Chore Assignments</span>
           <div style="display:flex;align-items:center;gap:10px">
@@ -773,7 +773,7 @@
 
       <!-- Chore Manager — only visible to editors -->
       <div id="kc-chore-manager-wrap" style="display:none;margin-top:13px">
-        <div class="card">
+        <div class="card collapsible" data-collapse-key="kcrew:manage" data-collapse-default>
           <div class="card-hd">
             <span class="card-t"><i class="ti ti-list-check" style="margin-right:6px;color:var(--navy)"></i>Manage Chore List</span>
             <span style="font-size:11px;color:var(--mt)">Add, edit, reorder, or remove chores for your chapter</span>
@@ -993,16 +993,16 @@
       <div id="ac-pane-overview">
         <div class="d2-stats" id="ac-kpi" style="margin-bottom:13px"></div>
         <div class="g3">
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="ac:top">
             <div class="card-hd"><span class="card-t" style="color:var(--gn-tx)"><i class="ti ti-trophy" style="font-size:12px;color:var(--gn);margin-right:4px"></i>Top GPAs</span><button class="card-a" onclick="acTab(document.querySelector('[data-tab=ac-pane-members]'),'ac-pane-members')">All Members →</button></div>
             <div id="ac-top" style="display:flex;flex-direction:column;gap:6px"></div>
           </div>
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="ac:warn">
             <div class="card-hd"><span class="card-t" style="color:var(--rd-tx)"><i class="ti ti-alert-triangle" style="font-size:12px;color:var(--rd);margin-right:4px"></i>Academic Warnings</span><span style="font-size:9.5px;color:var(--mt)">By cumulative GPA</span></div>
             <div id="ac-warn" style="display:flex;flex-direction:column;gap:6px"></div>
             <div id="ac-warn-empty" style="display:none"></div>
           </div>
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="ac:dist" data-collapse-mobile>
             <div class="card-hd"><span class="card-t">GPA Distribution</span><span style="font-size:9.5px;color:var(--mt)">By cumulative GPA</span></div>
             <div id="ac-dist" style="display:flex;flex-direction:column;gap:5px"></div>
           </div>
@@ -1011,7 +1011,7 @@
 
       <!-- Members Tab -->
       <div id="ac-pane-members" style="display:none">
-        <div class="card">
+        <div class="card collapsible" data-collapse-key="ac:members">
           <div class="card-hd">
             <span class="card-t">Chapter GPA: All Members</span>
             <button class="btn btn-p" id="ac-update-gpa-btn" style="height:26px;font-size:11px" onclick="openUpdateGpa()"><i class="ti ti-edit"></i>Update GPAs</button>
@@ -1040,7 +1040,7 @@
 
       <!-- History Tab -->
       <div id="ac-pane-history" style="display:none">
-        <div class="card">
+        <div class="card collapsible" data-collapse-key="ac:history" data-collapse-mobile>
           <div class="card-hd">
             <span class="card-t">Chapter GPA History</span>
             <button class="btn btn-p" id="ac-history-add-btn" style="height:26px;font-size:11px" onclick="acOpenHistory()"><i class="ti ti-plus"></i>Add Semester Report</button>
@@ -1082,18 +1082,18 @@
         <div class="d2-body">
           <div class="d2-left">
             <!-- Status: health rollup + itemized alerts in one card, not two -->
-            <div class="card">
+            <div class="card collapsible" data-collapse-key="fin:status">
               <div class="card-hd"><span class="card-t" style="display:flex;align-items:center;gap:6px"><span id="fin-alerts-dot" class="d2-pulse-dot"></span>Status</span></div>
               <div id="fin-health"></div>
               <div id="fin-alerts"></div>
             </div>
             <!-- Who Owes What -->
-            <div class="card">
+            <div class="card collapsible" data-collapse-key="fin:owes" data-collapse-mobile>
               <div class="card-hd"><span class="card-t">Who Owes What</span><button class="card-a" onclick="finTab(document.querySelector('[data-tab=fin-dues]'),'fin-dues')">Full view →</button></div>
               <div id="fin-who-owes"></div>
             </div>
             <!-- Recent Payments Feed -->
-            <div class="card">
+            <div class="card collapsible" data-collapse-key="fin:recent" data-collapse-mobile>
               <div class="card-hd"><span class="card-t">Recent Payments</span></div>
               <div id="fin-feed"></div>
             </div>
@@ -1101,12 +1101,12 @@
 
           <div class="d2-right">
             <!-- Budget Overview -->
-            <div class="card">
+            <div class="card collapsible" data-collapse-key="fin:budgetov" data-collapse-mobile>
               <div class="card-hd"><span class="card-t">Budget Overview</span><button class="card-a" onclick="finTab(document.querySelector('[data-tab=fin-budget]'),'fin-budget')">Manage →</button></div>
               <div id="fin-budget-overview"></div>
             </div>
             <!-- Upcoming Deadlines -->
-            <div class="card">
+            <div class="card collapsible" data-collapse-key="fin:deadlines" data-collapse-mobile>
               <div class="card-hd"><span class="card-t">Upcoming Deadlines</span></div>
               <div id="fin-deadlines"></div>
             </div>
@@ -1227,7 +1227,7 @@
       <div id="fin-settings" style="display:none">
         <div class="g2">
           <!-- Dues Configuration -->
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="fin:setdues" data-collapse-default>
             <div class="card-hd"><span class="card-t">Semester Dues by Member Type</span></div>
             <div style="font-size:11.5px;color:var(--mt);margin-bottom:13px">Set dues amounts for each member type. Members can have their type adjusted from the Members page.</div>
 
@@ -1294,7 +1294,7 @@
           </div>
 
           <!-- Budget Configuration -->
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="fin:setbudget" data-collapse-default>
             <div class="card-hd"><span class="card-t">Semester Budget</span></div>
             <div style="font-size:11.5px;color:var(--mt);margin-bottom:11px">Set the allocated budget for each spending category. Adjust each semester before tracking expenses.</div>
             <div id="fin-budget-inputs" style="display:flex;flex-direction:column;gap:7px"></div>
@@ -1306,7 +1306,7 @@
         </div>
 
         <!-- Budget Category Manager — full width below the 2-col grid -->
-        <div class="card" style="margin-top:13px">
+        <div class="card collapsible" data-collapse-key="fin:setcats" data-collapse-default style="margin-top:13px">
           <div class="card-hd">
             <span class="card-t">Budget Categories</span>
             <span style="font-size:11px;color:var(--mt)">Customize categories for your chapter (used in Budget, Expense Log, and the Log Expense form)</span>
@@ -1884,11 +1884,11 @@
         <div class="d2-stats" id="ch-kpi" style="margin-bottom:13px"></div>
 
         <div id="ch-events-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px">
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="ch:events">
             <div class="card-hd"><span class="card-t">Brotherhood Events Tracker</span></div>
             <div class="tw"><table class="tbl" id="ch-events-table"></table></div>
           </div>
-          <div class="card">
+          <div class="card collapsible" data-collapse-key="ch:board" data-collapse-mobile>
             <div class="card-hd"><span class="card-t">Event Planning Board</span></div>
             <div id="ch-kanban" class="rc-kanban" style="grid-template-columns:repeat(4,minmax(180px,1fr))"></div>
           </div>
@@ -1998,7 +1998,7 @@
           <div style="display:flex;justify-content:flex-end;margin-top:11px"><button class="btn" onclick="closeM(null,document.getElementById('m-bs-bulk'))">Close</button></div>
         </div></div>
 
-        <div class="card" style="margin-bottom:13px">
+        <div class="card collapsible" data-collapse-key="ch:devotionals" data-collapse-default style="margin-bottom:13px">
           <div class="card-hd"><span class="card-t">Devotionals</span></div>
           <div class="tw"><table class="tbl" id="ch-dv-table"></table></div>
         </div>
@@ -2048,14 +2048,14 @@
       </div>
       <div class="d2-stats" id="nme-kpi" style="margin-bottom:13px"></div>
       <div id="nme-grade-checks" style="margin-bottom:13px"></div>
-      <div class="card"><div class="card-hd"><span class="card-t">Education Sessions</span><div style="display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border:1px solid var(--bdr);border-radius:7px;background:var(--surf2)"><i class="ti ti-calendar-time" style="font-size:12px;color:var(--mt)"></i><select id="nme-semester-select" aria-label="Semester" style="height:21px;padding:0 3px;border:none;background:transparent;font-size:11px;font-weight:500;font-family:inherit;color:var(--tx)"></select></div></div><div class="tw"><table class="tbl" id="nme-sessions-table"></table></div></div>
+      <div class="card collapsible" data-collapse-key="nme:sessions"><div class="card-hd"><span class="card-t">Education Sessions</span><div style="display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border:1px solid var(--bdr);border-radius:7px;background:var(--surf2)"><i class="ti ti-calendar-time" style="font-size:12px;color:var(--mt)"></i><select id="nme-semester-select" aria-label="Semester" style="height:21px;padding:0 3px;border:none;background:transparent;font-size:11px;font-weight:500;font-family:inherit;color:var(--tx)"></select></div></div><div class="tw"><table class="tbl" id="nme-sessions-table"></table></div></div>
 
       <!-- Peer Mentor Program — Peer Mentors are Active members, not new members; new members
            get assigned INTO a mentor's rotating group rather than the mentors being assigned to
            them. A Peer Mentor's own account can be granted view+edit on this page specifically
            (Settings → General Member Users' "Peer Mentor" checkbox) without becoming a full
            officer. -->
-      <div class="card" style="margin-top:13px">
+      <div class="card collapsible" data-collapse-key="nme:pm" data-collapse-mobile style="margin-top:13px">
         <div class="card-hd">
           <span class="card-t">Peer Mentor Program</span>
           <button class="btn" id="nme-pm-import-btn" onclick="openImportModal('peerMentorProgram')"><i class="ti ti-table-import"></i>Import Program</button>

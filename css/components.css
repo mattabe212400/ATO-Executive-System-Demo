@@ -6,6 +6,27 @@
    which is what made these read as default-browser links instead of intentional UI. */
 .card-a{font-family:inherit;font-size:11px;font-weight:500;line-height:1.4;color:var(--sky-tx);cursor:pointer;border:none;background:none;padding:0;text-decoration:none}
 .card-a:hover{text-decoration:underline}
+
+/* ── Collapsible card ──────────────────────────────────────────────────────────
+   Opt in with class="card collapsible" on a card whose FIRST child is its .card-hd.
+   js/helpers.js wires a delegated click / Enter / Space on the header and remembers
+   the open state per data-collapse-key in localStorage, so a section a user closes
+   stays closed across re-renders and reloads. A caret sits at the head of the
+   header (points down when open, right when collapsed). Header controls — buttons,
+   links, selects — keep working; only a click on the bare header toggles.
+     data-collapse-default  → starts collapsed until the user opens it once
+     data-collapse-mobile   → starts collapsed only on a narrow screen              */
+.card.collapsible>.card-hd{cursor:pointer;-webkit-user-select:none;user-select:none}
+.card.collapsible>.card-hd>.card-t{cursor:pointer}
+.card.collapsible>.card-hd>.card-t::before{
+  content:"";display:inline-block;width:6px;height:6px;margin-right:8px;vertical-align:middle;
+  border-right:2px solid var(--mt);border-bottom:2px solid var(--mt);
+  transform:rotate(45deg);transition:transform .18s ease;position:relative;top:-1px}
+.card.collapsible.is-collapsed>.card-hd>.card-t::before{transform:rotate(-45deg);top:0}
+.card.collapsible.is-collapsed>.card-hd{margin-bottom:0}
+.card.collapsible.is-collapsed>:not(.card-hd){display:none!important}
+.card.collapsible>.card-hd>.card-t:focus-visible{outline:2px solid var(--sky);outline-offset:3px;border-radius:4px}
+@media(max-width:768px){.card.collapsible>.card-hd>.card-t::before{width:7px;height:7px}}
 .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:14px}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:14px}
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-bottom:14px}

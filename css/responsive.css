@@ -78,6 +78,10 @@
   .pl{width:110px}
   .card{padding:11px 12px}
   .card-hd{flex-wrap:wrap;gap:6px}
+  /* Collapsible headers are the primary way to move through a long page on a phone —
+     give them a full tap target and keep a collapsed card compact. */
+  .card.collapsible>.card-hd{min-height:38px}
+  .card.collapsible.is-collapsed{padding-top:9px;padding-bottom:9px}
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tbl{min-width:480px}
   .mo{align-items:flex-end;padding:0}

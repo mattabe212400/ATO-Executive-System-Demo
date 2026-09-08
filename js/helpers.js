@@ -320,6 +320,7 @@ function nav(page,el){
     skMap[page].forEach(({id,html})=>{const e=document.getElementById(id);if(e)e.innerHTML=html;});
   }
   setTimeout(()=>{if(R[page])R[page]();},60);
+  setTimeout(()=>{if(window.initCollapsibles)window.initCollapsibles(document.getElementById('page-'+page));},120);
   setTimeout(()=>{_viewerApplyWriteLock();},200);
   if(window.innerWidth<=1100)sbClose();
   // Sync mobile bottom nav active state
@@ -328,6 +329,71 @@ function nav(page,el){
   const _mbnEl=document.getElementById(_mbnMap[page]);
   if(_mbnEl)_mbnEl.classList.add('active');
 }
+
+// ── Collapsible cards ────────────────────────────────────────────────────────
+// Delegated toggle for any <div class="card collapsible" data-collapse-key="…">.
+// The open/closed state is a class on the (persistent) card element plus a
+// localStorage entry, so it survives the inner container being re-rendered and a
+// page reload. Header controls still work — only a click on the bare header
+// toggles. See the .card.collapsible rules in css/components.css.
+(function(){
+  const LS='atoCollapsed';
+  const read=()=>{try{return JSON.parse(localStorage.getItem(LS)||'{}')||{};}catch(e){return{};}};
+  const write=s=>{try{localStorage.setItem(LS,JSON.stringify(s));}catch(e){}};
+  const store=read();
+  const narrow=window.matchMedia('(max-width:768px)');
+  function wanted(card){
+    const k=card.getAttribute('data-collapse-key');
+    if(k&&Object.prototype.hasOwnProperty.call(store,k))return !!store[k];
+    if(card.hasAttribute('data-collapse-default'))return true;
+    if(card.hasAttribute('data-collapse-mobile')&&narrow.matches)return true;
+    return false;
+  }
+  function paint(card,collapsed){
+    card.classList.toggle('is-collapsed',collapsed);
+    const hd=card.firstElementChild;
+    if(!hd||!hd.classList.contains('card-hd'))return;
+    // The toggle control is the title span, not the whole header — a header can hold its own
+    // buttons/links, and nesting them inside a role="button" would be invalid ARIA.
+    const t=hd.querySelector('.card-t')||hd;
+    t.setAttribute('role','button');
+    t.setAttribute('tabindex','0');
+    t.setAttribute('aria-expanded',String(!collapsed));
+  }
+  window.initCollapsibles=function(root){
+    (root||document).querySelectorAll('.card.collapsible').forEach(c=>paint(c,wanted(c)));
+  };
+  function cardFor(target){
+    const hd=target&&target.closest&&target.closest('.card-hd');
+    if(!hd)return null;
+    const card=hd.parentElement;
+    if(!card||!card.classList.contains('card')||!card.classList.contains('collapsible'))return null;
+    if(hd!==card.firstElementChild)return null;
+    return card;
+  }
+  function toggle(card){
+    const collapsed=!card.classList.contains('is-collapsed');
+    paint(card,collapsed);
+    const k=card.getAttribute('data-collapse-key');
+    if(k){store[k]=collapsed;write(store);}
+  }
+  document.addEventListener('click',e=>{
+    if(e.target.closest('button,a,input,select,textarea,label,.card-a'))return;
+    const card=cardFor(e.target);
+    if(card)toggle(card);
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' '&&e.key!=='Spacebar')return;
+    const t=e.target;
+    if(!t.classList||!t.classList.contains('card-t'))return;
+    const card=cardFor(t);
+    if(!card)return;
+    e.preventDefault();
+    toggle(card);
+  });
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>window.initCollapsibles());
+  else window.initCollapsibles();
+})();
 // This chapter's real officer titles — Object.keys(CURRENT_CHAPTER.positions) is the runtime
 // source of truth (DEFAULT_POSITIONS in js/auth.js is only a new-chapter seed template, never
 // re-read for an existing chapter). Used to populate the Position pickers on Tasks & Goals.
