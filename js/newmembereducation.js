@@ -103,7 +103,7 @@ function nmeRenderGradeChecks(){
   }).join('');
 
   el.innerHTML=`
-    <div class="card">
+    <div class="card collapsible" data-collapse-key="nme:grade-checks">
       <div class="card-hd" style="flex-wrap:wrap;gap:8px">
         <div>
           <div class="card-t">New Member Grade Checks</div>
@@ -123,6 +123,9 @@ function nmeRenderGradeChecks(){
           </tr></thead><tbody>${nmRows}</tbody></table></div>`
         :`<div style="color:var(--ht);font-size:11.5px;padding:16px 0;text-align:center">No new members enrolled yet. Members with Member Status set to "New Member" (on the Members page) will appear here automatically.</div>`}
     </div>`;
+  // This card is rebuilt on every render (unlike the static-in-HTML collapsibles), so re-apply
+  // the stored open/closed state + ARIA each time.
+  if(window.initCollapsibles)window.initCollapsibles(el);
 }
 
 function nmeRenderSessions(){
