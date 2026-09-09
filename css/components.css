@@ -89,9 +89,17 @@
 .sbar i{color:var(--ht);font-size:13px}
 .sbar input{border:none;background:transparent;font-size:12px;font-family:inherit;color:var(--tx);outline:none;flex:1}
 .sbar input::placeholder{color:var(--ht)}
-.mo{display:none;position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+/* position:fixed (not absolute) so the overlay is anchored to the viewport rather than the
+   scrolled .content container — an absolute overlay on a scrolled/tall page pushed the dialog
+   (and its Save button) off-screen, especially in a narrow/split-screen window where the
+   fixed mobile bottom nav also sat on top of it. z-index clears the bottom nav (150) and the
+   sidebar drawer (200). .mo scrolls as a fallback; .md is capped to the viewport minus the
+   overlay padding and scrolls its own body, so the action row is always reachable. */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:210;align-items:center;justify-content:center;overflow-y:auto;overscroll-behavior:contain;padding:24px 16px}
 .mo.open{display:flex}
-.md{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--rl);padding:19px;width:470px;max-height:82vh;overflow-y:auto;border:1px solid var(--bdr2);box-shadow:var(--shadow-lg)}
+.md{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-radius:var(--rl);padding:19px;width:470px;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--bdr2);box-shadow:var(--shadow-lg)}
+/* Lock the background scroller while a modal is open (progressive enhancement). */
+body:has(.mo.open) .content{overflow:hidden}
 .md-t{font-size:14px;font-weight:600;margin-bottom:15px;display:flex;align-items:center;justify-content:space-between;color:var(--tx)}
 .md-x{cursor:pointer;color:var(--mt);border:none;background:none;font-size:18px;line-height:1}
 .md-x:hover{color:var(--tx)}

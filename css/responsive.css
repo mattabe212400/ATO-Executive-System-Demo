@@ -7,7 +7,7 @@
   .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fg{grid-template-columns:repeat(2,minmax(0,1fr))}
   .g21{grid-template-columns:minmax(0,1fr)}
-  .md{width:min(470px,calc(100vw - 32px));max-height:88vh}
+  .md{width:min(470px,calc(100vw - 32px))}
   .se-pos-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .se-pos-perm-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   #tr-folders{grid-template-columns:repeat(3,minmax(0,1fr))!important}
@@ -84,8 +84,11 @@
   .card.collapsible.is-collapsed{padding-top:9px;padding-bottom:9px}
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tbl{min-width:480px}
+  /* Bottom-sheet on phones. The overlay is now fixed + above the bottom nav, so the sheet
+     pins to the true viewport bottom; the extra bottom padding keeps the action row clear of
+     the home indicator / gesture area so Save is always tappable. */
   .mo{align-items:flex-end;padding:0}
-  .md{width:100%!important;max-width:100%!important;border-radius:var(--rl) var(--rl) 0 0;max-height:92dvh;padding:16px 15px;border-left:none;border-right:none;border-bottom:none}
+  .md{width:100%!important;max-width:100%!important;border-radius:var(--rl) var(--rl) 0 0;max-height:92dvh;padding:16px 15px calc(20px + env(safe-area-inset-bottom,0px));border-left:none;border-right:none;border-bottom:none}
   .confirm-box{width:calc(100vw - 28px);max-width:380px}
   .kb,#t-kb{grid-template-columns:1fr!important}
   .fr.c2,.fr.c3{grid-template-columns:1fr!important}
@@ -309,7 +312,7 @@
   .tbl th:nth-child(4),.tbl td:nth-child(4){display:none}
 
   /* ── MODALS ── */
-  .md{padding:13px 12px}
+  .md{padding:13px 12px calc(18px + env(safe-area-inset-bottom,0px))}
   .md-t{font-size:13px}
 
   /* ── BUTTONS: icon-only on very small ── */
