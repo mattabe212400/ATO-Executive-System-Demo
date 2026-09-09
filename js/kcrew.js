@@ -89,6 +89,10 @@ function kcEnsureDefaults(){
     });
   }
   if(!D.chores.checks)D.chores.checks={};
+  // { memberId: '2nd Floor' | '3rd Floor' } — the House Manager's explicit override for which
+  // floor's chores a live-in member is eligible for. Absent entries fall back to the member's
+  // House Life room floor (if any), else "any floor". See kcMemberFloor().
+  if(!D.chores.memberFloor)D.chores.memberFloor={};
 }
 
 // Close all open member pickers when clicking outside
@@ -227,6 +231,34 @@ function kcChorePool(){
   return sortedMembers().filter(m=>m.liveIn&&(!req||req.has(m.id)));
 }
 
+// ── FLOOR MATCHING ──
+// A chore's area maps to a floor when it reads like "2nd Floor" / "3rd Floor" (a leading
+// "2nd "/"3rd " counts too, e.g. "3rd Floor Bathrooms"). Everything else — the basement,
+// stairwells, common areas, dining room — returns null, meaning any roster member can do it
+// ("basement is either").
+function kcAreaFloor(area){
+  const a=(area||'').trim().toLowerCase();
+  if(a==='2nd floor'||a==='second floor'||a.startsWith('2nd '))return '2nd Floor';
+  if(a==='3rd floor'||a==='third floor'||a.startsWith('3rd '))return '3rd Floor';
+  return null;
+}
+// Which floor a live-in member is eligible for. An explicit override the House Manager set in
+// the Chore Roster panel wins; otherwise it's read off their House Life room assignment (if the
+// chapter uses that page); otherwise '' = no floor known (they still do the un-floored chores,
+// and back-fill a floor whose residents nobody has identified).
+function kcMemberFloor(id){
+  const ov=(D.chores&&D.chores.memberFloor)?D.chores.memberFloor[id]:'';
+  if(ov)return ov;
+  const rooms=(D.houseLife&&Array.isArray(D.houseLife.rooms))?D.houseLife.rooms:[];
+  const room=rooms.find(r=>Array.isArray(r.occupantIds)&&r.occupantIds.includes(id));
+  if(room&&room.floor){
+    const f=String(room.floor).trim().toLowerCase();
+    if(f==='2nd floor'||f==='second floor'||f.startsWith('2nd '))return '2nd Floor';
+    if(f==='3rd floor'||f==='third floor'||f.startsWith('3rd '))return '3rd Floor';
+  }
+  return '';
+}
+
 function kcRenderRequiredPanel(){
   const el=document.getElementById('kc-required-panel');
   if(!el)return;
@@ -242,22 +274,45 @@ function kcRenderRequiredPanel(){
     return;
   }
 
+  const cnt={'2nd Floor':0,'3rd Floor':0,none:0};
   const chips=liveIn.map(m=>{
     const on=inPool(m);
-    return`<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--bdr);border-radius:7px;cursor:pointer;font-size:12px;background:${on?'rgba(59,170,90,.07)':'var(--surf)'}">
-      <input type="checkbox" ${on?'checked':''} onchange="kcToggleRequired('${m.id}',this.checked)" style="accent-color:var(--sky);width:14px;height:14px;flex-shrink:0">
-      <span style="color:${on?'var(--tx)':'var(--mt)'}">${esc(m.name)}</span>
-    </label>`;
+    const ov=(D.chores.memberFloor||{})[m.id]||'';
+    const derived=ov?'':kcMemberFloor(m.id);        // House Life floor when no override
+    const eff=ov||derived;
+    if(on){ if(eff==='2nd Floor')cnt['2nd Floor']++; else if(eff==='3rd Floor')cnt['3rd Floor']++; else cnt.none++; }
+    const autoLabel=derived?`Auto · ${derived.replace(' Floor','')}`:'Auto';
+    return`<div style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;background:${on?'rgba(59,170,90,.07)':'var(--surf)'}">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;min-width:0">
+        <input type="checkbox" ${on?'checked':''} onchange="kcToggleRequired('${m.id}',this.checked)" style="accent-color:var(--sky);width:14px;height:14px;flex-shrink:0">
+        <span style="color:${on?'var(--tx)':'var(--mt)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)}</span>
+      </label>
+      <select onchange="kcSetMemberFloor('${m.id}',this.value)" title="Which floor's chores this member is eligible for" style="height:23px;font-size:10.5px;padding:0 4px;border:1px solid var(--bdr);border-radius:5px;background:var(--surf);color:var(--tx);font-family:inherit;flex-shrink:0;${on?'':'opacity:.55'}">
+        <option value=""${!ov?' selected':''}>${esc(autoLabel)}</option>
+        <option value="2nd Floor"${ov==='2nd Floor'?' selected':''}>2nd Floor</option>
+        <option value="3rd Floor"${ov==='3rd Floor'?' selected':''}>3rd Floor</option>
+      </select>
+    </div>`;
   }).join('');
 
   el.innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">
-      <span style="font-size:11.5px;color:var(--mt)"><strong style="color:var(--tx)">${poolCount}</strong> of ${liveIn.length} live-in member${liveIn.length!==1?'s':''} on chore rotation</span>
+      <span style="font-size:11.5px;color:var(--mt)"><strong style="color:var(--tx)">${poolCount}</strong> of ${liveIn.length} live-in member${liveIn.length!==1?'s':''} on rotation${poolCount?` &nbsp;·&nbsp; ${cnt['2nd Floor']} on 2nd, ${cnt['3rd Floor']} on 3rd${cnt.none?`, ${cnt.none} any floor`:''}`:''}</span>
       <button class="btn" onclick="kcSetAllRequired(true)" style="height:24px;font-size:10.5px;margin-left:auto">Select all</button>
       <button class="btn" onclick="kcSetAllRequired(false)" style="height:24px;font-size:10.5px">Clear all</button>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:7px">${chips}</div>
-    <div style="font-size:10.5px;color:var(--ht);margin-top:9px">New live-in members are on rotation by default until you clear anyone here; after that, add them manually.</div>`;
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px">${chips}</div>
+    <div style="font-size:10.5px;color:var(--ht);margin-top:9px">Randomize sends <strong>2nd Floor</strong> chores to 2nd-floor residents and <strong>3rd Floor</strong> chores to 3rd-floor residents; the basement, stairwells, common areas, and dining room go to anyone. "Auto" reads the member's floor from their House Life room; pick 2nd/3rd to override. New live-in members are on rotation by default until you clear anyone here.</div>`;
+}
+
+function kcSetMemberFloor(memberId,floor){
+  if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can edit the chore roster.','error');return;}
+  kcEnsureDefaults();
+  if(!D.chores.memberFloor)D.chores.memberFloor={};
+  if(floor)D.chores.memberFloor[memberId]=floor;
+  else delete D.chores.memberFloor[memberId];
+  saveD('chores');
+  kcRenderRequiredPanel();
 }
 
 function kcToggleRequired(memberId,checked){
@@ -500,12 +555,14 @@ function kcResetChores(){
   toast('Chores reset to defaults','success');
 }
 
-// Randomly deal every chore to a member on the chore roster. Fisher-Yates on both the roster and
-// the chore order, then round-robin over the shuffled roster so the load is even (member counts
-// at most 1 apart) and which members catch the remainder is itself random. Chores needing more
-// than one person (c.slots — the stairwells default to 2) draw that many distinct people from
-// the same rotation. The pool is the live-in members the House Manager has checked in the Chore
-// Roster panel (defaults to all live-in members until they narrow it).
+// Randomly deal every chore to a member on the chore roster, honoring floors: a "2nd Floor"
+// chore only goes to a 2nd-floor resident, a "3rd Floor" chore only to a 3rd-floor resident,
+// and everything else (basement, stairwells, common areas, dining) to anyone on the roster
+// (kcAreaFloor / kcMemberFloor). Floor-locked chores are dealt first, then the open chores go
+// to whoever is currently carrying the fewest total chores (random tiebreak) so everyone's
+// count comes out as even as the floor split allows. Chores needing more than one person
+// (c.slots — stairwells default to 2) draw that many distinct people. If a floor has no
+// identified residents its chores fall back to the whole roster.
 async function kcRandomizeChores(){
   if(!canEditKcrew()){toast('Only the President, VP, House Manager, or House Manager Assistant can assign chores.','error');return;}
   kcEnsureDefaults();
@@ -513,25 +570,55 @@ async function kcRandomizeChores(){
   if(!list.length){toast('No chores to assign yet.','error');return;}
   const pool=kcChorePool().map(m=>m.id);
   if(!pool.length){toast('No members on the chore roster — check at least one live-in member in the Chore Roster panel above.','error');return;}
-  const ok=await confirmDialog('Randomize Chores',`Randomly reassign all ${list.length} chore${list.length!==1?'s':''} across the ${pool.length} member${pool.length!==1?'s':''} on the chore roster? This replaces every current chore assignment.`,'Randomize',false);
+  const on2=pool.filter(id=>kcMemberFloor(id)==='2nd Floor');
+  const on3=pool.filter(id=>kcMemberFloor(id)==='3rd Floor');
+  const hasFloors=on2.length>0||on3.length>0;
+  const ok=await confirmDialog('Randomize Chores',
+    `Randomly reassign all ${list.length} chore${list.length!==1?'s':''} across the ${pool.length} member${pool.length!==1?'s':''} on the chore roster?`
+    +(hasFloors?' 2nd Floor chores go to 2nd-floor residents, 3rd Floor chores to 3rd-floor residents; everything else is open to anyone.':'')
+    +' This replaces every current chore assignment.','Randomize',false);
   if(!ok)return;
   const prev=list.map(c=>[...(c.memberIds||[])]);
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-  const people=shuffle([...pool]);
-  let cursor=0;
-  shuffle(list.map((_,i)=>i)).forEach(choreIdx=>{
-    const need=Math.min(Math.max(1,Math.round(list[choreIdx].slots||1)),people.length);
+  const load={};pool.forEach(id=>load[id]=0);
+  const take=(eligible,exclude)=>{
+    const cands=eligible.filter(id=>exclude.indexOf(id)<0);
+    if(!cands.length)return null;
+    const min=Math.min(...cands.map(id=>load[id]));
+    return shuffle(cands.filter(id=>load[id]===min))[0];
+  };
+  const assign=(idx,eligible)=>{
+    const elig=eligible.length?eligible:pool;              // no one on that floor → open it up
+    const need=Math.min(Math.max(1,Math.round(list[idx].slots||1)),elig.length);
     const picks=[];
-    for(let guard=0;picks.length<need&&guard<people.length*2;guard++){
-      const p=people[cursor++%people.length];
-      if(!picks.includes(p))picks.push(p);
+    while(picks.length<need){
+      const p=take(elig,picks);
+      if(p==null)break;
+      picks.push(p);load[p]++;
     }
-    list[choreIdx].memberIds=picks;
+    list[idx].memberIds=picks;
+  };
+  // Floor-locked chores first, so the open chores can even out everyone's totals afterward.
+  const locked2=[],locked3=[],open=[];
+  shuffle(list.map((_,i)=>i)).forEach(i=>{
+    const f=kcAreaFloor(list[i].area);
+    (f==='2nd Floor'?locked2:f==='3rd Floor'?locked3:open).push(i);
   });
+  locked2.forEach(i=>assign(i,on2));
+  locked3.forEach(i=>assign(i,on3));
+  open.forEach(i=>assign(i,pool));
+  // A floor that has chores but no identified residents got its chores opened to everyone —
+  // let the House Manager know so they can set floors in the roster if that wasn't intended.
+  const noFloorWarn=[];
+  if(!on2.length&&locked2.length)noFloorWarn.push('2nd');
+  if(!on3.length&&locked3.length)noFloorWarn.push('3rd');
   try{
     await saveD('chores');
     renderKcrew();
-    toast('Chores randomly assigned to live-in members','success');
+    toast(noFloorWarn.length
+      ?`Chores assigned. No ${noFloorWarn.join(' or ')}-floor residents set, so those chores went to anyone.`
+      :(hasFloors?'Chores randomly assigned by floor':'Chores randomly assigned to live-in members'),
+      noFloorWarn.length?'info':'success');
   }catch(e){
     list.forEach((c,i)=>{ c.memberIds=prev[i]; });
     renderKcrew();
