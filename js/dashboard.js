@@ -421,7 +421,7 @@ function renderAttendanceOwnOnly(){
   const me=(typeof _myMemberRecord==='function')?_myMemberRecord():null;
   if(!me){
     document.getElementById('a-kpi').innerHTML=statStrip('My Attendance','N/A','No record linked','neutral')+statStrip('Events Attended','N/A','N/A','neutral')+statStrip('Standing','N/A','N/A','neutral')+statStrip('Threshold','75%','Chapter requirement','neutral');
-    document.getElementById('a-table').innerHTML='<thead><tr><th>Member</th><th>Class</th><th>Attendance</th><th>Status</th></tr></thead><tbody><tr><td colspan="4" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No attendance record linked to your account yet. Contact an officer.</td></tr></tbody>';
+    document.getElementById('a-table').innerHTML='<thead><tr><th>Member</th><th>Class</th><th>Attended</th><th>Excused</th><th>Unexcused</th><th>Status</th></tr></thead><tbody><tr><td colspan="6" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No attendance record linked to your account yet. Contact an officer.</td></tr></tbody>';
     document.getElementById('a-mobile-cards').innerHTML='<div style="color:var(--ht);font-size:12px;padding:20px;text-align:center">No attendance record linked to your account yet. Contact an officer.</div>';
     return;
   }
@@ -433,13 +433,13 @@ function renderAttendanceOwnOnly(){
   // were visually indistinguishable regardless of which one a member was actually in.
   const _t=attTier(r);
   const status=[_t.label,_t.badge];
-  const col=r>=85?'var(--gn)':r>=75?'var(--navy)':r>=65?'var(--am)':'var(--rd)';
+  const c=aCountsForSemester(me.id);
   document.getElementById('a-kpi').innerHTML=
     kpi('My Attendance',r+'%',getSemester(),r>=75?'up':'down')+
     kpi('Events Attended',present,'of '+evCount+' total','neutral')+
     kpi('Standing','<span class="badge '+status[1]+'">'+status[0]+'</span>',r>=75?'On track':'Below 75%','neutral')+
     kpi('Chapter Threshold','75%','Minimum required','neutral');
-  document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attendance Rate</th><th>Status</th></tr></thead><tbody><tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(me.initials)}</div><span style="font-weight:500">${esc(me.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(me.classYear||'N/A')}</td><td style="font-weight:500;color:${col}">${r}%</td><td><span class="badge ${status[1]}">${esc(status[0])}</span></td></tr></tbody>`;
+  document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attended</th><th>Excused</th><th>Unexcused</th><th>Status</th></tr></thead><tbody><tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(me.initials)}</div><span style="font-weight:500">${esc(me.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(me.classYear||'N/A')}</td><td style="font-weight:500">${c.present}</td><td style="color:var(--mt)">${c.excused}</td><td style="font-weight:500;color:${c.absent>0?'var(--rd)':'var(--mt)'}">${c.absent}</td><td><span class="badge ${status[1]}">${esc(status[0])}</span></td></tr></tbody>`;
   document.getElementById('a-mobile-cards').innerHTML=`<div class="mob-card card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <div class="sh-av" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${esc(me.initials)}</div>
@@ -449,9 +449,10 @@ function renderAttendanceOwnOnly(){
       </div>
       <span class="badge ${status[1]}" style="font-size:9.5px;white-space:nowrap">${esc(status[0])}</span>
     </div>
-    <div style="display:flex;align-items:center;gap:7px">
-      <div style="flex:1;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden"><div style="height:100%;width:${r}%;background:${col};border-radius:2px"></div></div>
-      <span style="font-size:11px;font-weight:600;color:${col};min-width:32px;text-align:right">${r}%</span>
+    <div style="display:flex;align-items:center;gap:14px;font-size:11.5px">
+      <span><strong style="font-weight:600">${c.present}</strong> <span style="color:var(--mt)">attended</span></span>
+      <span><strong style="font-weight:600">${c.excused}</strong> <span style="color:var(--mt)">excused</span></span>
+      <span><strong style="font-weight:600;color:${c.absent>0?'var(--rd)':'inherit'}">${c.absent}</strong> <span style="color:var(--mt)">unexcused</span></span>
     </div>
   </div>`;
   updateBadges();
@@ -474,9 +475,9 @@ function renderAttendance(){
   const finesCollected=attFines.filter(f=>f.status==='Paid').reduce((s,f)=>s+f.amount,0);
   const finesOutstanding=attFines.filter(f=>f.status==='Unpaid').reduce((s,f)=>s+f.amount,0);
   document.getElementById('a-kpi').innerHTML=statStrip('Semester avg',avg+'%',sem,avg>=85?'up':'down')+statStrip('Excused Misses',excused,sem+' total','neutral')+statStrip('Unexcused Misses',absent,sem+' total',absent>20?'down':'neutral')+statStrip('Fines Collected','$'+finesCollected.toLocaleString(),sem+' total','up')+statStrip('Fines Outstanding','$'+finesOutstanding.toLocaleString(),finesOutstanding>0?'Needs collection':'All paid',finesOutstanding>0?'down':'up');
-  document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attendance Rate</th><th>Status</th><th></th></tr></thead><tbody>${D.members.length?sortedMembers().map(m=>{const r=aRForSemester(m.id,sem);const t=attTier(r);return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div><span style="font-weight:500">${esc(m.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(m.classYear)}</td><td style="font-weight:500;color:${t.color}">${r}%</td><td><span class="badge ${t.badge}">${t.label}</span></td><td><button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(m.name)}" onclick="openEditMember('${m.id}')"><i class="ti ti-pencil"></i></button></td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No members yet. Add members to start tracking attendance.</td></tr>'}</tbody>`;
+  document.getElementById('a-table').innerHTML=`<thead><tr><th>Member</th><th>Class</th><th>Attended</th><th>Excused</th><th>Unexcused</th><th>Status</th><th></th></tr></thead><tbody>${D.members.length?sortedMembers().map(m=>{const r=aRForSemester(m.id,sem);const t=attTier(r);const c=aCountsForSemester(m.id,sem);return`<tr><td><div style="display:flex;align-items:center;gap:7px"><div class="sh-av" style="width:25px;height:25px;font-size:8.5px;flex-shrink:0">${esc(m.initials)}</div><span style="font-weight:500">${esc(m.name)}</span></div></td><td style="color:var(--mt);font-size:11.5px">${esc(m.classYear)}</td><td style="font-weight:500">${c.present}</td><td style="color:var(--mt)">${c.excused}</td><td style="font-weight:500;color:${c.absent>0?'var(--rd)':'var(--mt)'}">${c.absent}</td><td><span class="badge ${t.badge}">${t.label}</span></td><td><button class="btn" style="height:23px;font-size:10.5px" aria-label="Edit ${esc(m.name)}" onclick="openEditMember('${m.id}')"><i class="ti ti-pencil"></i></button></td></tr>`;}).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--mt);padding:14px;font-size:12px">No members yet. Add members to start tracking attendance.</td></tr>'}</tbody>`;
   document.getElementById('a-mobile-cards').innerHTML=D.members.length?sortedMembers().map(m=>{
-    const r=aRForSemester(m.id,sem);const t=attTier(r);
+    const r=aRForSemester(m.id,sem);const t=attTier(r);const c=aCountsForSemester(m.id,sem);
     return`<div class="mob-card card clickable" tabindex="0" role="button" aria-label="Edit ${esc(m.name)}" onclick="openEditMember('${m.id}')">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div class="sh-av" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${esc(m.initials)}</div>
@@ -486,9 +487,10 @@ function renderAttendance(){
         </div>
         <span class="badge ${t.badge}" style="font-size:9.5px;white-space:nowrap">${t.label}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:7px">
-        <div style="flex:1;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden"><div style="height:100%;width:${r}%;background:${t.color};border-radius:2px"></div></div>
-        <span style="font-size:11px;font-weight:600;color:${t.color};min-width:32px;text-align:right">${r}%</span>
+      <div style="display:flex;align-items:center;gap:14px;font-size:11.5px">
+        <span><strong style="font-weight:600">${c.present}</strong> <span style="color:var(--mt)">attended</span></span>
+        <span><strong style="font-weight:600">${c.excused}</strong> <span style="color:var(--mt)">excused</span></span>
+        <span><strong style="font-weight:600;color:${c.absent>0?'var(--rd)':'inherit'}">${c.absent}</strong> <span style="color:var(--mt)">unexcused</span></span>
       </div>
     </div>`;
   }).join(''):'<div style="color:var(--ht);font-size:12px;padding:20px;text-align:center">No members yet. Add members to start tracking attendance.</div>';

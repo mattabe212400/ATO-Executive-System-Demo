@@ -194,6 +194,25 @@ function aRForSemester(memberId,semesterLabel){
   return Math.round(present/counted*100);
 }
 
+// Raw present/excused/unexcused counts behind aRForSemester()'s percentage — same eligibility
+// rules (mandatory, past, on/after join date), just not collapsed into a single rate. Used by
+// the Attendance page's Members tab, which shows these counts instead of a percentage.
+function aCountsForSemester(memberId,semesterLabel){
+  const range=semesterDateRange(semesterLabel);
+  const mandEvents=D.events.filter(e=>e.mandatory&&!isUp(e.date)&&(!range||(e.date>=range.start&&e.date<=range.end)));
+  const m=D.members.find(x=>x.id===memberId);
+  const joinDate=m&&m.joinDate;
+  const eligibleEvents=joinDate?mandEvents.filter(e=>e.date>=joinDate):mandEvents;
+  let present=0,excused=0,absent=0;
+  eligibleEvents.forEach(ev=>{
+    const rec=(D.attendance[ev.id]||{})[memberId];
+    if(rec==='present')present++;
+    else if(rec==='excused')excused++;
+    else if(rec==='absent')absent++;
+  });
+  return {present,excused,absent};
+}
+
 // Does this member have at least one mandatory event that actually counts toward a rate (on/
 // after their join date, and not excused)? aR()/aRForSemester() return 100 both for a member
 // with zero eligible events AND for a member whose eligible events were ALL excused (nothing
