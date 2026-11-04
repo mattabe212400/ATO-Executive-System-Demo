@@ -6,6 +6,8 @@ function renderAlumni(){
   if(addBtn)addBtn.style.display=canEditPage('alumni')?'':'none';
   const importBtn=document.getElementById('al-import-btn');
   if(importBtn)importBtn.style.display=canEditPage('alumni')?'':'none';
+  const exportBtn=document.getElementById('al-export-btn');
+  if(exportBtn)exportBtn.style.display=canEditPage('alumni')?'':'none';
   const al=D.alumni;
   const recent=al.outreach.filter(o=>{if(!o.date)return false;return(new Date()-new Date(o.date+'T12:00:00'))<30*86400000;}).length;
   document.getElementById('al-kpi').innerHTML=
@@ -27,6 +29,8 @@ function alTab(el,tab){
   }
   const importBtn=document.getElementById('al-import-btn');
   if(importBtn)importBtn.style.display=(tab==='al-directory'&&canEditPage('alumni'))?'':'none';
+  const exportBtn=document.getElementById('al-export-btn');
+  if(exportBtn)exportBtn.style.display=(tab==='al-directory'&&canEditPage('alumni'))?'':'none';
   if(tab==='al-directory')alRenderDirectory();
   else if(tab==='al-events')alRenderEvents();
   else alRenderOutreach();
@@ -66,8 +70,9 @@ function alPopulateFilters(){
   locSel.innerHTML='<option value="">All Locations</option>'+locations.map(l=>`<option value="${esc(l)}" ${l===curLoc?'selected':''}>${esc(l)}</option>`).join('');
   indSel.innerHTML='<option value="">All Industries</option>'+industries.map(i=>`<option value="${esc(i)}" ${i===curInd?'selected':''}>${esc(i)}</option>`).join('');
 }
-function alRenderDirectory(){
-  alPopulateFilters();
+// The directory rows after the search box and the three filter dropdowns are applied — shared by
+// the table render and the CSV export so an export always matches exactly what's on screen.
+function alFilteredRows(){
   const q=document.getElementById('al-search')?.value?.toLowerCase()||'';
   const classFilter=document.getElementById('al-filter-class')?.value||'';
   const locFilter=document.getElementById('al-filter-location')?.value||'';
@@ -77,6 +82,30 @@ function alRenderDirectory(){
   if(classFilter)rows=rows.filter(a=>alClassYear(a)===classFilter);
   if(locFilter)rows=rows.filter(a=>(a.location||'').trim()===locFilter);
   if(indFilter)rows=rows.filter(a=>(a.industry||'').trim()===indFilter);
+  return rows;
+}
+// Exports the currently filtered directory. Every field is quoted (with embedded quotes doubled)
+// rather than stripping commas the way some older exports do — employers and locations like
+// "Des Moines, IA" routinely contain commas, and those need to survive the round trip intact.
+// Gated to editors like Import: viewers can read the table, but a bulk download of alumni contact
+// info is a bigger exposure than on-screen viewing.
+function alExportCSV(){
+  if(!canEditPage('alumni')){toast('You do not have permission to export alumni.','error');return;}
+  const rows=alFilteredRows();
+  if(!rows.length){toast('No alumni to export','info');return;}
+  const q=v=>'"'+csvSafe(v).replace(/"/g,'""')+'"';
+  let csv='Name,Class Year,Email,Phone,Initiation Date,Employer,Industry,Location,LinkedIn,Last Contact,Notes\n';
+  rows.forEach(a=>{
+    const initD=alParseInitDate(a.initiationDate);
+    const initDate=initD?`${initD.getFullYear()}-${String(initD.getMonth()+1).padStart(2,'0')}-${String(initD.getDate()).padStart(2,'0')}`:(a.initiationDate||'');
+    csv+=[a.name,alClassYear(a),a.email,a.phone,initDate,a.employer,a.industry,a.location,a.linkedin,a.lastContact,a.notes].map(q).join(',')+'\n';
+  });
+  downloadCSV('alumni_directory_'+localDateStr()+'.csv',csv);
+  toast(`Exported ${rows.length} alumni`,'success');
+}
+function alRenderDirectory(){
+  alPopulateFilters();
+  const rows=alFilteredRows();
   const canEdit=canEditPage('alumni');
   const initials=name=>(name||'').trim().split(/\s+/).map(p=>p[0]).join('').slice(0,2).toUpperCase()||'??';
   document.getElementById('al-table').innerHTML=`<thead><tr><th>Name</th><th>Class</th><th>Email</th><th>Phone</th><th>Initiated</th><th>Employer</th><th>Industry</th><th>Location</th><th>LinkedIn</th><th></th></tr></thead><tbody>${rows.length?rows.map(a=>{

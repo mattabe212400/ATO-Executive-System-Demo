@@ -1831,6 +1831,7 @@
         <select id="al-filter-industry" onchange="alFilter()" aria-label="Filter by industry" style="height:29px;padding:0 8px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:inherit;background:var(--surf);color:var(--tx)"><option value="">All Industries</option></select>
         <div class="sbar" style="flex:1;max-width:220px;margin-bottom:0"><i class="ti ti-search"></i><input id="al-search" placeholder="Search alumni..." aria-label="Search alumni" oninput="alFilter()"></div>
         <div class="list-toolbar-actions">
+          <button class="btn" id="al-export-btn" onclick="alExportCSV()"><i class="ti ti-file-export"></i>Export CSV</button>
           <button class="btn" id="al-import-btn" onclick="openImportModal('alumni')"><i class="ti ti-table-import"></i>Import CSV</button>
           <button class="btn btn-p" id="al-add-btn" onclick="alOpenAdd()"><i class="ti ti-plus"></i>Add Alumni</button>
         </div>
